@@ -16,37 +16,13 @@
 #include <mutex>
 #include <string>
 
+#include "aws_sdk_guard.h"
+
 using namespace flowpipe;
 
 using S3SinkConfig = flowpipe::stages::s3::sink::v1::S3SinkConfig;
 
 namespace {
-class AwsSdkGuard {
-public:
-  AwsSdkGuard() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (ref_count_++ == 0) {
-      Aws::InitAPI(options_);
-    }
-  }
-
-  ~AwsSdkGuard() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (--ref_count_ == 0) {
-      Aws::ShutdownAPI(options_);
-    }
-  }
-
-private:
-  static std::mutex mutex_;
-  static int ref_count_;
-  static Aws::SDKOptions options_;
-};
-
-std::mutex AwsSdkGuard::mutex_{};
-int AwsSdkGuard::ref_count_ = 0;
-Aws::SDKOptions AwsSdkGuard::options_{};
-
 Aws::Client::ClientConfiguration BuildClientConfig(const S3SinkConfig& cfg) {
   Aws::Client::ClientConfiguration client_config;
   if (!cfg.region().empty()) {
