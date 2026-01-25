@@ -14,8 +14,6 @@ list(APPEND CMAKE_PREFIX_PATH "/opt/flow-pipe")
 # ------------------------------------------------------------
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS s3)
-find_package(AWSSDK REQUIRED COMPONENTS core)
 
 # ------------------------------------------------------------
 # Proto
