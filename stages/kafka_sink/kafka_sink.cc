@@ -106,7 +106,7 @@ public:
         partition,
         RD_KAFKA_MSG_F_COPY,
         const_cast<char*>(reinterpret_cast<const char*>(payload.data())),
-        payload.size(),
+        payload.size,
         nullptr,
         0,
         nullptr);
