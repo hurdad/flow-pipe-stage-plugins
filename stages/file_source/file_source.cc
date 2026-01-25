@@ -10,8 +10,6 @@
 
 #include <zlib.h>
 
-#include <algorithm>
-#include <cctype>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -22,45 +20,29 @@ using namespace flowpipe;
 using FileSourceConfig = flowpipe::stages::file::source::v1::FileSourceConfig;
 
 namespace {
-std::string ToLower(std::string value) {
-  std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-    return static_cast<char>(std::tolower(ch));
-  });
-  return value;
-}
+using CompressionType = FileSourceConfig::CompressionType;
 
-enum class CompressionType {
-  kNone,
-  kGzip,
-};
-
-bool ParseCompression(const std::string& compression,
-                      const std::string& path,
-                      CompressionType& out_type) {
-  if (compression.empty()) {
-    out_type = CompressionType::kNone;
-    return true;
+bool ResolveCompression(CompressionType compression,
+                        const std::string& path,
+                        CompressionType& out_type) {
+  switch (compression) {
+    case FileSourceConfig::COMPRESSION_UNSPECIFIED:
+    case FileSourceConfig::COMPRESSION_NONE:
+      out_type = FileSourceConfig::COMPRESSION_NONE;
+      return true;
+    case FileSourceConfig::COMPRESSION_GZIP:
+      out_type = FileSourceConfig::COMPRESSION_GZIP;
+      return true;
+    case FileSourceConfig::COMPRESSION_AUTO:
+      if (path.size() >= 3 && path.rfind(".gz") == path.size() - 3) {
+        out_type = FileSourceConfig::COMPRESSION_GZIP;
+      } else {
+        out_type = FileSourceConfig::COMPRESSION_NONE;
+      }
+      return true;
+    default:
+      return false;
   }
-
-  std::string normalized = ToLower(compression);
-  if (normalized == "none") {
-    out_type = CompressionType::kNone;
-    return true;
-  }
-  if (normalized == "gzip") {
-    out_type = CompressionType::kGzip;
-    return true;
-  }
-  if (normalized == "auto") {
-    if (path.size() >= 3 && path.rfind(".gz") == path.size() - 3) {
-      out_type = CompressionType::kGzip;
-    } else {
-      out_type = CompressionType::kNone;
-    }
-    return true;
-  }
-
-  return false;
 }
 
 bool ReadFileRaw(const std::string& path, std::vector<char>& out) {
@@ -172,8 +154,8 @@ public:
     }
 
     CompressionType compression;
-    if (!ParseCompression(cfg.compression(), cfg.path(), compression)) {
-      FP_LOG_ERROR("file_source unsupported compression: " + cfg.compression());
+    if (!ResolveCompression(cfg.compression(), cfg.path(), compression)) {
+      FP_LOG_ERROR("file_source unsupported compression enum value");
       return false;
     }
 
@@ -200,14 +182,14 @@ public:
 
     std::vector<char> data;
     switch (compression_) {
-      case CompressionType::kNone: {
+      case FileSourceConfig::COMPRESSION_NONE: {
         if (!ReadFileRaw(config_.path(), data)) {
           FP_LOG_ERROR("file_source failed to read file: " + config_.path());
           return false;
         }
         break;
       }
-      case CompressionType::kGzip: {
+      case FileSourceConfig::COMPRESSION_GZIP: {
         std::string error;
         if (!ReadFileGzip(config_.path(), data, error)) {
           FP_LOG_ERROR("file_source gzip error: " + error);
@@ -215,6 +197,11 @@ public:
         }
         break;
       }
+      case FileSourceConfig::COMPRESSION_UNSPECIFIED:
+      case FileSourceConfig::COMPRESSION_AUTO:
+      default:
+        FP_LOG_ERROR("file_source invalid resolved compression");
+        return false;
     }
 
     auto buffer = AllocatePayloadBuffer(data.size());
@@ -236,7 +223,7 @@ public:
 
 private:
   FileSourceConfig config_{};
-  CompressionType compression_{CompressionType::kNone};
+  CompressionType compression_{FileSourceConfig::COMPRESSION_NONE};
   bool produced_{false};
 };
 
