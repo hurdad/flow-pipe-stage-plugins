@@ -19,6 +19,7 @@
 using namespace flowpipe;
 
 using SNSSinkConfig = flowpipe::stages::sns::sink::v1::SNSSinkConfig;
+using flowpipe::stages::util::AwsSdkGuard;
 
 namespace {
 Aws::Client::ClientConfiguration BuildClientConfig(const SNSSinkConfig& cfg) {

@@ -53,7 +53,6 @@ add_library(stage_s3_source SHARED
 target_include_directories(stage_s3_source
         PRIVATE
         /opt/flow-pipe/include
-        ${CMAKE_CURRENT_LIST_DIR}/../s3_common
 )
 
 # ------------------------------------------------------------
@@ -65,7 +64,7 @@ target_link_libraries(stage_s3_source
         stage_s3_source_proto
         AWS::core
         AWS::s3
-        stage_s3_common
+        stage_util
 )
 
 # ------------------------------------------------------------

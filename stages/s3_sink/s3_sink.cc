@@ -21,6 +21,7 @@
 using namespace flowpipe;
 
 using S3SinkConfig = flowpipe::stages::s3::sink::v1::S3SinkConfig;
+using flowpipe::stages::util::AwsSdkGuard;
 
 namespace {
 Aws::Client::ClientConfiguration BuildClientConfig(const S3SinkConfig& cfg) {
