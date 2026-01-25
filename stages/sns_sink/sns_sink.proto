@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package flowpipe.stages.sns.sink.v1;
+
+// Configuration for SNSSink stage
+message SNSSinkConfig {
+  // SNS topic ARN
+  string topic_arn = 1;
+
+  // AWS region (e.g., us-east-1)
+  string region = 2;
+
+  // Optional endpoint override
+  string endpoint = 3;
+
+  // Optional AWS access key ID
+  string access_key_id = 4;
+
+  // Optional AWS secret access key
+  string secret_access_key = 5;
+
+  // Optional AWS session token
+  string session_token = 6;
+
+  // Optional SNS subject
+  string subject = 7;
+
+  // Optional SNS message structure (e.g., json)
+  string message_structure = 8;
+}
