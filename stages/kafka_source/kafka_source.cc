@@ -111,13 +111,18 @@ public:
     }
 
     if (message->payload && message->len > 0) {
-      using PayloadValue = Payload::value_type;
-      const auto* data = static_cast<const PayloadValue*>(message->payload);
-      payload.assign(data, data + message->len);
-    } else {
-      payload.clear();
-    }
+      // ----------------------------------------------------------
+      // Allocate payload buffer with shared ownership
+      // ----------------------------------------------------------
+      auto buffer = AllocatePayloadBuffer(message->len);
+      if (!buffer) {
+        FP_LOG_ERROR("noop_source failed to allocate payload");
+        return false;
+      }
 
+      std::memcpy(buffer.get(), message->payload, message->len);
+      payload = Payload(std::move(buffer), message->len);
+    }
     rd_kafka_message_destroy(message);
     return true;
   }
