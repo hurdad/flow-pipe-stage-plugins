@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package flowpipe.stages.file.source.v1;
+
+// Configuration for FileSource stage
+message FileSourceConfig {
+  // File path to read
+  string path = 1;
+
+  // Compression type: none, gzip, auto (default: none)
+  string compression = 2;
+}
