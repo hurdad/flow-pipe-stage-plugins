@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package flowpipe.stages.redis.stream.sink.v1;
+
+// Configuration for RedisStreamSink stage
+message RedisStreamSinkConfig {
+  // Redis host (default: 127.0.0.1)
+  string host = 1;
+
+  // Redis port (default: 6379)
+  uint32 port = 2;
+
+  // Stream name
+  string stream = 3;
+
+  // Optional ACL username
+  string username = 4;
+
+  // Optional password
+  string password = 5;
+
+  // Optional database index
+  uint32 database = 6;
+
+  // Field name to write (default: data)
+  string field_name = 7;
+
+  // Max length for trimming
+  int64 maxlen = 8;
+
+  // Use approximate trimming for maxlen
+  bool maxlen_approx = 9;
+
+  // Entry id (default: *)
+  string id = 10;
+
+  // Command timeout (ms)
+  int32 command_timeout_ms = 11;
+}

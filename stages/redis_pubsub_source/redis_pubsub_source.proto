@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package flowpipe.stages.redis.pubsub.source.v1;
+
+// Configuration for RedisPubSubSource stage
+message RedisPubSubSourceConfig {
+  // Redis host (default: 127.0.0.1)
+  string host = 1;
+
+  // Redis port (default: 6379)
+  uint32 port = 2;
+
+  // Pub/Sub channel to subscribe to
+  string channel = 3;
+
+  // Optional ACL username
+  string username = 4;
+
+  // Optional password
+  string password = 5;
+
+  // Optional database index
+  uint32 database = 6;
+
+  // Poll timeout for waiting on messages (ms)
+  int32 poll_timeout_ms = 7;
+}
