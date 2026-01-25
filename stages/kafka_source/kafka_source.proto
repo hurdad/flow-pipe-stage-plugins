@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package flowpipe.stages.kafka.source.v1;
+
+// Configuration for KafkaSource stage
+message KafkaSourceConfig {
+  // Kafka bootstrap servers (comma-separated list)
+  string brokers = 1;
+
+  // Kafka topic name
+  string topic = 2;
+
+  // Consumer group id
+  string group_id = 3;
+
+  // Optional client.id
+  string client_id = 4;
+
+  // Optional partition (-1 for subscription)
+  int32 partition = 5;
+
+  // Optional auto.offset.reset (earliest/latest)
+  string auto_offset_reset = 6;
+
+  // Poll timeout in milliseconds
+  int32 poll_timeout_ms = 7;
+
+  // Additional librdkafka configuration options
+  map<string, string> consumer_config = 8;
+}
