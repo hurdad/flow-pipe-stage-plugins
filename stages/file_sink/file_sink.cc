@@ -10,8 +10,6 @@
 
 #include <zlib.h>
 
-#include <algorithm>
-#include <cctype>
 #include <fstream>
 #include <string>
 
@@ -20,36 +18,21 @@ using namespace flowpipe;
 using FileSinkConfig = flowpipe::stages::file::sink::v1::FileSinkConfig;
 
 namespace {
-std::string ToLower(std::string value) {
-  std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-    return static_cast<char>(std::tolower(ch));
-  });
-  return value;
-}
+using CompressionType = FileSinkConfig::CompressionType;
 
-enum class CompressionType {
-  kNone,
-  kGzip,
-};
-
-bool ParseCompression(const std::string& compression,
-                      CompressionType& out_type) {
-  if (compression.empty()) {
-    out_type = CompressionType::kNone;
-    return true;
+bool ResolveCompression(CompressionType compression,
+                        CompressionType& out_type) {
+  switch (compression) {
+    case FileSinkConfig::COMPRESSION_UNSPECIFIED:
+    case FileSinkConfig::COMPRESSION_NONE:
+      out_type = FileSinkConfig::COMPRESSION_NONE;
+      return true;
+    case FileSinkConfig::COMPRESSION_GZIP:
+      out_type = FileSinkConfig::COMPRESSION_GZIP;
+      return true;
+    default:
+      return false;
   }
-
-  std::string normalized = ToLower(compression);
-  if (normalized == "none") {
-    out_type = CompressionType::kNone;
-    return true;
-  }
-  if (normalized == "gzip") {
-    out_type = CompressionType::kGzip;
-    return true;
-  }
-
-  return false;
 }
 
 std::string BuildGzipMode(bool append, int compression_level) {
@@ -106,8 +89,8 @@ public:
     }
 
     CompressionType compression;
-    if (!ParseCompression(cfg.compression(), compression)) {
-      FP_LOG_ERROR("file_sink unsupported compression: " + cfg.compression());
+    if (!ResolveCompression(cfg.compression(), compression)) {
+      FP_LOG_ERROR("file_sink unsupported compression enum value");
       return false;
     }
 
@@ -133,7 +116,7 @@ public:
     }
 
     switch (compression_) {
-      case CompressionType::kNone: {
+      case FileSinkConfig::COMPRESSION_NONE: {
         std::ios_base::openmode mode = std::ios::binary;
         mode |= config_.append() ? std::ios::app : std::ios::trunc;
         std::ofstream output(config_.path(), mode);
@@ -150,7 +133,7 @@ public:
         }
         break;
       }
-      case CompressionType::kGzip: {
+      case FileSinkConfig::COMPRESSION_GZIP: {
         std::string mode = BuildGzipMode(config_.append(),
                                          config_.compression_level());
         gzFile file = gzopen(config_.path().c_str(), mode.c_str());
@@ -176,6 +159,10 @@ public:
         }
         break;
       }
+      case FileSinkConfig::COMPRESSION_UNSPECIFIED:
+      default:
+        FP_LOG_ERROR("file_sink invalid resolved compression");
+        return;
     }
 
     FP_LOG_DEBUG("file_sink wrote payload to file");
@@ -183,7 +170,7 @@ public:
 
 private:
   FileSinkConfig config_{};
-  CompressionType compression_{CompressionType::kNone};
+  CompressionType compression_{FileSinkConfig::COMPRESSION_NONE};
 };
 
 // ============================================================

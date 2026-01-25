@@ -4,9 +4,16 @@ package flowpipe.stages.file.source.v1;
 
 // Configuration for FileSource stage
 message FileSourceConfig {
+  enum CompressionType {
+    COMPRESSION_UNSPECIFIED = 0;
+    COMPRESSION_NONE = 1;
+    COMPRESSION_GZIP = 2;
+    COMPRESSION_AUTO = 3;
+  }
+
   // File path to read
   string path = 1;
 
-  // Compression type: none, gzip, auto (default: none)
-  string compression = 2;
+  // Compression type (default: none)
+  CompressionType compression = 2;
 }
