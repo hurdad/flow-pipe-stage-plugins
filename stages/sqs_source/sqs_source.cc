@@ -21,6 +21,7 @@
 using namespace flowpipe;
 
 using SQSSourceConfig = flowpipe::stages::sqs::source::v1::SQSSourceConfig;
+using flowpipe::stages::util::AwsSdkGuard;
 
 namespace {
 Aws::Client::ClientConfiguration BuildClientConfig(const SQSSourceConfig& cfg) {

@@ -53,7 +53,6 @@ add_library(stage_sns_sink SHARED
 target_include_directories(stage_sns_sink
         PRIVATE
         /opt/flow-pipe/include
-        ${CMAKE_CURRENT_LIST_DIR}/../sns_common
 )
 
 # ------------------------------------------------------------
@@ -65,7 +64,7 @@ target_link_libraries(stage_sns_sink
         stage_sns_sink_proto
         AWS::core
         AWS::sns
-        stage_sns_common
+        stage_util
 )
 
 # ------------------------------------------------------------

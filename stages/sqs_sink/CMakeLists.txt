@@ -53,7 +53,6 @@ add_library(stage_sqs_sink SHARED
 target_include_directories(stage_sqs_sink
         PRIVATE
         /opt/flow-pipe/include
-        ${CMAKE_CURRENT_LIST_DIR}/../sqs_common
 )
 
 # ------------------------------------------------------------
@@ -65,7 +64,7 @@ target_link_libraries(stage_sqs_sink
         stage_sqs_sink_proto
         AWS::core
         AWS::sqs
-        stage_sqs_common
+        stage_util
 )
 
 # ------------------------------------------------------------

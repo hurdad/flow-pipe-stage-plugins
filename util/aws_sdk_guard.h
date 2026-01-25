@@ -4,7 +4,7 @@
 
 #include <mutex>
 
-namespace flowpipe::stages::sqs {
+namespace flowpipe::stages::util {
 
 class AwsSdkGuard {
 public:
@@ -20,4 +20,4 @@ private:
   static Aws::SDKOptions options_;
 };
 
-}  // namespace flowpipe::stages::sqs
+}  // namespace flowpipe::stages::util
