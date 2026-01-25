@@ -15,6 +15,7 @@ list(APPEND CMAKE_PREFIX_PATH "/opt/flow-pipe")
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(AWSSDK REQUIRED COMPONENTS s3)
+find_package(AWSSDK REQUIRED COMPONENTS core)
 
 # ------------------------------------------------------------
 # Proto
@@ -54,6 +55,7 @@ add_library(stage_s3_sink SHARED
 target_include_directories(stage_s3_sink
         PRIVATE
         /opt/flow-pipe/include
+        ${CMAKE_CURRENT_LIST_DIR}/../s3_common
 )
 
 # ------------------------------------------------------------
@@ -64,6 +66,7 @@ target_link_libraries(stage_s3_sink
         flowpipe::flowpipe_runtime
         stage_s3_sink_proto
         AWS::s3
+        stage_s3_common
 )
 
 # ------------------------------------------------------------

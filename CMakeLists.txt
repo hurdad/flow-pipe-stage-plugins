@@ -14,5 +14,6 @@ find_package(Protobuf REQUIRED)
 # Build all plugin stages
 add_subdirectory(stages/kafka_sink)
 add_subdirectory(stages/kafka_source)
+add_subdirectory(stages/s3_common)
 add_subdirectory(stages/s3_sink)
 add_subdirectory(stages/s3_source)
