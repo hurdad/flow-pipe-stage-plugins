@@ -63,6 +63,7 @@ target_link_libraries(stage_sqs_sink
         PRIVATE
         flowpipe::flowpipe_runtime
         stage_sqs_sink_proto
+        AWS::core
         AWS::sqs
         stage_sqs_common
 )

@@ -15,7 +15,7 @@ target_include_directories(stage_sqs_common
 )
 
 target_link_libraries(stage_sqs_common
-        PRIVATE
+        PUBLIC
         AWS::core
 )
 

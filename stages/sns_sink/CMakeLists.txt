@@ -63,6 +63,7 @@ target_link_libraries(stage_sns_sink
         PRIVATE
         flowpipe::flowpipe_runtime
         stage_sns_sink_proto
+        AWS::core
         AWS::sns
         stage_sns_common
 )
