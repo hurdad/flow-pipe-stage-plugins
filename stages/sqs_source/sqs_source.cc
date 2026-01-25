@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentials.h>
 #include <aws/sqs/SQSClient.h>
 #include <aws/sqs/model/DeleteMessageRequest.h>
 #include <aws/sqs/model/ReceiveMessageRequest.h>
@@ -144,7 +145,19 @@ public:
     auto message = buffered_messages_.front();
     buffered_messages_.pop_front();
 
-    payload.assign(message.body.begin(), message.body.end());
+
+    // ----------------------------------------------------------
+    // Allocate payload buffer with shared ownership
+    // ----------------------------------------------------------
+    auto buffer = AllocatePayloadBuffer(message.body.size());
+    if (!buffer) {
+      FP_LOG_ERROR("sqs_source failed to allocate payload");
+      return false;
+    }
+
+    std::memcpy(buffer.get(), message.body.data(), message.body.size());
+
+    payload = Payload(std::move(buffer), message.body.size());
 
     if (config_.delete_after_read()) {
       DeleteMessage(message.receipt_handle);

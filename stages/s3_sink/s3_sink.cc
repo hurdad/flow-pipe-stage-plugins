@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentials.h>
 #include <aws/core/utils/memory/stl/AWSStringStream.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -148,7 +149,7 @@ public:
 
     auto body = Aws::MakeShared<Aws::StringStream>("s3_sink_body");
     body->write(reinterpret_cast<const char*>(payload.data()),
-                static_cast<std::streamsize>(payload.size()));
+                static_cast<std::streamsize>(payload.size));
     request.SetBody(body);
 
     auto outcome = client_->PutObject(request);

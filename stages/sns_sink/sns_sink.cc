@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentials.h>
 #include <aws/sns/SNSClient.h>
 #include <aws/sns/model/PublishRequest.h>
 
@@ -132,7 +133,7 @@ public:
     Aws::SNS::Model::PublishRequest request;
     request.SetTopicArn(config_.topic_arn());
 
-    std::string body(payload.begin(), payload.end());
+    std::string body(payload.data(), payload.data() + payload.size);
     request.SetMessage(body);
 
     if (!config_.subject().empty()) {

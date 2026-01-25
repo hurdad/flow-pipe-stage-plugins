@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentials.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/GetObjectRequest.h>
 
@@ -154,7 +155,19 @@ public:
     std::string body((std::istreambuf_iterator<char>(stream)),
                      std::istreambuf_iterator<char>());
 
-    payload.assign(body.begin(), body.end());
+    // ----------------------------------------------------------
+    // Allocate payload buffer with shared ownership
+    // ----------------------------------------------------------
+    auto buffer = AllocatePayloadBuffer(body.size());
+    if (!buffer) {
+      FP_LOG_ERROR("s3_source failed to allocate payload");
+      return false;
+    }
+
+    std::memcpy(buffer.get(), body.data(), body.size());
+
+    payload = Payload(std::move(buffer), body.size());
+
     produced_ = true;
 
     FP_LOG_DEBUG("s3_source produced payload from S3");

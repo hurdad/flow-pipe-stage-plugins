@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentials.h>
 #include <aws/sqs/SQSClient.h>
 #include <aws/sqs/model/SendMessageRequest.h>
 
@@ -132,7 +133,7 @@ public:
     Aws::SQS::Model::SendMessageRequest request;
     request.SetQueueUrl(config_.queue_url());
 
-    std::string body(payload.begin(), payload.end());
+    std::string body(payload.data(), payload.data() + payload.size);
     request.SetMessageBody(body);
 
     if (!config_.message_group_id().empty()) {
