@@ -3,11 +3,6 @@ cmake_minimum_required(VERSION 3.20)
 project(stage_s3_common LANGUAGES CXX)
 
 # ------------------------------------------------------------
-# Dependencies
-# ------------------------------------------------------------
-find_package(AWSSDK REQUIRED COMPONENTS core)
-
-# ------------------------------------------------------------
 # Shared AWS SDK guard
 # ------------------------------------------------------------
 add_library(stage_s3_common SHARED

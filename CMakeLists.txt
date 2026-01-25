@@ -9,17 +9,7 @@ enable_testing()
 # ------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------
-include(ExternalProject)
-
-ExternalProject_Add(libawscpp-download
-        GIT_REPOSITORY    https://github.com/aws/aws-sdk-cpp.git
-        GIT_TAG           1.11.734
-        LIST_SEPARATOR    "|"
-        CMAKE_ARGS       -DBUILD_SHARED_LIBS=OFF
-        -DBUILD_ONLY=s3
-        BUILD_ALWAYS      TRUE
-        TEST_COMMAND      ""
-)
+include(cmake/AwsSdk.cmake)
 
 find_package(Protobuf REQUIRED)
 
