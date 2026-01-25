@@ -15,7 +15,7 @@ target_include_directories(stage_s3_common
 )
 
 target_link_libraries(stage_s3_common
-        PRIVATE
+        PUBLIC
         AWS::core
 )
 

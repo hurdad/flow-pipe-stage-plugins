@@ -15,7 +15,7 @@ target_include_directories(stage_sns_common
 )
 
 target_link_libraries(stage_sns_common
-        PRIVATE
+        PUBLIC
         AWS::core
 )
 

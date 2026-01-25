@@ -63,6 +63,7 @@ target_link_libraries(stage_s3_sink
         PRIVATE
         flowpipe::flowpipe_runtime
         stage_s3_sink_proto
+        AWS::core
         AWS::s3
         stage_s3_common
 )
