@@ -1,12 +1,14 @@
 # ============================================================
-# Build stage plugin
+# Build stage plugin (dev image target)
 # ============================================================
 ARG FLOW_PIPE_TAG=main-ubuntu24.04
 
-FROM ghcr.io/hurdad/flow-pipe-dev:${FLOW_PIPE_TAG} AS build
+FROM ghcr.io/hurdad/flow-pipe-dev:${FLOW_PIPE_TAG} AS dev
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends librdkafka-dev \
+ && apt-get install -y --no-install-recommends \
+    libhiredis-dev \
+    librdkafka-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -21,13 +23,15 @@ RUN cmake -S . -B build -G Ninja \
 # ============================================================
 # Runtime image with plugin
 # ============================================================
-FROM ghcr.io/hurdad/flow-pipe-runtime:${FLOW_PIPE_TAG}
+FROM ghcr.io/hurdad/flow-pipe-runtime:${FLOW_PIPE_TAG} AS runtime
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends librdkafka1 \
+ && apt-get install -y --no-install-recommends \
+    libhiredis0.14 \
+    librdkafka1 \
  && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build \
+COPY --from=dev \
   /opt/flow-pipe/plugins/*.so \
   /opt/flow-pipe/plugins/
 
