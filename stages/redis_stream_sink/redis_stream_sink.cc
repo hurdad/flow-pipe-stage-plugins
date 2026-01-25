@@ -52,7 +52,7 @@ redisReply* ExecuteXAdd(redisContext* context,
   }
 
   argv.push_back(reinterpret_cast<const char*>(payload.data()));
-  argvlen.push_back(payload.size());
+  argvlen.push_back(payload.size);
 
   return static_cast<redisReply*>(
       redisCommandArgv(context,
