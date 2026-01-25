@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package flowpipe.stages.file.sink.v1;
+
+// Configuration for FileSink stage
+message FileSinkConfig {
+  // File path to write
+  string path = 1;
+
+  // Append to existing file (default: false)
+  bool append = 2;
+
+  // Compression type: none, gzip (default: none)
+  string compression = 3;
+
+  // Compression level for gzip (0-9, <=0 uses default)
+  int32 compression_level = 4;
+}
