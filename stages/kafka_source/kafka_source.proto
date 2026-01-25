@@ -16,8 +16,8 @@ message KafkaSourceConfig {
   // Optional client.id
   string client_id = 4;
 
-  // Optional partition (-1 for subscription)
-  int32 partition = 5;
+  // Optional partition (when set and >= 0, assign; otherwise subscribe)
+  optional int32 partition = 5;
 
   // Optional auto.offset.reset (earliest/latest)
   string auto_offset_reset = 6;
