@@ -208,7 +208,7 @@ private:
 
     rd_kafka_poll_set_consumer(consumer_);
 
-    if (config_.partition() >= 0) {
+    if (config_.has_partition() && config_.partition() >= 0) {
       rd_kafka_topic_partition_list_t* partitions =
           rd_kafka_topic_partition_list_new(1);
       rd_kafka_topic_partition_list_add(partitions,
