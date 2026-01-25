@@ -27,7 +27,7 @@ FROM ghcr.io/hurdad/flow-pipe-runtime:${FLOW_PIPE_TAG} AS runtime
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    libhiredis0.14 \
+    libhiredis1.1.0 \
     librdkafka1 \
  && rm -rf /var/lib/apt/lists/*
 
