@@ -4,5 +4,18 @@ package flowpipe.stages.kafka.sink.v1;
 
 // Configuration for KafkaSink stage
 message KafkaSinkConfig {
+  // Kafka bootstrap servers (comma-separated list)
+  string brokers = 1;
 
+  // Kafka topic name
+  string topic = 2;
+
+  // Optional client.id
+  string client_id = 3;
+
+  // Optional partition (-1 for partitioner)
+  int32 partition = 4;
+
+  // Additional librdkafka configuration options
+  map<string, string> producer_config = 5;
 }

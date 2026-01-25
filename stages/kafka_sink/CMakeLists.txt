@@ -14,6 +14,8 @@ list(APPEND CMAKE_PREFIX_PATH "/opt/flow-pipe")
 # ------------------------------------------------------------
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(RDKAFKA REQUIRED rdkafka)
 
 # ------------------------------------------------------------
 # Proto
@@ -62,6 +64,12 @@ target_link_libraries(stage_kafka_sink
         PRIVATE
         flowpipe::flowpipe_runtime
         stage_kafka_sink_proto
+        ${RDKAFKA_LIBRARIES}
+)
+
+target_include_directories(stage_kafka_sink
+        PRIVATE
+        ${RDKAFKA_INCLUDE_DIRS}
 )
 
 # ------------------------------------------------------------
