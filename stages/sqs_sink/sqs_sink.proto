@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package flowpipe.stages.sqs.sink.v1;
+
+// Configuration for SQSSink stage
+message SQSSinkConfig {
+  // SQS queue URL
+  string queue_url = 1;
+
+  // AWS region (e.g., us-east-1)
+  string region = 2;
+
+  // Optional endpoint override
+  string endpoint = 3;
+
+  // Optional AWS access key ID
+  string access_key_id = 4;
+
+  // Optional AWS secret access key
+  string secret_access_key = 5;
+
+  // Optional AWS session token
+  string session_token = 6;
+
+  // Optional message group ID (FIFO queues only)
+  string message_group_id = 7;
+
+  // Optional message deduplication ID (FIFO queues only)
+  string message_deduplication_id = 8;
+}
