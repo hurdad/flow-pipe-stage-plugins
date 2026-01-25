@@ -6,6 +6,10 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 
 - Kafka source
 - Kafka sink
+- Redis pub/sub source
+- Redis pub/sub sink
+- Redis stream source
+- Redis stream sink
 - S3 source
 - S3 sink
 - SNS sink
@@ -18,6 +22,7 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - CMake 3.20+ and a C++20 compiler.
 - Protobuf development libraries.
 - librdkafka development libraries (Kafka stages).
+- hiredis development libraries (Redis stages).
 - AWS SDK for C++ (S3/SNS/SQS stages). The build uses a FetchContent fallback if it is not installed.
 
 ## Build

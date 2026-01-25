@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package flowpipe.stages.redis.pubsub.sink.v1;
+
+// Configuration for RedisPubSubSink stage
+message RedisPubSubSinkConfig {
+  // Redis host (default: 127.0.0.1)
+  string host = 1;
+
+  // Redis port (default: 6379)
+  uint32 port = 2;
+
+  // Pub/Sub channel to publish to
+  string channel = 3;
+
+  // Optional ACL username
+  string username = 4;
+
+  // Optional password
+  string password = 5;
+
+  // Optional database index
+  uint32 database = 6;
+
+  // Command timeout (ms)
+  int32 command_timeout_ms = 7;
+}

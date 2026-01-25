@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package flowpipe.stages.redis.stream.source.v1;
+
+// Configuration for RedisStreamSource stage
+message RedisStreamSourceConfig {
+  // Redis host (default: 127.0.0.1)
+  string host = 1;
+
+  // Redis port (default: 6379)
+  uint32 port = 2;
+
+  // Stream name
+  string stream = 3;
+
+  // Optional ACL username
+  string username = 4;
+
+  // Optional password
+  string password = 5;
+
+  // Optional database index
+  uint32 database = 6;
+
+  // Starting ID (default: $)
+  string start_id = 7;
+
+  // Block timeout when waiting for entries (ms)
+  int32 block_timeout_ms = 8;
+
+  // Number of entries to read per call
+  int32 count = 9;
+
+  // Field name to extract (defaults to first field)
+  string field_name = 10;
+}
