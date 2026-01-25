@@ -126,7 +126,7 @@ public:
         }
 
         output.write(reinterpret_cast<const char*>(payload.data()),
-                     static_cast<std::streamsize>(payload.size()));
+                     static_cast<std::streamsize>(payload.size));
         if (!output.good()) {
           FP_LOG_ERROR("file_sink failed to write file: " + config_.path());
           return;
@@ -143,7 +143,7 @@ public:
         }
 
         int written = gzwrite(file, payload.data(),
-                              static_cast<unsigned int>(payload.size()));
+                              static_cast<unsigned int>(payload.size));
         if (written == 0) {
           int err = 0;
           const char* error_message = gzerror(file, &err);
