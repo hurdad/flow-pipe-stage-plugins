@@ -148,8 +148,6 @@ class HttpSink final : public ISinkStage, public ConfigurableStage {
 
       if (method_ == HttpSinkConfig::METHOD_PUT) {
         request_.setOpt(curlpp::options::CustomRequest("PUT"));
-      } else {
-        request_.setOpt(curlpp::options::CustomRequest(""));
       }
 
       request_.perform();
