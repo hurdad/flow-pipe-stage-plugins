@@ -16,7 +16,7 @@ RUN apt-get update \
 WORKDIR /build
 COPY . .
 
-RUN cmake -S . -B build -G Ninja \
+RUN cmake -S . -B build -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/flow-pipe \
  && cmake --build build \
  && ctest --test-dir build --output-on-failure \
  && cmake --install build
@@ -38,5 +38,9 @@ RUN apt-get update \
 COPY --from=dev \
   /opt/flow-pipe/plugins/*.so \
   /opt/flow-pipe/plugins/
+
+COPY --from=dev \
+  /opt/flow-pipe/lib/ \
+  /opt/flow-pipe/lib/
 
 ENV FLOW_PIPE_PLUGIN_PATH=/opt/flow-pipe/plugins
