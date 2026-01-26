@@ -1,5 +1,6 @@
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
 #include <sys/socket.h>
@@ -39,6 +40,14 @@ void UnlinkUnixSocket(const std::string& path) {
   if (!path.empty()) {
     unlink(path.c_str());
   }
+}
+
+bool SetSocketNonBlocking(int fd) {
+  int flags = fcntl(fd, F_GETFL, 0);
+  if (flags < 0) {
+    return false;
+  }
+  return fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
 }
 
 bool BindUnixSocket(const std::string& path, int& out_fd) {
@@ -256,6 +265,12 @@ class TcpSource final : public ISourceStage, public ConfigurableStage {
           FP_LOG_ERROR(std::string("tcp_source accept failed: ") + strerror(errno));
           return false;
         }
+        if (!SetSocketNonBlocking(accepted_fd)) {
+          FP_LOG_ERROR(std::string("tcp_source failed to set non-blocking client socket: ") +
+                       strerror(errno));
+          CloseSocket(accepted_fd);
+          return false;
+        }
         client_fd_ = accepted_fd;
       }
     }
@@ -280,6 +295,9 @@ class TcpSource final : public ISourceStage, public ConfigurableStage {
     ssize_t received = recv(client_fd_, buffer.data(), buffer.size(), 0);
     if (received <= 0) {
       if (received < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return false;
+        }
         FP_LOG_ERROR(std::string("tcp_source recv failed: ") + strerror(errno));
       }
       CloseSocket(client_fd_);
