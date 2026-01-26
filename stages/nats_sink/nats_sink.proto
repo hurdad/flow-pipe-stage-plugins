@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package flowpipe.stages.nats.sink.v1;
+
+// Configuration for NatsSink stage
+message NatsSinkConfig {
+  // NATS server URL (default: nats://127.0.0.1:4222)
+  string url = 1;
+
+  // Subject to publish to (required)
+  string subject = 2;
+
+  // Flush timeout in milliseconds (default: 1000)
+  uint32 flush_timeout_ms = 3;
+}

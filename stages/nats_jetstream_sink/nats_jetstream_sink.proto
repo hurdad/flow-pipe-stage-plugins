@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package flowpipe.stages.nats.jetstream.sink.v1;
+
+// Configuration for NatsJetStreamSink stage
+message NatsJetStreamSinkConfig {
+  // NATS server URL (default: nats://127.0.0.1:4222)
+  string url = 1;
+
+  // Subject to publish to (required)
+  string subject = 2;
+}
