@@ -17,6 +17,8 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - SNS sink
 - SQS source
 - SQS sink
+- TCP source
+- TCP sink
 - UDP source
 - UDP sink
 - HTTP sink

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package flowpipe.stages.tcp.source.v1;
+
+// Configuration for TcpSource stage
+message TcpSourceConfig {
+  // Unix domain stream socket path (overrides bind_address/port when set)
+  string unix_socket_path = 1;
+
+  // Address to bind (default: 0.0.0.0)
+  string bind_address = 2;
+
+  // TCP port to bind (required)
+  uint32 port = 3;
+
+  // Maximum payload size to read (default: 65536, max: 1048576)
+  uint32 max_payload_size = 4;
+
+  // Poll timeout in milliseconds (default: 1000)
+  int32 poll_timeout_ms = 5;
+}
