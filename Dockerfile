@@ -10,6 +10,7 @@ RUN apt-get update \
     libhiredis-dev \
     librdkafka-dev \
     libcurlpp-dev \
+    libnats-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -31,6 +32,7 @@ RUN apt-get update \
     libhiredis1.1.0 \
     librdkafka1 \
     libcurlpp0t64 \
+    libnats3.7t64 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dev \
