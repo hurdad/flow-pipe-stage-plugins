@@ -22,6 +22,10 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - UDP source
 - UDP sink
 - HTTP sink
+- NATS source
+- NATS sink
+- NATS JetStream source
+- NATS JetStream sink
 
 ## Requirements
 
@@ -32,6 +36,7 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - librdkafka development libraries (Kafka stages).
 - hiredis development libraries (Redis stages).
 - AWS SDK for C++ (S3/SNS/SQS stages). The build uses a FetchContent fallback if it is not installed.
+- libnats development libraries (NATS stages).
 
 ## Build
 

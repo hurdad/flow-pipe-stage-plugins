@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package flowpipe.stages.nats.source.v1;
+
+// Configuration for NatsSource stage
+message NatsSourceConfig {
+  // NATS server URL (default: nats://127.0.0.1:4222)
+  string url = 1;
+
+  // Subject to subscribe to (required)
+  string subject = 2;
+
+  // Queue group name for queue subscriptions (optional)
+  string queue_group = 3;
+
+  // Poll timeout in milliseconds (default: 1000)
+  uint32 poll_timeout_ms = 4;
+}
