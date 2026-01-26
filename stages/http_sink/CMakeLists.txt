@@ -13,7 +13,26 @@ list(APPEND CMAKE_PREFIX_PATH "/opt/flow-pipe")
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(CURLPP REQUIRED IMPORTED_TARGET libcurlpp)
+pkg_check_modules(CURLPP QUIET IMPORTED_TARGET libcurlpp)
+
+if (CURLPP_FOUND)
+    set(CURLPP_TARGET PkgConfig::CURLPP)
+else()
+    find_path(CURLPP_INCLUDE_DIR curlpp/Easy.hpp)
+    find_library(CURLPP_LIBRARY NAMES curlpp libcurlpp)
+
+    if (CURLPP_INCLUDE_DIR AND CURLPP_LIBRARY)
+        add_library(CURLPP::curlpp UNKNOWN IMPORTED)
+        set_target_properties(CURLPP::curlpp PROPERTIES
+                IMPORTED_LOCATION "${CURLPP_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${CURLPP_INCLUDE_DIR}"
+        )
+        set(CURLPP_TARGET CURLPP::curlpp)
+    else()
+        message(WARNING "libcurlpp not found; skipping http_sink stage build.")
+        return()
+    endif()
+endif()
 
 # ------------------------------------------------------------
 # Proto
@@ -65,7 +84,7 @@ target_link_libraries(stage_http_sink
         PRIVATE
         flowpipe::flowpipe_runtime
         stage_http_sink_proto
-        PkgConfig::CURLPP
+        ${CURLPP_TARGET}
 )
 
 # ------------------------------------------------------------
