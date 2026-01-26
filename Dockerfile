@@ -16,7 +16,9 @@ RUN apt-get update \
 WORKDIR /build
 COPY . .
 
-RUN cmake -S . -B build -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/flow-pipe \
+RUN cmake -S . -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/flow-pipe \
  && cmake --build build \
  && ctest --test-dir build --output-on-failure \
  && cmake --install build
