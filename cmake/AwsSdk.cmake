@@ -6,7 +6,7 @@ if(NOT AWSSDK_FOUND)
   include(FetchContent)
 
   set(BUILD_ONLY "s3;sns;sqs" CACHE STRING "AWS SDK components to build" FORCE)
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build AWS SDK as static libraries" FORCE)
+  set(BUILD_SHARED_LIBS ON CACHE BOOL "Build AWS SDK as shared libraries" FORCE)
   set(ENABLE_TESTING OFF CACHE BOOL "Disable AWS SDK tests" FORCE)
   set(AUTORUN_UNIT_TESTS OFF CACHE BOOL "Disable AWS SDK unit tests" FORCE)
 
