@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package flowpipe.stages.http.sink.v1;
+
+// Configuration for HttpSink stage
+message HttpSinkConfig {
+  enum Method {
+    METHOD_UNSPECIFIED = 0;
+    METHOD_POST = 1;
+    METHOD_PUT = 2;
+  }
+
+  message Header {
+    string name = 1;
+    string value = 2;
+  }
+
+  // HTTP endpoint URL (required)
+  string url = 1;
+
+  // HTTP method to use (default: METHOD_POST).
+  Method method = 2;
+
+  // Content-Type header value (default: application/json).
+  string content_type = 3;
+
+  // Request timeout in milliseconds (default: 5000).
+  uint32 timeout_ms = 4;
+
+  // Additional HTTP headers to include in the request.
+  repeated Header headers = 5;
+}
