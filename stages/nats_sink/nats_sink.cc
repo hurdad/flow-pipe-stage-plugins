@@ -1,16 +1,14 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "nats_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <nats/nats.h>
 
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "nats_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -28,10 +26,8 @@ std::string StatusToString(natsStatus status) {
 // ============================================================
 // NatsSink
 // ============================================================
-class NatsSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class NatsSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "nats_sink";
   }
@@ -71,9 +67,8 @@ public:
     }
 
     std::string url = cfg.url().empty() ? kDefaultNatsUrl : cfg.url();
-    int flush_timeout_ms = cfg.flush_timeout_ms() > 0
-        ? static_cast<int>(cfg.flush_timeout_ms())
-        : kDefaultFlushTimeoutMs;
+    int flush_timeout_ms = cfg.flush_timeout_ms() > 0 ? static_cast<int>(cfg.flush_timeout_ms())
+                                                      : kDefaultFlushTimeoutMs;
 
     if (!InitializeConnection(url)) {
       return false;
@@ -106,10 +101,8 @@ public:
       return;
     }
 
-    natsStatus status = natsConnection_Publish(connection_,
-                                               subject_.c_str(),
-                                               payload.data(),
-                                               payload.size);
+    natsStatus status =
+        natsConnection_Publish(connection_, subject_.c_str(), payload.data(), payload.size);
     if (status != NATS_OK) {
       FP_LOG_ERROR("nats_sink publish failed: " + StatusToString(status));
       return;
@@ -123,7 +116,7 @@ public:
     }
   }
 
-private:
+ private:
   bool InitializeConnection(const std::string& url) {
     ShutdownConnection();
 

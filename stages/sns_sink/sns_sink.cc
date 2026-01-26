@@ -1,21 +1,18 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "sns_sink.pb.h"
-
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/sns/SNSClient.h>
 #include <aws/sns/model/PublishRequest.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <string>
 
 #include "aws_sdk_guard.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "sns_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -34,8 +31,7 @@ Aws::Client::ClientConfiguration BuildClientConfig(const SNSSinkConfig& cfg) {
   return client_config;
 }
 
-std::unique_ptr<Aws::SNS::SNSClient> BuildSnsClient(
-    const SNSSinkConfig& cfg) {
+std::unique_ptr<Aws::SNS::SNSClient> BuildSnsClient(const SNSSinkConfig& cfg) {
   Aws::Client::ClientConfiguration client_config = BuildClientConfig(cfg);
 
   if (!cfg.access_key_id().empty() || !cfg.secret_access_key().empty()) {
@@ -44,10 +40,8 @@ std::unique_ptr<Aws::SNS::SNSClient> BuildSnsClient(
       return nullptr;
     }
 
-    Aws::Auth::AWSCredentials credentials(
-        cfg.access_key_id(),
-        cfg.secret_access_key(),
-        cfg.session_token());
+    Aws::Auth::AWSCredentials credentials(cfg.access_key_id(), cfg.secret_access_key(),
+                                          cfg.session_token());
 
     return std::make_unique<Aws::SNS::SNSClient>(credentials, client_config);
   }
@@ -59,10 +53,8 @@ std::unique_ptr<Aws::SNS::SNSClient> BuildSnsClient(
 // ============================================================
 // SNSSink
 // ============================================================
-class SNSSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class SNSSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "sns_sink";
   }
@@ -146,15 +138,14 @@ public:
 
     auto outcome = client_->Publish(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("sns_sink failed to publish message: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("sns_sink failed to publish message: " + outcome.GetError().GetMessage());
       return;
     }
 
     FP_LOG_DEBUG("sns_sink published message to SNS");
   }
 
-private:
+ private:
   AwsSdkGuard sdk_guard_{};
   SNSSinkConfig config_{};
   std::unique_ptr<Aws::SNS::SNSClient> client_{};

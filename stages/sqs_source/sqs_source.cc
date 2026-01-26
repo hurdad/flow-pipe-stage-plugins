@@ -1,23 +1,20 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "sqs_source.pb.h"
-
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/sqs/SQSClient.h>
 #include <aws/sqs/model/DeleteMessageRequest.h>
 #include <aws/sqs/model/ReceiveMessageRequest.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <deque>
 #include <string>
 
 #include "aws_sdk_guard.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "sqs_source.pb.h"
 
 using namespace flowpipe;
 
@@ -36,8 +33,7 @@ Aws::Client::ClientConfiguration BuildClientConfig(const SQSSourceConfig& cfg) {
   return client_config;
 }
 
-std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(
-    const SQSSourceConfig& cfg) {
+std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(const SQSSourceConfig& cfg) {
   Aws::Client::ClientConfiguration client_config = BuildClientConfig(cfg);
 
   if (!cfg.access_key_id().empty() || !cfg.secret_access_key().empty()) {
@@ -46,10 +42,8 @@ std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(
       return nullptr;
     }
 
-    Aws::Auth::AWSCredentials credentials(
-        cfg.access_key_id(),
-        cfg.secret_access_key(),
-        cfg.session_token());
+    Aws::Auth::AWSCredentials credentials(cfg.access_key_id(), cfg.secret_access_key(),
+                                          cfg.session_token());
 
     return std::make_unique<Aws::SQS::SQSClient>(credentials, client_config);
   }
@@ -66,10 +60,8 @@ struct PendingMessage {
 // ============================================================
 // SQSSource
 // ============================================================
-class SQSSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class SQSSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "sqs_source";
   }
@@ -145,7 +137,6 @@ public:
     auto message = buffered_messages_.front();
     buffered_messages_.pop_front();
 
-
     // ----------------------------------------------------------
     // Allocate payload buffer with shared ownership
     // ----------------------------------------------------------
@@ -167,30 +158,26 @@ public:
     return true;
   }
 
-private:
+ private:
   bool ReceiveMessages() {
     Aws::SQS::Model::ReceiveMessageRequest request;
     request.SetQueueUrl(config_.queue_url());
 
     if (config_.max_number_of_messages() > 0) {
-      request.SetMaxNumberOfMessages(
-          static_cast<int>(config_.max_number_of_messages()));
+      request.SetMaxNumberOfMessages(static_cast<int>(config_.max_number_of_messages()));
     }
 
     if (config_.wait_time_seconds() > 0) {
-      request.SetWaitTimeSeconds(
-          static_cast<int>(config_.wait_time_seconds()));
+      request.SetWaitTimeSeconds(static_cast<int>(config_.wait_time_seconds()));
     }
 
     if (config_.visibility_timeout_seconds() > 0) {
-      request.SetVisibilityTimeout(
-          static_cast<int>(config_.visibility_timeout_seconds()));
+      request.SetVisibilityTimeout(static_cast<int>(config_.visibility_timeout_seconds()));
     }
 
     auto outcome = client_->ReceiveMessage(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("sqs_source failed to receive message: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("sqs_source failed to receive message: " + outcome.GetError().GetMessage());
       return false;
     }
 
@@ -200,8 +187,7 @@ private:
     }
 
     for (const auto& message : messages) {
-      buffered_messages_.push_back(
-          PendingMessage{message.GetBody(), message.GetReceiptHandle()});
+      buffered_messages_.push_back(PendingMessage{message.GetBody(), message.GetReceiptHandle()});
     }
 
     return true;
@@ -214,8 +200,7 @@ private:
 
     auto outcome = client_->DeleteMessage(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("sqs_source failed to delete message: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("sqs_source failed to delete message: " + outcome.GetError().GetMessage());
     }
   }
 

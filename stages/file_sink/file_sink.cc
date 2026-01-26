@@ -1,17 +1,15 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "file_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <zlib.h>
 
 #include <fstream>
 #include <string>
+
+#include "file_sink.pb.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 
 using namespace flowpipe;
 
@@ -20,8 +18,7 @@ using FileSinkConfig = flowpipe::stages::file::sink::v1::FileSinkConfig;
 namespace {
 using CompressionType = FileSinkConfig::CompressionType;
 
-bool ResolveCompression(CompressionType compression,
-                        CompressionType& out_type) {
+bool ResolveCompression(CompressionType compression, CompressionType& out_type) {
   switch (compression) {
     case FileSinkConfig::COMPRESSION_UNSPECIFIED:
     case FileSinkConfig::COMPRESSION_NONE:
@@ -47,10 +44,8 @@ std::string BuildGzipMode(bool append, int compression_level) {
 // ============================================================
 // FileSink
 // ============================================================
-class FileSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class FileSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "file_sink";
   }
@@ -134,16 +129,14 @@ public:
         break;
       }
       case FileSinkConfig::COMPRESSION_GZIP: {
-        std::string mode = BuildGzipMode(config_.append(),
-                                         config_.compression_level());
+        std::string mode = BuildGzipMode(config_.append(), config_.compression_level());
         gzFile file = gzopen(config_.path().c_str(), mode.c_str());
         if (!file) {
           FP_LOG_ERROR("file_sink failed to open gzip file: " + config_.path());
           return;
         }
 
-        int written = gzwrite(file, payload.data(),
-                              static_cast<unsigned int>(payload.size));
+        int written = gzwrite(file, payload.data(), static_cast<unsigned int>(payload.size));
         if (written == 0) {
           int err = 0;
           const char* error_message = gzerror(file, &err);
@@ -168,7 +161,7 @@ public:
     FP_LOG_DEBUG("file_sink wrote payload to file");
   }
 
-private:
+ private:
   FileSinkConfig config_{};
   CompressionType compression_{FileSinkConfig::COMPRESSION_NONE};
 };

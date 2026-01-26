@@ -1,17 +1,15 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "nats_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <nats/nats.h>
 
 #include <cstring>
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "nats_source.pb.h"
 
 using namespace flowpipe;
 
@@ -29,10 +27,8 @@ std::string StatusToString(natsStatus status) {
 // ============================================================
 // NatsSource
 // ============================================================
-class NatsSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class NatsSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "nats_source";
   }
@@ -72,9 +68,8 @@ public:
     }
 
     std::string url = cfg.url().empty() ? kDefaultNatsUrl : cfg.url();
-    int poll_timeout_ms = cfg.poll_timeout_ms() > 0
-        ? static_cast<int>(cfg.poll_timeout_ms())
-        : kDefaultPollTimeoutMs;
+    int poll_timeout_ms =
+        cfg.poll_timeout_ms() > 0 ? static_cast<int>(cfg.poll_timeout_ms()) : kDefaultPollTimeoutMs;
 
     if (!InitializeConnection(url, cfg.subject(), cfg.queue_group())) {
       return false;
@@ -102,9 +97,7 @@ public:
     }
 
     natsMsg* msg = nullptr;
-    natsStatus status = natsSubscription_NextMsg(&msg,
-                                                 subscription_,
-                                                 poll_timeout_ms_);
+    natsStatus status = natsSubscription_NextMsg(&msg, subscription_, poll_timeout_ms_);
     if (status == NATS_TIMEOUT) {
       return false;
     }
@@ -138,9 +131,8 @@ public:
     return true;
   }
 
-private:
-  bool InitializeConnection(const std::string& url,
-                            const std::string& subject,
+ private:
+  bool InitializeConnection(const std::string& url, const std::string& subject,
                             const std::string& queue_group) {
     ShutdownConnection();
 
@@ -153,14 +145,10 @@ private:
 
     natsSubscription* subscription = nullptr;
     if (!queue_group.empty()) {
-      status = natsConnection_QueueSubscribeSync(&subscription,
-                                                 connection,
-                                                 subject.c_str(),
+      status = natsConnection_QueueSubscribeSync(&subscription, connection, subject.c_str(),
                                                  queue_group.c_str());
     } else {
-      status = natsConnection_SubscribeSync(&subscription,
-                                            connection,
-                                            subject.c_str());
+      status = natsConnection_SubscribeSync(&subscription, connection, subject.c_str());
     }
 
     if (status != NATS_OK) {

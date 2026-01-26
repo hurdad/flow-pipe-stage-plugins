@@ -1,10 +1,3 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "csv_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
 
@@ -13,6 +6,12 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "csv_sink.pb.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 
 using namespace flowpipe;
 
@@ -34,9 +33,7 @@ bool FileHasContent(const std::string& path) {
   return input.tellg() > 0;
 }
 
-std::string EscapeCsvField(const std::string& value,
-                           char delimiter,
-                           bool quote_all) {
+std::string EscapeCsvField(const std::string& value, char delimiter, bool quote_all) {
   bool needs_quotes = quote_all;
   for (char ch : value) {
     if (ch == '"' || ch == '\n' || ch == '\r' || ch == delimiter) {
@@ -94,10 +91,8 @@ std::string ValueToString(const google::protobuf::Value& value) {
 // ============================================================
 // CsvSink
 // ============================================================
-class CsvSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class CsvSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "csv_sink";
   }
@@ -162,8 +157,7 @@ public:
       return;
     }
 
-    std::string payload_str(reinterpret_cast<const char*>(payload.data()),
-                            payload.size);
+    std::string payload_str(reinterpret_cast<const char*>(payload.data()), payload.size);
 
     google::protobuf::Struct row;
     auto status = google::protobuf::util::JsonStringToMessage(payload_str, &row);
@@ -214,7 +208,7 @@ public:
     FP_LOG_DEBUG("csv_sink wrote payload to file");
   }
 
-private:
+ private:
   void WriteRow(std::ofstream& output, const std::vector<std::string>& values) {
     for (size_t i = 0; i < values.size(); ++i) {
       if (i > 0) {

@@ -1,17 +1,15 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "nats_jetstream_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <nats/nats.h>
 
 #include <cstring>
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "nats_jetstream_source.pb.h"
 
 using namespace flowpipe;
 
@@ -30,10 +28,8 @@ std::string StatusToString(natsStatus status) {
 // ============================================================
 // NatsJetStreamSource
 // ============================================================
-class NatsJetStreamSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class NatsJetStreamSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "nats_jetstream_source";
   }
@@ -73,14 +69,10 @@ public:
     }
 
     std::string url = cfg.url().empty() ? kDefaultNatsUrl : cfg.url();
-    int poll_timeout_ms = cfg.poll_timeout_ms() > 0
-        ? static_cast<int>(cfg.poll_timeout_ms())
-        : kDefaultPollTimeoutMs;
+    int poll_timeout_ms =
+        cfg.poll_timeout_ms() > 0 ? static_cast<int>(cfg.poll_timeout_ms()) : kDefaultPollTimeoutMs;
 
-    if (!InitializeConnection(url,
-                              cfg.subject(),
-                              cfg.stream_name(),
-                              cfg.durable_name())) {
+    if (!InitializeConnection(url, cfg.subject(), cfg.stream_name(), cfg.durable_name())) {
       return false;
     }
 
@@ -106,16 +98,13 @@ public:
     }
 
     natsMsg* msg = nullptr;
-    natsStatus status = natsSubscription_NextMsg(&msg,
-                                                 subscription_,
-                                                 poll_timeout_ms_);
+    natsStatus status = natsSubscription_NextMsg(&msg, subscription_, poll_timeout_ms_);
     if (status == NATS_TIMEOUT) {
       return false;
     }
 
     if (status != NATS_OK || !msg) {
-      FP_LOG_ERROR("nats_jetstream_source receive failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_source receive failed: " + StatusToString(status));
       return false;
     }
 
@@ -150,26 +139,22 @@ public:
     return true;
   }
 
-private:
-  bool InitializeConnection(const std::string& url,
-                            const std::string& subject,
-                            const std::string& stream_name,
-                            const std::string& durable_name) {
+ private:
+  bool InitializeConnection(const std::string& url, const std::string& subject,
+                            const std::string& stream_name, const std::string& durable_name) {
     ShutdownConnection();
 
     natsConnection* connection = nullptr;
     natsStatus status = natsConnection_ConnectTo(&connection, url.c_str());
     if (status != NATS_OK) {
-      FP_LOG_ERROR("nats_jetstream_source connect failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_source connect failed: " + StatusToString(status));
       return false;
     }
 
     jsCtx* jetstream = nullptr;
     status = natsConnection_JetStream(&jetstream, connection, nullptr);
     if (status != NATS_OK) {
-      FP_LOG_ERROR("nats_jetstream_source jetstream init failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_source jetstream init failed: " + StatusToString(status));
       natsConnection_Destroy(connection);
       return false;
     }
@@ -184,7 +169,7 @@ private:
     }
 
     if (!durable_name.empty()) {
-      //sub_options.Durable = durable_name.c_str();
+      // sub_options.Durable = durable_name.c_str();
       options_ptr = &sub_options;
     }
 
@@ -194,8 +179,7 @@ private:
     //                           subject.c_str(),
     //                           options_ptr);
     if (status != NATS_OK) {
-      FP_LOG_ERROR("nats_jetstream_source subscribe failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_source subscribe failed: " + StatusToString(status));
       jsCtx_Destroy(jetstream);
       natsConnection_Destroy(connection);
       return false;

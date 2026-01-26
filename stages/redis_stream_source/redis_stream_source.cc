@@ -1,20 +1,17 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "redis_stream_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <hiredis/hiredis.h>
 
 #include <cstring>
 #include <string>
 #include <vector>
 
-#include <hiredis/hiredis.h>
-
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 #include "redis_client.h"
+#include "redis_stream_source.pb.h"
 
 using namespace flowpipe;
 
@@ -27,8 +24,7 @@ struct StreamMessage {
   std::string payload;
 };
 
-bool ExtractStreamMessage(const redisReply* reply,
-                          const std::string& field_name,
+bool ExtractStreamMessage(const redisReply* reply, const std::string& field_name,
                           StreamMessage& message) {
   if (!reply) {
     return false;
@@ -43,8 +39,7 @@ bool ExtractStreamMessage(const redisReply* reply,
   }
 
   const redisReply* stream_entry = reply->element[0];
-  if (!stream_entry || stream_entry->type != REDIS_REPLY_ARRAY
-      || stream_entry->elements < 2) {
+  if (!stream_entry || stream_entry->type != REDIS_REPLY_ARRAY || stream_entry->elements < 2) {
     return false;
   }
 
@@ -60,9 +55,8 @@ bool ExtractStreamMessage(const redisReply* reply,
 
   const redisReply* id_reply = entry->element[0];
   const redisReply* fields = entry->element[1];
-  if (!id_reply || id_reply->type != REDIS_REPLY_STRING
-      || !fields || fields->type != REDIS_REPLY_ARRAY
-      || fields->elements < 2) {
+  if (!id_reply || id_reply->type != REDIS_REPLY_STRING || !fields ||
+      fields->type != REDIS_REPLY_ARRAY || fields->elements < 2) {
     return false;
   }
 
@@ -71,8 +65,8 @@ bool ExtractStreamMessage(const redisReply* reply,
   for (size_t i = 0; i + 1 < fields->elements; i += 2) {
     const redisReply* field = fields->element[i];
     const redisReply* value = fields->element[i + 1];
-    if (!field || !value || field->type != REDIS_REPLY_STRING
-        || value->type != REDIS_REPLY_STRING) {
+    if (!field || !value || field->type != REDIS_REPLY_STRING ||
+        value->type != REDIS_REPLY_STRING) {
       continue;
     }
 
@@ -92,8 +86,7 @@ bool ExtractStreamMessage(const redisReply* reply,
   return false;
 }
 
-redisReply* ExecuteXRead(redisContext* context,
-                         const RedisStreamSourceConfig& config,
+redisReply* ExecuteXRead(redisContext* context, const RedisStreamSourceConfig& config,
                          const std::string& last_id) {
   std::vector<std::string> args;
   args.emplace_back("XREAD");
@@ -123,20 +116,15 @@ redisReply* ExecuteXRead(redisContext* context,
   }
 
   return static_cast<redisReply*>(
-      redisCommandArgv(context,
-                       static_cast<int>(argv.size()),
-                       argv.data(),
-                       argvlen.data()));
+      redisCommandArgv(context, static_cast<int>(argv.size()), argv.data(), argvlen.data()));
 }
 }  // namespace
 
 // ============================================================
 // RedisStreamSource
 // ============================================================
-class RedisStreamSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class RedisStreamSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "redis_stream_source";
   }
@@ -203,16 +191,13 @@ public:
     redisReply* reply = ExecuteXRead(context_, config_, last_id_);
     if (!reply) {
       if (context_->err) {
-        FP_LOG_ERROR("redis_stream_source read error: "
-                     + std::string(context_->errstr));
+        FP_LOG_ERROR("redis_stream_source read error: " + std::string(context_->errstr));
       }
       return false;
     }
 
     StreamMessage message;
-    const bool has_message = ExtractStreamMessage(reply,
-                                                  config_.field_name(),
-                                                  message);
+    const bool has_message = ExtractStreamMessage(reply, config_.field_name(), message);
     freeReplyObject(reply);
 
     if (!has_message) {
@@ -232,7 +217,7 @@ public:
     return true;
   }
 
-private:
+ private:
   bool InitializeConnection() {
     ShutdownConnection();
 
@@ -243,15 +228,13 @@ private:
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options,
-                                                   "redis_stream_source");
+    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_stream_source");
     if (!context_) {
       return false;
     }
 
     if (config_.block_timeout_ms() > 0) {
-      flowpipe::stages::util::ApplyRedisTimeout(context_,
-                                                config_.block_timeout_ms());
+      flowpipe::stages::util::ApplyRedisTimeout(context_, config_.block_timeout_ms());
     }
 
     return true;

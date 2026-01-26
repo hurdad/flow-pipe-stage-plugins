@@ -1,22 +1,20 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "udp_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+#include <netdb.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "udp_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -30,9 +28,7 @@ void CloseSocket(int& fd) {
   }
 }
 
-bool ResolveDestination(const std::string& host,
-                        uint32_t port,
-                        addrinfo** out_result) {
+bool ResolveDestination(const std::string& host, uint32_t port, addrinfo** out_result) {
   addrinfo hints{};
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
@@ -40,16 +36,14 @@ bool ResolveDestination(const std::string& host,
   std::string port_str = std::to_string(port);
   int result = getaddrinfo(host.c_str(), port_str.c_str(), &hints, out_result);
   if (result != 0) {
-    FP_LOG_ERROR("udp_sink getaddrinfo failed: " +
-                 std::string(gai_strerror(result)));
+    FP_LOG_ERROR("udp_sink getaddrinfo failed: " + std::string(gai_strerror(result)));
     return false;
   }
 
   return true;
 }
 
-bool BuildUnixDestination(const std::string& path,
-                          sockaddr_storage& destination,
+bool BuildUnixDestination(const std::string& path, sockaddr_storage& destination,
                           socklen_t& destination_len) {
   sockaddr_un addr{};
   addr.sun_family = AF_UNIX;
@@ -63,10 +57,8 @@ bool BuildUnixDestination(const std::string& path,
 // ============================================================
 // UdpSink
 // ============================================================
-class UdpSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class UdpSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "udp_sink";
   }
@@ -117,8 +109,7 @@ public:
     if (use_unix_socket) {
       new_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
       if (new_fd >= 0 &&
-          !BuildUnixDestination(cfg.unix_socket_path(), destination,
-                                destination_len)) {
+          !BuildUnixDestination(cfg.unix_socket_path(), destination, destination_len)) {
         CloseSocket(new_fd);
         new_fd = -1;
       }
@@ -178,11 +169,9 @@ public:
     }
 
     ssize_t sent = sendto(socket_fd_, payload.data(), payload.size, 0,
-                          reinterpret_cast<const sockaddr*>(&destination_),
-                          destination_len_);
+                          reinterpret_cast<const sockaddr*>(&destination_), destination_len_);
     if (sent < 0) {
-      FP_LOG_ERROR(std::string("udp_sink sendto failed: ") +
-                   strerror(errno));
+      FP_LOG_ERROR(std::string("udp_sink sendto failed: ") + strerror(errno));
       return;
     }
 
@@ -194,7 +183,7 @@ public:
     FP_LOG_DEBUG("udp_sink sent payload");
   }
 
-private:
+ private:
   UdpSinkConfig config_{};
   int socket_fd_{-1};
   sockaddr_storage destination_{};

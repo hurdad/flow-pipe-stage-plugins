@@ -1,21 +1,18 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "sqs_sink.pb.h"
-
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/sqs/SQSClient.h>
 #include <aws/sqs/model/SendMessageRequest.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <string>
 
 #include "aws_sdk_guard.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "sqs_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -34,8 +31,7 @@ Aws::Client::ClientConfiguration BuildClientConfig(const SQSSinkConfig& cfg) {
   return client_config;
 }
 
-std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(
-    const SQSSinkConfig& cfg) {
+std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(const SQSSinkConfig& cfg) {
   Aws::Client::ClientConfiguration client_config = BuildClientConfig(cfg);
 
   if (!cfg.access_key_id().empty() || !cfg.secret_access_key().empty()) {
@@ -44,10 +40,8 @@ std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(
       return nullptr;
     }
 
-    Aws::Auth::AWSCredentials credentials(
-        cfg.access_key_id(),
-        cfg.secret_access_key(),
-        cfg.session_token());
+    Aws::Auth::AWSCredentials credentials(cfg.access_key_id(), cfg.secret_access_key(),
+                                          cfg.session_token());
 
     return std::make_unique<Aws::SQS::SQSClient>(credentials, client_config);
   }
@@ -59,10 +53,8 @@ std::unique_ptr<Aws::SQS::SQSClient> BuildSqsClient(
 // ============================================================
 // SQSSink
 // ============================================================
-class SQSSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class SQSSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "sqs_sink";
   }
@@ -146,15 +138,14 @@ public:
 
     auto outcome = client_->SendMessage(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("sqs_sink failed to send message: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("sqs_sink failed to send message: " + outcome.GetError().GetMessage());
       return;
     }
 
     FP_LOG_DEBUG("sqs_sink sent message to SQS");
   }
 
-private:
+ private:
   AwsSdkGuard sdk_guard_{};
   SQSSinkConfig config_{};
   std::unique_ptr<Aws::SQS::SQSClient> client_{};

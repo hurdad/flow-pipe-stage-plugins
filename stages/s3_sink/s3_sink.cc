@@ -1,23 +1,20 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "s3_sink.pb.h"
-
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/core/utils/memory/stl/AWSStringStream.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <mutex>
 #include <string>
 
 #include "aws_sdk_guard.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "s3_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -46,21 +43,16 @@ std::unique_ptr<Aws::S3::S3Client> BuildS3Client(const S3SinkConfig& cfg) {
       return nullptr;
     }
 
-    Aws::Auth::AWSCredentials credentials(
-        cfg.access_key_id(),
-        cfg.secret_access_key(),
-        cfg.session_token());
+    Aws::Auth::AWSCredentials credentials(cfg.access_key_id(), cfg.secret_access_key(),
+                                          cfg.session_token());
 
     return std::make_unique<Aws::S3::S3Client>(
-        credentials,
-        client_config,
-        Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
+        credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
         use_virtual_addressing);
   }
 
   return std::make_unique<Aws::S3::S3Client>(
-      client_config,
-      Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
+      client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
       use_virtual_addressing);
 }
 }  // namespace
@@ -68,10 +60,8 @@ std::unique_ptr<Aws::S3::S3Client> BuildS3Client(const S3SinkConfig& cfg) {
 // ============================================================
 // S3Sink
 // ============================================================
-class S3Sink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class S3Sink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "s3_sink";
   }
@@ -154,15 +144,14 @@ public:
 
     auto outcome = client_->PutObject(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("s3_sink failed to upload object: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("s3_sink failed to upload object: " + outcome.GetError().GetMessage());
       return;
     }
 
     FP_LOG_DEBUG("s3_sink uploaded object to S3");
   }
 
-private:
+ private:
   AwsSdkGuard sdk_guard_{};
   S3SinkConfig config_{};
   std::unique_ptr<Aws::S3::S3Client> client_{};

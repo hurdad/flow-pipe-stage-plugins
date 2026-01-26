@@ -7,14 +7,14 @@
 namespace flowpipe::stages::util {
 
 class AwsSdkGuard {
-public:
+ public:
   AwsSdkGuard();
   ~AwsSdkGuard();
 
   AwsSdkGuard(const AwsSdkGuard&) = delete;
   AwsSdkGuard& operator=(const AwsSdkGuard&) = delete;
 
-private:
+ private:
   static std::mutex mutex_;
   static int ref_count_;
   static Aws::SDKOptions options_;

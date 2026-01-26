@@ -1,16 +1,14 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "nats_jetstream_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <nats/nats.h>
 
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "nats_jetstream_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -28,10 +26,8 @@ std::string StatusToString(natsStatus status) {
 // ============================================================
 // NatsJetStreamSink
 // ============================================================
-class NatsJetStreamSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class NatsJetStreamSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "nats_jetstream_sink";
   }
@@ -118,23 +114,21 @@ public:
     }
   }
 
-private:
+ private:
   bool InitializeConnection(const std::string& url) {
     ShutdownConnection();
 
     natsConnection* connection = nullptr;
     natsStatus status = natsConnection_ConnectTo(&connection, url.c_str());
     if (status != NATS_OK) {
-      FP_LOG_ERROR("nats_jetstream_sink connect failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_sink connect failed: " + StatusToString(status));
       return false;
     }
 
     jsCtx* jetstream = nullptr;
     status = natsConnection_JetStream(&jetstream, connection, nullptr);
     if (status != NATS_OK) {
-      FP_LOG_ERROR("nats_jetstream_sink jetstream init failed: "
-                   + StatusToString(status));
+      FP_LOG_ERROR("nats_jetstream_sink jetstream init failed: " + StatusToString(status));
       natsConnection_Destroy(connection);
       return false;
     }

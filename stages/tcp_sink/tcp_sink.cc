@@ -1,22 +1,20 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "tcp_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+#include <netdb.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "tcp_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -30,9 +28,7 @@ void CloseSocket(int& fd) {
   }
 }
 
-bool ResolveDestination(const std::string& host,
-                        uint32_t port,
-                        addrinfo** out_result) {
+bool ResolveDestination(const std::string& host, uint32_t port, addrinfo** out_result) {
   addrinfo hints{};
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
@@ -40,8 +36,7 @@ bool ResolveDestination(const std::string& host,
   std::string port_str = std::to_string(port);
   int result = getaddrinfo(host.c_str(), port_str.c_str(), &hints, out_result);
   if (result != 0) {
-    FP_LOG_ERROR("tcp_sink getaddrinfo failed: " +
-                 std::string(gai_strerror(result)));
+    FP_LOG_ERROR("tcp_sink getaddrinfo failed: " + std::string(gai_strerror(result)));
     return false;
   }
 
@@ -58,8 +53,8 @@ bool ConnectUnixSocket(const std::string& path, int& out_fd) {
   addr.sun_family = AF_UNIX;
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
 
-  if (connect(fd, reinterpret_cast<const sockaddr*>(&addr),
-              static_cast<socklen_t>(sizeof(addr))) != 0) {
+  if (connect(fd, reinterpret_cast<const sockaddr*>(&addr), static_cast<socklen_t>(sizeof(addr))) !=
+      0) {
     CloseSocket(fd);
     return false;
   }
@@ -111,10 +106,8 @@ int SendFlags() {
 // ============================================================
 // TcpSink
 // ============================================================
-class TcpSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class TcpSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "tcp_sink";
   }
@@ -202,11 +195,9 @@ public:
     size_t total_sent = 0;
     const auto* data = static_cast<const uint8_t*>(payload.data());
     while (total_sent < payload.size) {
-      ssize_t sent = send(socket_fd_, data + total_sent,
-                          payload.size - total_sent, SendFlags());
+      ssize_t sent = send(socket_fd_, data + total_sent, payload.size - total_sent, SendFlags());
       if (sent <= 0) {
-        FP_LOG_ERROR(std::string("tcp_sink send failed: ") +
-                     strerror(errno));
+        FP_LOG_ERROR(std::string("tcp_sink send failed: ") + strerror(errno));
         CloseSocket(socket_fd_);
         return;
       }
@@ -216,7 +207,7 @@ public:
     FP_LOG_DEBUG("tcp_sink sent payload");
   }
 
-private:
+ private:
   TcpSinkConfig config_{};
   int socket_fd_{-1};
 };

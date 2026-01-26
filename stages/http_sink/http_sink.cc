@@ -1,10 +1,3 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "http_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
 
@@ -13,9 +6,14 @@
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
 #include <curlpp/cURLpp.hpp>
-
 #include <list>
 #include <string>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "http_sink.pb.h"
 
 using namespace flowpipe;
 
@@ -37,10 +35,8 @@ std::string BuildHeader(const HttpSinkConfig::Header& header) {
 // ============================================================
 // HttpSink
 // ============================================================
-class HttpSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class HttpSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "http_sink";
   }
@@ -79,8 +75,7 @@ public:
     }
 
     HttpSinkConfig::Method method = ResolveMethod(cfg.method());
-    if (method != HttpSinkConfig::METHOD_POST &&
-        method != HttpSinkConfig::METHOD_PUT) {
+    if (method != HttpSinkConfig::METHOD_POST && method != HttpSinkConfig::METHOD_PUT) {
       FP_LOG_ERROR("http_sink method must be POST or PUT");
       return false;
     }
@@ -147,11 +142,9 @@ public:
         request_.setOpt(curlpp::options::HttpHeader(headers_));
       }
 
-      std::string body(reinterpret_cast<const char*>(payload.data()),
-                       payload.size);
+      std::string body(reinterpret_cast<const char*>(payload.data()), payload.size);
       request_.setOpt(curlpp::options::PostFields(body));
-      request_.setOpt(curlpp::options::PostFieldSize(
-          static_cast<long>(body.size())));
+      request_.setOpt(curlpp::options::PostFieldSize(static_cast<long>(body.size())));
 
       if (method_ == HttpSinkConfig::METHOD_PUT) {
         request_.setOpt(curlpp::options::CustomRequest("PUT"));
@@ -163,8 +156,7 @@ public:
 
       long response_code = curlpp::infos::ResponseCode::get(request_);
       if (response_code < 200 || response_code >= 300) {
-        FP_LOG_ERROR("http_sink non-success response: " +
-                     std::to_string(response_code));
+        FP_LOG_ERROR("http_sink non-success response: " + std::to_string(response_code));
         return;
       }
     } catch (const curlpp::RuntimeError& err) {
@@ -178,7 +170,7 @@ public:
     FP_LOG_DEBUG("http_sink sent payload");
   }
 
-private:
+ private:
   HttpSinkConfig config_{};
   HttpSinkConfig::Method method_{HttpSinkConfig::METHOD_POST};
   uint32_t timeout_ms_{5000};

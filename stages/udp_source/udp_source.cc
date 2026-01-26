@@ -1,17 +1,9 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "udp_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+#include <netdb.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -19,6 +11,12 @@
 #include <cstring>
 #include <string>
 #include <vector>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "udp_source.pb.h"
 
 using namespace flowpipe;
 
@@ -52,8 +50,8 @@ bool BindUnixSocket(const std::string& path, int& out_fd) {
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
 
   UnlinkUnixSocket(path);
-  if (bind(fd, reinterpret_cast<const sockaddr*>(&addr),
-           static_cast<socklen_t>(sizeof(addr))) != 0) {
+  if (bind(fd, reinterpret_cast<const sockaddr*>(&addr), static_cast<socklen_t>(sizeof(addr))) !=
+      0) {
     CloseSocket(fd);
     return false;
   }
@@ -62,22 +60,17 @@ bool BindUnixSocket(const std::string& path, int& out_fd) {
   return true;
 }
 
-bool ResolveBindAddress(const std::string& address,
-                        uint32_t port,
-                        addrinfo** out_result) {
+bool ResolveBindAddress(const std::string& address, uint32_t port, addrinfo** out_result) {
   addrinfo hints{};
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE;
 
   std::string port_str = std::to_string(port);
-  int result = getaddrinfo(address.empty() ? nullptr : address.c_str(),
-                           port_str.c_str(),
-                           &hints,
+  int result = getaddrinfo(address.empty() ? nullptr : address.c_str(), port_str.c_str(), &hints,
                            out_result);
   if (result != 0) {
-    FP_LOG_ERROR("udp_source getaddrinfo failed: " +
-                 std::string(gai_strerror(result)));
+    FP_LOG_ERROR("udp_source getaddrinfo failed: " + std::string(gai_strerror(result)));
     return false;
   }
 
@@ -108,10 +101,8 @@ bool BindSocket(const addrinfo* info, int& out_fd) {
 // ============================================================
 // UdpSource
 // ============================================================
-class UdpSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class UdpSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "udp_source";
   }
@@ -158,16 +149,14 @@ public:
     }
 
     size_t max_payload_size = cfg.max_payload_size() == 0
-        ? kMaxUdpPayloadSize
-        : static_cast<size_t>(cfg.max_payload_size());
+                                  ? kMaxUdpPayloadSize
+                                  : static_cast<size_t>(cfg.max_payload_size());
     if (max_payload_size > kMaxUdpPayloadSize) {
       FP_LOG_INFO("udp_source max_payload_size capped at 65507 bytes");
       max_payload_size = kMaxUdpPayloadSize;
     }
 
-    int poll_timeout_ms = cfg.poll_timeout_ms() > 0
-        ? cfg.poll_timeout_ms()
-        : kDefaultPollTimeoutMs;
+    int poll_timeout_ms = cfg.poll_timeout_ms() > 0 ? cfg.poll_timeout_ms() : kDefaultPollTimeoutMs;
 
     int new_fd = -1;
     if (use_unix_socket) {
@@ -238,11 +227,9 @@ public:
     }
 
     std::vector<char> buffer(max_payload_size_);
-    ssize_t received = recvfrom(socket_fd_, buffer.data(), buffer.size(), 0,
-                                nullptr, nullptr);
+    ssize_t received = recvfrom(socket_fd_, buffer.data(), buffer.size(), 0, nullptr, nullptr);
     if (received < 0) {
-      FP_LOG_ERROR(std::string("udp_source recvfrom failed: ") +
-                   strerror(errno));
+      FP_LOG_ERROR(std::string("udp_source recvfrom failed: ") + strerror(errno));
       return false;
     }
 
@@ -253,15 +240,14 @@ public:
     }
 
     if (received > 0) {
-      std::memcpy(payload_buffer.get(), buffer.data(),
-                  static_cast<size_t>(received));
+      std::memcpy(payload_buffer.get(), buffer.data(), static_cast<size_t>(received));
     }
 
     payload = Payload(std::move(payload_buffer), static_cast<size_t>(received));
     return true;
   }
 
-private:
+ private:
   UdpSourceConfig config_{};
   int socket_fd_{-1};
   size_t max_payload_size_{kMaxUdpPayloadSize};

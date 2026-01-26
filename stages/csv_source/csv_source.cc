@@ -1,10 +1,3 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "csv_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
 
@@ -16,27 +9,30 @@
 #include <string>
 #include <vector>
 
+#include "csv_source.pb.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+
 using namespace flowpipe;
 
 using CsvSourceConfig = flowpipe::stages::csv::source::v1::CsvSourceConfig;
 
 namespace {
 std::string Trim(std::string value) {
-  auto begin = std::find_if_not(value.begin(), value.end(), [](unsigned char ch) {
-    return std::isspace(ch) != 0;
-  });
+  auto begin = std::find_if_not(value.begin(), value.end(),
+                                [](unsigned char ch) { return std::isspace(ch) != 0; });
   auto end = std::find_if_not(value.rbegin(), value.rend(), [](unsigned char ch) {
-    return std::isspace(ch) != 0;
-  }).base();
+               return std::isspace(ch) != 0;
+             }).base();
   if (begin >= end) {
     return "";
   }
   return std::string(begin, end);
 }
 
-bool ParseCsvLine(const std::string& line,
-                  char delimiter,
-                  std::vector<std::string>& fields,
+bool ParseCsvLine(const std::string& line, char delimiter, std::vector<std::string>& fields,
                   std::string& error) {
   fields.clear();
   std::string current;
@@ -88,9 +84,7 @@ char ResolveDelimiter(const std::string& delimiter) {
   return delimiter[0];
 }
 
-bool ReadNextDataLine(std::ifstream& input,
-                      bool skip_empty_lines,
-                      std::string& out_line) {
+bool ReadNextDataLine(std::ifstream& input, bool skip_empty_lines, std::string& out_line) {
   while (std::getline(input, out_line)) {
     if (!out_line.empty() && out_line.back() == '\r') {
       out_line.pop_back();
@@ -110,10 +104,8 @@ bool ReadNextDataLine(std::ifstream& input,
 // ============================================================
 // CsvSource
 // ============================================================
-class CsvSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class CsvSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "csv_source";
   }
@@ -269,7 +261,7 @@ public:
     return false;
   }
 
-private:
+ private:
   CsvSourceConfig config_{};
   std::ifstream input_{};
   std::vector<std::string> headers_{};

@@ -1,17 +1,9 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "tcp_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+#include <netdb.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -19,6 +11,12 @@
 #include <cstring>
 #include <string>
 #include <vector>
+
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "tcp_source.pb.h"
 
 using namespace flowpipe;
 
@@ -54,8 +52,8 @@ bool BindUnixSocket(const std::string& path, int& out_fd) {
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
 
   UnlinkUnixSocket(path);
-  if (bind(fd, reinterpret_cast<const sockaddr*>(&addr),
-           static_cast<socklen_t>(sizeof(addr))) != 0) {
+  if (bind(fd, reinterpret_cast<const sockaddr*>(&addr), static_cast<socklen_t>(sizeof(addr))) !=
+      0) {
     CloseSocket(fd);
     return false;
   }
@@ -69,22 +67,17 @@ bool BindUnixSocket(const std::string& path, int& out_fd) {
   return true;
 }
 
-bool ResolveBindAddress(const std::string& address,
-                        uint32_t port,
-                        addrinfo** out_result) {
+bool ResolveBindAddress(const std::string& address, uint32_t port, addrinfo** out_result) {
   addrinfo hints{};
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
   std::string port_str = std::to_string(port);
-  int result = getaddrinfo(address.empty() ? nullptr : address.c_str(),
-                           port_str.c_str(),
-                           &hints,
+  int result = getaddrinfo(address.empty() ? nullptr : address.c_str(), port_str.c_str(), &hints,
                            out_result);
   if (result != 0) {
-    FP_LOG_ERROR("tcp_source getaddrinfo failed: " +
-                 std::string(gai_strerror(result)));
+    FP_LOG_ERROR("tcp_source getaddrinfo failed: " + std::string(gai_strerror(result)));
     return false;
   }
 
@@ -120,10 +113,8 @@ bool BindSocket(const addrinfo* info, int& out_fd) {
 // ============================================================
 // TcpSource
 // ============================================================
-class TcpSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class TcpSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "tcp_source";
   }
@@ -171,16 +162,14 @@ public:
     }
 
     size_t max_payload_size = cfg.max_payload_size() == 0
-        ? kDefaultTcpPayloadSize
-        : static_cast<size_t>(cfg.max_payload_size());
+                                  ? kDefaultTcpPayloadSize
+                                  : static_cast<size_t>(cfg.max_payload_size());
     if (max_payload_size > kMaxTcpPayloadSize) {
       FP_LOG_INFO("tcp_source max_payload_size capped at 1048576 bytes");
       max_payload_size = kMaxTcpPayloadSize;
     }
 
-    int poll_timeout_ms = cfg.poll_timeout_ms() > 0
-        ? cfg.poll_timeout_ms()
-        : kDefaultPollTimeoutMs;
+    int poll_timeout_ms = cfg.poll_timeout_ms() > 0 ? cfg.poll_timeout_ms() : kDefaultPollTimeoutMs;
 
     int new_fd = -1;
     if (use_unix_socket) {
@@ -264,8 +253,7 @@ public:
       if (client_fd_ < 0) {
         int accepted_fd = accept(listen_fd_, nullptr, nullptr);
         if (accepted_fd < 0) {
-          FP_LOG_ERROR(std::string("tcp_source accept failed: ") +
-                       strerror(errno));
+          FP_LOG_ERROR(std::string("tcp_source accept failed: ") + strerror(errno));
           return false;
         }
         client_fd_ = accepted_fd;
@@ -292,8 +280,7 @@ public:
     ssize_t received = recv(client_fd_, buffer.data(), buffer.size(), 0);
     if (received <= 0) {
       if (received < 0) {
-        FP_LOG_ERROR(std::string("tcp_source recv failed: ") +
-                     strerror(errno));
+        FP_LOG_ERROR(std::string("tcp_source recv failed: ") + strerror(errno));
       }
       CloseSocket(client_fd_);
       return false;
@@ -305,14 +292,13 @@ public:
       return false;
     }
 
-    std::memcpy(payload_buffer.get(), buffer.data(),
-                static_cast<size_t>(received));
+    std::memcpy(payload_buffer.get(), buffer.data(), static_cast<size_t>(received));
 
     payload = Payload(std::move(payload_buffer), static_cast<size_t>(received));
     return true;
   }
 
-private:
+ private:
   TcpSourceConfig config_{};
   int listen_fd_{-1};
   int client_fd_{-1};

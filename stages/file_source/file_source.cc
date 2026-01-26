@@ -1,19 +1,17 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "file_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-
 #include <zlib.h>
 
 #include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "file_source.pb.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 
 using namespace flowpipe;
 
@@ -22,8 +20,7 @@ using FileSourceConfig = flowpipe::stages::file::source::v1::FileSourceConfig;
 namespace {
 using CompressionType = FileSourceConfig::CompressionType;
 
-bool ResolveCompression(CompressionType compression,
-                        const std::string& path,
+bool ResolveCompression(CompressionType compression, const std::string& path,
                         CompressionType& out_type) {
   switch (compression) {
     case FileSourceConfig::COMPRESSION_UNSPECIFIED:
@@ -112,10 +109,8 @@ bool ReadFileGzip(const std::string& path, std::vector<char>& out, std::string& 
 // ============================================================
 // FileSource
 // ============================================================
-class FileSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class FileSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "file_source";
   }
@@ -221,7 +216,7 @@ public:
     return true;
   }
 
-private:
+ private:
   FileSourceConfig config_{};
   CompressionType compression_{FileSourceConfig::COMPRESSION_NONE};
   bool produced_{false};

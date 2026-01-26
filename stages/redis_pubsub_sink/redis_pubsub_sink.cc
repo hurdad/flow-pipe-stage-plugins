@@ -1,31 +1,25 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "redis_pubsub_sink.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <hiredis/hiredis.h>
 
 #include <string>
 
-#include <hiredis/hiredis.h>
-
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 #include "redis_client.h"
+#include "redis_pubsub_sink.pb.h"
 
 using namespace flowpipe;
 
-using RedisPubSubSinkConfig =
-    flowpipe::stages::redis::pubsub::sink::v1::RedisPubSubSinkConfig;
+using RedisPubSubSinkConfig = flowpipe::stages::redis::pubsub::sink::v1::RedisPubSubSinkConfig;
 
 // ============================================================
 // RedisPubSubSink
 // ============================================================
-class RedisPubSubSink final
-    : public ISinkStage,
-      public ConfigurableStage {
-public:
+class RedisPubSubSink final : public ISinkStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "redis_pubsub_sink";
   }
@@ -93,12 +87,8 @@ public:
       return;
     }
 
-    redisReply* reply = static_cast<redisReply*>(
-        redisCommand(context_,
-                     "PUBLISH %s %b",
-                     config_.channel().c_str(),
-                     payload.data(),
-                     payload.size));
+    redisReply* reply = static_cast<redisReply*>(redisCommand(
+        context_, "PUBLISH %s %b", config_.channel().c_str(), payload.data(), payload.size));
 
     if (!reply) {
       FP_LOG_ERROR("redis_pubsub_sink failed to publish message");
@@ -108,7 +98,7 @@ public:
     freeReplyObject(reply);
   }
 
-private:
+ private:
   bool InitializeConnection() {
     ShutdownConnection();
 
@@ -119,15 +109,13 @@ private:
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options,
-                                                   "redis_pubsub_sink");
+    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_pubsub_sink");
     if (!context_) {
       return false;
     }
 
     if (config_.command_timeout_ms() > 0) {
-      flowpipe::stages::util::ApplyRedisTimeout(context_,
-                                                config_.command_timeout_ms());
+      flowpipe::stages::util::ApplyRedisTimeout(context_, config_.command_timeout_ms());
     }
 
     return true;

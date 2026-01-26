@@ -1,19 +1,16 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "redis_pubsub_source.pb.h"
-
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <hiredis/hiredis.h>
 
 #include <cstring>
 #include <string>
 
-#include <hiredis/hiredis.h>
-
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
 #include "redis_client.h"
+#include "redis_pubsub_source.pb.h"
 
 using namespace flowpipe;
 
@@ -23,10 +20,8 @@ using RedisPubSubSourceConfig =
 // ============================================================
 // RedisPubSubSource
 // ============================================================
-class RedisPubSubSource final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class RedisPubSubSource final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "redis_pubsub_source";
   }
@@ -93,8 +88,7 @@ public:
     const int result = redisGetReply(context_, &reply_ptr);
     if (result != REDIS_OK || !reply_ptr) {
       if (context_->err) {
-        FP_LOG_ERROR("redis_pubsub_source read error: "
-                     + std::string(context_->errstr));
+        FP_LOG_ERROR("redis_pubsub_source read error: " + std::string(context_->errstr));
       }
       return false;
     }
@@ -106,10 +100,9 @@ public:
       redisReply* kind = reply->element[0];
       redisReply* message = reply->element[2];
 
-      if (kind && kind->type == REDIS_REPLY_STRING
-          && std::string(kind->str, kind->len) == "message"
-          && message
-          && message->type == REDIS_REPLY_STRING) {
+      if (kind && kind->type == REDIS_REPLY_STRING &&
+          std::string(kind->str, kind->len) == "message" && message &&
+          message->type == REDIS_REPLY_STRING) {
         auto buffer = AllocatePayloadBuffer(message->len);
         if (!buffer) {
           FP_LOG_ERROR("redis_pubsub_source failed to allocate payload");
@@ -125,7 +118,7 @@ public:
     return produced;
   }
 
-private:
+ private:
   bool InitializeConnection() {
     ShutdownConnection();
 
@@ -136,30 +129,25 @@ private:
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options,
-                                                   "redis_pubsub_source");
+    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_pubsub_source");
     if (!context_) {
       return false;
     }
 
-    const int timeout_ms = config_.poll_timeout_ms() > 0
-        ? config_.poll_timeout_ms()
-        : 1000;
+    const int timeout_ms = config_.poll_timeout_ms() > 0 ? config_.poll_timeout_ms() : 1000;
     flowpipe::stages::util::ApplyRedisTimeout(context_, timeout_ms);
 
-    redisReply* reply = static_cast<redisReply*>(
-        redisCommand(context_, "SUBSCRIBE %s", config_.channel().c_str()));
+    redisReply* reply =
+        static_cast<redisReply*>(redisCommand(context_, "SUBSCRIBE %s", config_.channel().c_str()));
     if (!reply) {
       FP_LOG_ERROR("redis_pubsub_source failed to subscribe to channel");
       ShutdownConnection();
       return false;
     }
 
-    const bool ok = reply->type == REDIS_REPLY_ARRAY
-        && reply->elements >= 3
-        && reply->element[0]->type == REDIS_REPLY_STRING
-        && std::string(reply->element[0]->str, reply->element[0]->len)
-            == "subscribe";
+    const bool ok = reply->type == REDIS_REPLY_ARRAY && reply->elements >= 3 &&
+                    reply->element[0]->type == REDIS_REPLY_STRING &&
+                    std::string(reply->element[0]->str, reply->element[0]->len) == "subscribe";
     freeReplyObject(reply);
 
     if (!ok) {

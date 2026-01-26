@@ -1,12 +1,11 @@
 #pragma once
 
-#include "flowpipe/observability/logging.h"
-
 #include <hiredis/hiredis.h>
-
 #include <sys/time.h>
 
 #include <string>
+
+#include "flowpipe/observability/logging.h"
 
 namespace flowpipe::stages::util {
 
@@ -41,9 +40,7 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
                                   const std::string& stage_name) {
   const std::string host = config.host.empty() ? "127.0.0.1" : config.host;
   const int port = config.port > 0 ? config.port : 6379;
-  const int timeout_ms = config.connect_timeout_ms > 0
-      ? config.connect_timeout_ms
-      : 2000;
+  const int timeout_ms = config.connect_timeout_ms > 0 ? config.connect_timeout_ms : 2000;
 
   timeval timeout{};
   timeout.tv_sec = timeout_ms / 1000;
@@ -51,35 +48,26 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
 
   redisContext* context = redisConnectWithTimeout(host.c_str(), port, timeout);
   if (!context || context->err) {
-    FP_LOG_ERROR(stage_name + " failed to connect to Redis at " + host + ":"
-                 + std::to_string(port)
-                 + (context && context->err
-                        ? " (" + std::string(context->errstr) + ")"
-                        : ""));
+    FP_LOG_ERROR(stage_name + " failed to connect to Redis at " + host + ":" +
+                 std::to_string(port) +
+                 (context && context->err ? " (" + std::string(context->errstr) + ")" : ""));
     CloseRedis(context);
     return nullptr;
   }
 
   if (!config.username.empty() || !config.password.empty()) {
     if (config.password.empty()) {
-      FP_LOG_ERROR(stage_name
-                   + " requires password when username is provided");
+      FP_LOG_ERROR(stage_name + " requires password when username is provided");
       CloseRedis(context);
       return nullptr;
     }
 
     redisReply* reply = nullptr;
     if (!config.username.empty()) {
-      reply = static_cast<redisReply*>(redisCommand(
-          context,
-          "AUTH %s %s",
-          config.username.c_str(),
-          config.password.c_str()));
+      reply = static_cast<redisReply*>(
+          redisCommand(context, "AUTH %s %s", config.username.c_str(), config.password.c_str()));
     } else {
-      reply = static_cast<redisReply*>(redisCommand(
-          context,
-          "AUTH %s",
-          config.password.c_str()));
+      reply = static_cast<redisReply*>(redisCommand(context, "AUTH %s", config.password.c_str()));
     }
 
     if (!reply) {
@@ -88,9 +76,8 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
       return nullptr;
     }
 
-    const bool ok = reply->type == REDIS_REPLY_STATUS
-        && reply->str
-        && std::string(reply->str) == "OK";
+    const bool ok =
+        reply->type == REDIS_REPLY_STATUS && reply->str && std::string(reply->str) == "OK";
     freeReplyObject(reply);
 
     if (!ok) {
@@ -101,17 +88,16 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
   }
 
   if (config.database > 0) {
-    redisReply* reply = static_cast<redisReply*>(
-        redisCommand(context, "SELECT %d", config.database));
+    redisReply* reply =
+        static_cast<redisReply*>(redisCommand(context, "SELECT %d", config.database));
     if (!reply) {
       FP_LOG_ERROR(stage_name + " failed to select Redis database");
       CloseRedis(context);
       return nullptr;
     }
 
-    const bool ok = reply->type == REDIS_REPLY_STATUS
-        && reply->str
-        && std::string(reply->str) == "OK";
+    const bool ok =
+        reply->type == REDIS_REPLY_STATUS && reply->str && std::string(reply->str) == "OK";
     freeReplyObject(reply);
 
     if (!ok) {

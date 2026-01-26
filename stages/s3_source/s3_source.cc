@@ -1,22 +1,19 @@
-#include "flowpipe/stage.h"
-#include "flowpipe/configurable_stage.h"
-#include "flowpipe/observability/logging.h"
-#include "flowpipe/plugin.h"
-
-#include "s3_source.pb.h"
-
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/GetObjectRequest.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <mutex>
 #include <string>
 
 #include "aws_sdk_guard.h"
+#include "flowpipe/configurable_stage.h"
+#include "flowpipe/observability/logging.h"
+#include "flowpipe/plugin.h"
+#include "flowpipe/stage.h"
+#include "s3_source.pb.h"
 
 using namespace flowpipe;
 
@@ -45,21 +42,16 @@ std::unique_ptr<Aws::S3::S3Client> BuildS3Client(const S3SourceConfig& cfg) {
       return nullptr;
     }
 
-    Aws::Auth::AWSCredentials credentials(
-        cfg.access_key_id(),
-        cfg.secret_access_key(),
-        cfg.session_token());
+    Aws::Auth::AWSCredentials credentials(cfg.access_key_id(), cfg.secret_access_key(),
+                                          cfg.session_token());
 
     return std::make_unique<Aws::S3::S3Client>(
-        credentials,
-        client_config,
-        Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
+        credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
         use_virtual_addressing);
   }
 
   return std::make_unique<Aws::S3::S3Client>(
-      client_config,
-      Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
+      client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never,
       use_virtual_addressing);
 }
 }  // namespace
@@ -67,10 +59,8 @@ std::unique_ptr<Aws::S3::S3Client> BuildS3Client(const S3SourceConfig& cfg) {
 // ============================================================
 // S3Source
 // ============================================================
-class S3Source final
-    : public ISourceStage,
-      public ConfigurableStage {
-public:
+class S3Source final : public ISourceStage, public ConfigurableStage {
+ public:
   std::string name() const override {
     return "s3_source";
   }
@@ -145,15 +135,13 @@ public:
 
     auto outcome = client_->GetObject(request);
     if (!outcome.IsSuccess()) {
-      FP_LOG_ERROR("s3_source failed to fetch object: "
-                   + outcome.GetError().GetMessage());
+      FP_LOG_ERROR("s3_source failed to fetch object: " + outcome.GetError().GetMessage());
       return false;
     }
 
     auto result = outcome.GetResultWithOwnership();
     auto& stream = result.GetBody();
-    std::string body((std::istreambuf_iterator<char>(stream)),
-                     std::istreambuf_iterator<char>());
+    std::string body((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 
     // ----------------------------------------------------------
     // Allocate payload buffer with shared ownership
@@ -174,7 +162,7 @@ public:
     return true;
   }
 
-private:
+ private:
   AwsSdkGuard sdk_guard_{};
   S3SourceConfig config_{};
   std::unique_ptr<Aws::S3::S3Client> client_{};
