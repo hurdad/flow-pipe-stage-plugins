@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package flowpipe.stages.tcp.sink.v1;
+
+// Configuration for TcpSink stage
+message TcpSinkConfig {
+  // Unix domain stream socket path (overrides host/port when set)
+  string unix_socket_path = 1;
+
+  // Destination host (default: 127.0.0.1)
+  string host = 2;
+
+  // Destination port (required)
+  uint32 port = 3;
+}
