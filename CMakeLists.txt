@@ -13,6 +13,32 @@ include(cmake/AwsSdk.cmake)
 
 find_package(Protobuf REQUIRED)
 
+# ------------------------------------------------------------
+# Formatting
+# ------------------------------------------------------------
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if(CLANG_FORMAT_EXE)
+  file(GLOB_RECURSE CLANG_FORMAT_FILES
+    CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/stages/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/stages/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/stages/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/stages/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/*.cpp
+  )
+  add_custom_target(format
+    COMMAND ${CLANG_FORMAT_EXE} -i --style=file ${CLANG_FORMAT_FILES}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Running clang-format on source files"
+    VERBATIM
+  )
+else()
+  message(STATUS "clang-format not found; format target will be unavailable.")
+endif()
+
 # Build all plugin stages
 add_subdirectory(stages/kafka_sink)
 add_subdirectory(stages/kafka_source)
