@@ -9,6 +9,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     libhiredis-dev \
     librdkafka-dev \
+    libcurlpp-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -29,6 +30,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     libhiredis1.1.0 \
     librdkafka1 \
+    libcurlpp0t64 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dev \

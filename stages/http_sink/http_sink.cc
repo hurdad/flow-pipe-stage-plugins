@@ -109,7 +109,7 @@ public:
 
     request_.reset();
     request_.setOpt(curlpp::options::Url(cfg.url()));
-    request_.setOpt(curlpp::options::TimeoutMs(timeout_ms));
+    request_.setOpt(curlpp::options::Timeout(timeout_ms));
     request_.setOpt(curlpp::options::NoSignal(true));
     if (!new_headers.empty()) {
       request_.setOpt(curlpp::options::HttpHeader(new_headers));
@@ -141,7 +141,7 @@ public:
     try {
       request_.reset();
       request_.setOpt(curlpp::options::Url(config_.url()));
-      request_.setOpt(curlpp::options::TimeoutMs(timeout_ms_));
+      request_.setOpt(curlpp::options::Timeout(timeout_ms_));
       request_.setOpt(curlpp::options::NoSignal(true));
       if (!headers_.empty()) {
         request_.setOpt(curlpp::options::HttpHeader(headers_));
