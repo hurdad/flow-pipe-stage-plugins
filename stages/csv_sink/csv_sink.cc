@@ -174,6 +174,10 @@ class CsvSink final : public ISinkStage, public ConfigurableStage {
       std::sort(headers_.begin(), headers_.end());
     }
 
+    if (!config_.append()) {
+      header_written_ = false;
+    }
+
     std::ios_base::openmode mode = std::ios::binary;
     mode |= config_.append() ? std::ios::app : std::ios::trunc;
     std::ofstream output(config_.path(), mode);
