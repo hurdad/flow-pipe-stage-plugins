@@ -45,6 +45,14 @@ cmake -S . -B build
 cmake --build build
 ```
 
+### Format
+
+The CMake build provides a `format` target when `clang-format` is available.
+
+```sh
+cmake --build build --target format
+```
+
 ## Install
 
 The shared libraries install to `/opt/flow-pipe/plugins`.
