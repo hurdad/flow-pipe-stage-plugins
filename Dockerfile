@@ -17,6 +17,7 @@ RUN apt-get update \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
     libarrow-dev \
+    libparquet-dev \
     libhiredis-dev \
     librdkafka-dev \
     libcurlpp-dev \
@@ -50,7 +51,8 @@ RUN apt-get update \
  && rm apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
-    libarrow-dev \
+    libarrow2300 \
+    libparquet2300 \
     libhiredis1.1.0 \
     librdkafka1 \
     libcurlpp0t64 \
