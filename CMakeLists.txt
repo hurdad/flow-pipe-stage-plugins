@@ -10,6 +10,7 @@ enable_testing()
 # Dependencies
 # ------------------------------------------------------------
 include(cmake/AwsSdk.cmake)
+find_package(Arrow REQUIRED)
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
 
