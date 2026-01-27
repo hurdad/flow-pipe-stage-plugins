@@ -9,7 +9,6 @@ enable_testing()
 # ------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------
-include(cmake/AwsSdk.cmake)
 find_package(Arrow REQUIRED)
 find_package(flowpipe REQUIRED)
 find_package(Protobuf REQUIRED)
@@ -40,9 +39,6 @@ else()
   message(STATUS "clang-format not found; format target will be unavailable.")
 endif()
 
-# Utils
-add_subdirectory(util)
-
 # Build all plugin stages
 add_subdirectory(stages/kafka_sink)
 add_subdirectory(stages/kafka_source)
@@ -54,11 +50,6 @@ add_subdirectory(stages/redis_pubsub_sink)
 add_subdirectory(stages/redis_pubsub_source)
 add_subdirectory(stages/redis_stream_sink)
 add_subdirectory(stages/redis_stream_source)
-add_subdirectory(stages/s3_sink)
-add_subdirectory(stages/s3_source)
-add_subdirectory(stages/sns_sink)
-add_subdirectory(stages/sqs_sink)
-add_subdirectory(stages/sqs_source)
 add_subdirectory(stages/udp_sink)
 add_subdirectory(stages/udp_source)
 add_subdirectory(stages/tcp_sink)
