@@ -18,7 +18,7 @@ COPY . .
 
 RUN cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/opt/flow-pipe \
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_PREFIX_PATH} \
  && cmake --build build \
  && ctest --test-dir build --output-on-failure \
  && cmake --install build
