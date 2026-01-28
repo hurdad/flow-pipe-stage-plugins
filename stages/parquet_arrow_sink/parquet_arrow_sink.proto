@@ -4,6 +4,38 @@ package flowpipe.stages.parquet.arrow.sink.v1;
 
 // Configuration for ParquetArrowSink stage
 message ParquetArrowSinkConfig {
+  enum Encoding {
+    ENCODING_UNSPECIFIED = 0;
+    ENCODING_PLAIN = 1;
+    ENCODING_PLAIN_DICTIONARY = 2;
+    ENCODING_RLE = 3;
+    ENCODING_BIT_PACKED = 4;
+    ENCODING_DELTA_BINARY_PACKED = 5;
+    ENCODING_DELTA_LENGTH_BYTE_ARRAY = 6;
+    ENCODING_DELTA_BYTE_ARRAY = 7;
+    ENCODING_RLE_DICTIONARY = 8;
+    ENCODING_BYTE_STREAM_SPLIT = 9;
+  }
+
+  enum ParquetVersion {
+    PARQUET_VERSION_UNSPECIFIED = 0;
+    PARQUET_VERSION_1_0 = 1;
+    PARQUET_VERSION_2_6 = 2;
+  }
+
+  enum DataPageVersion {
+    DATA_PAGE_VERSION_UNSPECIFIED = 0;
+    DATA_PAGE_VERSION_V1 = 1;
+    DATA_PAGE_VERSION_V2 = 2;
+  }
+
+  enum SizeStatisticsLevel {
+    SIZE_STATISTICS_LEVEL_UNSPECIFIED = 0;
+    SIZE_STATISTICS_LEVEL_NONE = 1;
+    SIZE_STATISTICS_LEVEL_COLUMN_CHUNK = 2;
+    SIZE_STATISTICS_LEVEL_PAGE_AND_COLUMN_CHUNK = 3;
+  }
+
   enum FileSystem {
     FILE_SYSTEM_AUTO = 0;
     FILE_SYSTEM_LOCAL = 1;
@@ -24,6 +56,58 @@ message ParquetArrowSinkConfig {
     COMPRESSION_BZ2 = 8;
   }
 
+  message BloomFilterOptions {
+    int32 ndv = 1;
+    double fpp = 2;
+  }
+
+  message SortingColumn {
+    int32 column_index = 1;
+    bool descending = 2;
+    bool nulls_first = 3;
+  }
+
+  message CdcOptions {
+    int64 min_chunk_size = 1;
+    int64 max_chunk_size = 2;
+    int32 norm_level = 3;
+  }
+
+  message ColumnProperties {
+    optional bool dictionary_enabled = 1;
+    optional bool statistics_enabled = 2;
+    optional bool page_index_enabled = 3;
+    optional Encoding encoding = 4;
+    optional Compression compression = 5;
+    optional int32 compression_level = 6;
+    optional BloomFilterOptions bloom_filter_options = 7;
+  }
+
+  message WriterProperties {
+    optional int64 dictionary_page_size_limit = 1;
+    optional int64 write_batch_size = 2;
+    optional int64 max_row_group_length = 3;
+    optional int64 data_page_size = 4;
+    optional int64 max_rows_per_page = 5;
+    optional DataPageVersion data_page_version = 6;
+    optional ParquetVersion version = 7;
+    optional string created_by = 8;
+    optional bool store_decimal_as_integer = 9;
+    optional bool page_checksum_enabled = 10;
+    optional SizeStatisticsLevel size_statistics_level = 11;
+    optional bool dictionary_enabled = 12;
+    optional bool statistics_enabled = 13;
+    optional bool page_index_enabled = 14;
+    optional Encoding encoding = 15;
+    optional Compression compression = 16;
+    optional int32 compression_level = 17;
+    optional int64 max_statistics_size = 18;
+    repeated SortingColumn sorting_columns = 19;
+    map<string, ColumnProperties> column_properties = 20;
+    optional bool content_defined_chunking_enabled = 21;
+    optional CdcOptions content_defined_chunking_options = 22;
+  }
+
   // File path to write
   string path = 1;
 
@@ -35,4 +119,7 @@ message ParquetArrowSinkConfig {
 
   // Compression selection
   Compression compression = 4;
+
+  // Writer properties overrides
+  optional WriterProperties writer_properties = 5;
 }
