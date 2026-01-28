@@ -121,15 +121,28 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadTableFromPayload(const Payload&
 
 arrow::csv::WriteOptions BuildWriteOptions(const CsvArrowSinkConfig& config) {
   auto options = arrow::csv::WriteOptions::Defaults();
-  if (config.has_include_header()) {
-    options.include_header = config.include_header();
+  if (!config.has_write_options()) {
+    return options;
   }
-  options.delimiter = ResolveChar(config.delimiter(), options.delimiter);
-  if (config.has_null_string()) {
-    options.null_string = config.null_string();
+  const auto& write_options = config.write_options();
+  if (write_options.has_include_header()) {
+    options.include_header = write_options.include_header();
   }
-  if (config.has_quoting_style()) {
-    options.quoting_style = ResolveQuotingStyle(config.quoting_style());
+  if (write_options.has_batch_size()) {
+    options.batch_size = static_cast<int32_t>(write_options.batch_size());
+  }
+  options.delimiter = ResolveChar(write_options.delimiter(), options.delimiter);
+  if (write_options.has_null_string()) {
+    options.null_string = write_options.null_string();
+  }
+  if (!write_options.eol().empty()) {
+    options.eol = write_options.eol();
+  }
+  if (write_options.has_quoting_style()) {
+    options.quoting_style = ResolveQuotingStyle(write_options.quoting_style());
+  }
+  if (write_options.has_quoting_header()) {
+    options.quoting_header = ResolveQuotingStyle(write_options.quoting_header());
   }
   return options;
 }

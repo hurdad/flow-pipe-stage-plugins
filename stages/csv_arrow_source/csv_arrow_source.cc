@@ -121,59 +121,104 @@ arrow::Result<std::shared_ptr<arrow::io::InputStream>> MaybeWrapCompressedInput(
 
 arrow::csv::ReadOptions BuildReadOptions(const CsvArrowSourceConfig& config) {
   auto options = arrow::csv::ReadOptions::Defaults();
-  if (config.has_use_threads()) {
-    options.use_threads = config.use_threads();
+  if (!config.has_read_options()) {
+    return options;
   }
-  if (config.has_block_size()) {
-    options.block_size = config.block_size();
+  const auto& read_options = config.read_options();
+  if (read_options.has_use_threads()) {
+    options.use_threads = read_options.use_threads();
   }
-  if (config.has_skip_rows()) {
-    options.skip_rows = config.skip_rows();
+  if (read_options.has_block_size()) {
+    options.block_size = read_options.block_size();
   }
-  if (config.has_autogenerate_column_names()) {
-    options.autogenerate_column_names = config.autogenerate_column_names();
+  if (read_options.has_skip_rows()) {
+    options.skip_rows = read_options.skip_rows();
   }
-  if (!config.column_names().empty()) {
-    options.column_names.assign(config.column_names().begin(), config.column_names().end());
+  if (read_options.has_skip_rows_after_names()) {
+    options.skip_rows_after_names = read_options.skip_rows_after_names();
+  }
+  if (read_options.has_autogenerate_column_names()) {
+    options.autogenerate_column_names = read_options.autogenerate_column_names();
+  }
+  if (!read_options.column_names().empty()) {
+    options.column_names.assign(read_options.column_names().begin(),
+                                read_options.column_names().end());
   }
   return options;
 }
 
 arrow::csv::ParseOptions BuildParseOptions(const CsvArrowSourceConfig& config) {
   auto options = arrow::csv::ParseOptions::Defaults();
-  options.delimiter = ResolveChar(config.delimiter(), options.delimiter);
-  options.quote_char = ResolveChar(config.quote_char(), options.quote_char);
-  if (!config.escape_char().empty()) {
-    options.escape_char = ResolveChar(config.escape_char(), options.escape_char);
+  if (!config.has_parse_options()) {
+    return options;
   }
-  if (config.has_double_quote()) {
-    options.double_quote = config.double_quote();
+  const auto& parse_options = config.parse_options();
+  options.delimiter = ResolveChar(parse_options.delimiter(), options.delimiter);
+  if (parse_options.has_quoting()) {
+    options.quoting = parse_options.quoting();
   }
-  if (config.has_newlines_in_values()) {
-    options.newlines_in_values = config.newlines_in_values();
+  options.quote_char = ResolveChar(parse_options.quote_char(), options.quote_char);
+  if (parse_options.has_escaping()) {
+    options.escaping = parse_options.escaping();
+  }
+  if (!parse_options.escape_char().empty()) {
+    options.escape_char = ResolveChar(parse_options.escape_char(), options.escape_char);
+  }
+  if (parse_options.has_double_quote()) {
+    options.double_quote = parse_options.double_quote();
+  }
+  if (parse_options.has_newlines_in_values()) {
+    options.newlines_in_values = parse_options.newlines_in_values();
+  }
+  if (parse_options.has_ignore_empty_lines()) {
+    options.ignore_empty_lines = parse_options.ignore_empty_lines();
   }
   return options;
 }
 
 arrow::csv::ConvertOptions BuildConvertOptions(const CsvArrowSourceConfig& config) {
   auto options = arrow::csv::ConvertOptions::Defaults();
-  if (config.has_check_utf8()) {
-    options.check_utf8 = config.check_utf8();
+  if (!config.has_convert_options()) {
+    return options;
   }
-  if (config.has_strings_can_be_null()) {
-    options.strings_can_be_null = config.strings_can_be_null();
+  const auto& convert_options = config.convert_options();
+  if (convert_options.has_check_utf8()) {
+    options.check_utf8 = convert_options.check_utf8();
   }
-  if (config.has_quoted_strings_can_be_null()) {
-    options.quoted_strings_can_be_null = config.quoted_strings_can_be_null();
+  if (convert_options.has_strings_can_be_null()) {
+    options.strings_can_be_null = convert_options.strings_can_be_null();
   }
-  if (!config.null_values().empty()) {
-    options.null_values.assign(config.null_values().begin(), config.null_values().end());
+  if (convert_options.has_quoted_strings_can_be_null()) {
+    options.quoted_strings_can_be_null = convert_options.quoted_strings_can_be_null();
   }
-  if (!config.true_values().empty()) {
-    options.true_values.assign(config.true_values().begin(), config.true_values().end());
+  if (convert_options.has_auto_dict_encode()) {
+    options.auto_dict_encode = convert_options.auto_dict_encode();
   }
-  if (!config.false_values().empty()) {
-    options.false_values.assign(config.false_values().begin(), config.false_values().end());
+  if (convert_options.has_auto_dict_max_cardinality()) {
+    options.auto_dict_max_cardinality =
+        static_cast<int32_t>(convert_options.auto_dict_max_cardinality());
+  }
+  if (!convert_options.decimal_point().empty()) {
+    options.decimal_point = ResolveChar(convert_options.decimal_point(), options.decimal_point);
+  }
+  if (!convert_options.null_values().empty()) {
+    options.null_values.assign(convert_options.null_values().begin(),
+                               convert_options.null_values().end());
+  }
+  if (!convert_options.true_values().empty()) {
+    options.true_values.assign(convert_options.true_values().begin(),
+                               convert_options.true_values().end());
+  }
+  if (!convert_options.false_values().empty()) {
+    options.false_values.assign(convert_options.false_values().begin(),
+                                convert_options.false_values().end());
+  }
+  if (!convert_options.include_columns().empty()) {
+    options.include_columns.assign(convert_options.include_columns().begin(),
+                                   convert_options.include_columns().end());
+  }
+  if (convert_options.has_include_missing_columns()) {
+    options.include_missing_columns = convert_options.include_missing_columns();
   }
   return options;
 }
