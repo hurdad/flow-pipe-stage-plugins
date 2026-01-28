@@ -26,6 +26,7 @@ target_link_libraries(stage_arrow_proto
 target_include_directories(stage_arrow_proto
         PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/proto
 )
 
 target_compile_features(stage_arrow_proto

@@ -45,6 +45,6 @@ message CsvArrowSinkConfig {
   // WriteOptions
   WriteOptions write_options = 3;
 
-  // Common Arrow options (filesystem and compression)
-  arrow.common.Common common = 4;
+  // Common Arrow options (filesystem and compression).
+  .arrow.common.Common common = 4;
 }

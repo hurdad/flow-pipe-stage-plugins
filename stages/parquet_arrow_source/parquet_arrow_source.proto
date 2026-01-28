@@ -15,6 +15,6 @@ message ParquetArrowSourceConfig {
   // Reader options
   optional int64 batch_size = 3;
 
-  // Common Arrow options (filesystem and compression)
-  arrow.common.Common common = 4;
+  // Common Arrow options (filesystem and compression).
+  .arrow.common.Common common = 4;
 }
