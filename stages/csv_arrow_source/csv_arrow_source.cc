@@ -2,6 +2,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <arrow/csv/api.h>
+#include <arrow/buffer.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/io/compressed.h>
@@ -118,7 +119,7 @@ arrow::Result<std::shared_ptr<arrow::io::InputStream>> MaybeWrapCompressedInput(
   }
   ARROW_ASSIGN_OR_RAISE(auto codec, arrow::util::Codec::Create(compression));
   ARROW_ASSIGN_OR_RAISE(auto compressed_stream,
-                        arrow::io::CompressedInputStream::Make(codec, input));
+                        arrow::io::CompressedInputStream::Make(codec.get(), input));
   return compressed_stream;
 }
 

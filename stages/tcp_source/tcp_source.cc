@@ -1,6 +1,6 @@
+#include <fcntl.h>
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-#include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
 #include <sys/socket.h>
