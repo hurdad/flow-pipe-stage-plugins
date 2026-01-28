@@ -43,9 +43,6 @@ message JsonArrowSourceConfig {
   // ParseOptions
   ParseOptions parse_options = 4;
 
-  // Filesystem selection
-  arrow.common.FileSystem filesystem = 5;
-
-  // Compression selection
-  arrow.common.Compression compression = 6;
+  // Common Arrow options (filesystem and compression)
+  arrow.common.Common common = 5;
 }

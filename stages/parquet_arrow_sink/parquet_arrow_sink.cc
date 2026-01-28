@@ -239,7 +239,7 @@ void ApplyWriterProperties(const ParquetArrowSinkConfig& config,
   if (properties.has_compression()) {
     builder->compression(ResolveCompression(properties.compression()));
   } else {
-    builder->compression(ResolveCompression(config.compression()));
+    builder->compression(ResolveCompression(config.common().compression()));
   }
   if (properties.has_compression_level()) {
     builder->compression_level(properties.compression_level());
@@ -359,7 +359,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_sink failed to resolve filesystem: " +
                    fs_result.status().ToString());
@@ -377,7 +377,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
     if (config_.has_writer_properties()) {
       ApplyWriterProperties(config_, &builder);
     } else {
-      builder.compression(ResolveCompression(config_.compression()));
+      builder.compression(ResolveCompression(config_.common().compression()));
     }
     auto properties = builder.build();
 

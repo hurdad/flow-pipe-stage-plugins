@@ -170,7 +170,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto write_options = BuildWriteOptions(config_);
-    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;
@@ -189,7 +189,8 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto compression_result = ResolveCompression(fs_and_path.second, config_.compression());
+    auto compression_result =
+        ResolveCompression(fs_and_path.second, config_.common().compression());
     if (!compression_result.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to resolve compression: " +
                    compression_result.status().ToString());

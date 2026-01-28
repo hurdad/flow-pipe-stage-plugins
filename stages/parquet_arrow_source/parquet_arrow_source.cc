@@ -112,7 +112,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
     batch_index_ = 0;
     table_emitted_ = false;
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());
