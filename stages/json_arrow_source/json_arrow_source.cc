@@ -212,9 +212,9 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    arrow::io::IOContext io_context = arrow::io::default_io_context();
-    auto reader_result = arrow::json::TableReader::Make(io_context, *input_stream_result,
-                                                        read_options, parse_options);
+    auto reader_result =
+        arrow::json::TableReader::Make(arrow::default_memory_pool(), *input_stream_result,
+                                       read_options, parse_options);
     if (!reader_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to create reader: " +
                    reader_result.status().ToString());
