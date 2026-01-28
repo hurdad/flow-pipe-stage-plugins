@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package flowpipe.stages.parquet.arrow.source.v1;
+
+// Configuration for ParquetArrowSource stage
+message ParquetArrowSourceConfig {
+  enum OutputType {
+    OUTPUT_TYPE_TABLE = 0;
+    OUTPUT_TYPE_RECORD_BATCH = 1;
+  }
+
+  enum FileSystem {
+    FILE_SYSTEM_AUTO = 0;
+    FILE_SYSTEM_LOCAL = 1;
+    FILE_SYSTEM_S3 = 2;
+    FILE_SYSTEM_GCS = 3;
+    FILE_SYSTEM_HDFS = 4;
+  }
+
+  // File path to read
+  string path = 1;
+
+  // Output payload type
+  OutputType output_type = 2;
+
+  // Reader options
+  optional int64 batch_size = 3;
+
+  // Filesystem selection
+  FileSystem filesystem = 4;
+}
