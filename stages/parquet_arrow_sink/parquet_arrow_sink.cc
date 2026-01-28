@@ -16,52 +16,33 @@
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
 #include "parquet_arrow_sink.pb.h"
+#include "util/arrow.h"
 
 using namespace flowpipe;
 
 using ParquetArrowSinkConfig = flowpipe::stages::parquet::arrow::sink::v1::ParquetArrowSinkConfig;
 
 namespace {
-arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
-    const ParquetArrowSinkConfig& config) {
-  std::string path = config.path();
-  switch (config.filesystem()) {
-    case ParquetArrowSinkConfig::FILE_SYSTEM_LOCAL: {
-      return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), path);
-    }
-    case ParquetArrowSinkConfig::FILE_SYSTEM_S3:
-    case ParquetArrowSinkConfig::FILE_SYSTEM_GCS:
-    case ParquetArrowSinkConfig::FILE_SYSTEM_HDFS: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-    case ParquetArrowSinkConfig::FILE_SYSTEM_AUTO:
-    default: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-  }
-}
-
-parquet::Compression::type ResolveCompression(ParquetArrowSinkConfig::Compression compression) {
+parquet::Compression::type ResolveCompression(arrow::common::Compression compression) {
   switch (compression) {
-    case ParquetArrowSinkConfig::COMPRESSION_SNAPPY:
+    case arrow::common::COMPRESSION_SNAPPY:
       return parquet::Compression::SNAPPY;
-    case ParquetArrowSinkConfig::COMPRESSION_GZIP:
+    case arrow::common::COMPRESSION_GZIP:
       return parquet::Compression::GZIP;
-    case ParquetArrowSinkConfig::COMPRESSION_BROTLI:
+    case arrow::common::COMPRESSION_BROTLI:
       return parquet::Compression::BROTLI;
-    case ParquetArrowSinkConfig::COMPRESSION_ZSTD:
+    case arrow::common::COMPRESSION_ZSTD:
       return parquet::Compression::ZSTD;
-    case ParquetArrowSinkConfig::COMPRESSION_LZ4:
+    case arrow::common::COMPRESSION_LZ4:
       return parquet::Compression::LZ4;
-    case ParquetArrowSinkConfig::COMPRESSION_LZ4_FRAME:
+    case arrow::common::COMPRESSION_LZ4_FRAME:
       return parquet::Compression::LZ4_FRAME;
-    case ParquetArrowSinkConfig::COMPRESSION_LZO:
+    case arrow::common::COMPRESSION_LZO:
       return parquet::Compression::LZO;
-    case ParquetArrowSinkConfig::COMPRESSION_BZ2:
+    case arrow::common::COMPRESSION_BZ2:
       return parquet::Compression::BZ2;
-    case ParquetArrowSinkConfig::COMPRESSION_UNCOMPRESSED:
+    case arrow::common::COMPRESSION_UNCOMPRESSED:
+    case arrow::common::COMPRESSION_AUTO:
     default:
       return parquet::Compression::UNCOMPRESSED;
   }
@@ -378,7 +359,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto fs_result = ResolveFileSystem(config_);
+    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_sink failed to resolve filesystem: " +
                    fs_result.status().ToString());

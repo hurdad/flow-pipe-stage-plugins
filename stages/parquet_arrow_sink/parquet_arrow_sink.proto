@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package flowpipe.stages.parquet.arrow.sink.v1;
 
+import "arrow/arrow_common.proto";
+
 // Configuration for ParquetArrowSink stage
 message ParquetArrowSinkConfig {
   enum Encoding {
@@ -36,26 +38,6 @@ message ParquetArrowSinkConfig {
     SIZE_STATISTICS_LEVEL_PAGE_AND_COLUMN_CHUNK = 3;
   }
 
-  enum FileSystem {
-    FILE_SYSTEM_AUTO = 0;
-    FILE_SYSTEM_LOCAL = 1;
-    FILE_SYSTEM_S3 = 2;
-    FILE_SYSTEM_GCS = 3;
-    FILE_SYSTEM_HDFS = 4;
-  }
-
-  enum Compression {
-    COMPRESSION_UNCOMPRESSED = 0;
-    COMPRESSION_SNAPPY = 1;
-    COMPRESSION_GZIP = 2;
-    COMPRESSION_BROTLI = 3;
-    COMPRESSION_ZSTD = 4;
-    COMPRESSION_LZ4 = 5;
-    COMPRESSION_LZ4_FRAME = 6;
-    COMPRESSION_LZO = 7;
-    COMPRESSION_BZ2 = 8;
-  }
-
   message SortingColumn {
     int32 column_index = 1;
     bool descending = 2;
@@ -73,7 +55,7 @@ message ParquetArrowSinkConfig {
     optional bool statistics_enabled = 2;
     optional bool page_index_enabled = 3;
     optional Encoding encoding = 4;
-    optional Compression compression = 5;
+    optional arrow.common.Compression compression = 5;
     optional int32 compression_level = 6;
   }
 
@@ -93,7 +75,7 @@ message ParquetArrowSinkConfig {
     optional bool statistics_enabled = 13;
     optional bool page_index_enabled = 14;
     optional Encoding encoding = 15;
-    optional Compression compression = 16;
+    optional arrow.common.Compression compression = 16;
     optional int32 compression_level = 17;
     optional int64 max_statistics_size = 18;
     repeated SortingColumn sorting_columns = 19;
@@ -109,10 +91,10 @@ message ParquetArrowSinkConfig {
   optional int64 row_group_size = 2;
 
   // Filesystem selection
-  FileSystem filesystem = 3;
+  arrow.common.FileSystem filesystem = 3;
 
   // Compression selection
-  Compression compression = 4;
+  arrow.common.Compression compression = 4;
 
   // Writer properties overrides
   optional WriterProperties writer_properties = 5;

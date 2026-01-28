@@ -17,6 +17,7 @@
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
+#include "util/arrow.h"
 
 using namespace flowpipe;
 
@@ -39,54 +40,6 @@ arrow::csv::QuotingStyle ResolveQuotingStyle(CsvArrowSinkConfig::QuotingStyle st
     case CsvArrowSinkConfig::QUOTING_STYLE_NEEDED:
     default:
       return arrow::csv::QuotingStyle::Needed;
-  }
-}
-
-arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
-    const CsvArrowSinkConfig& config) {
-  std::string path = config.path();
-  switch (config.filesystem()) {
-    case CsvArrowSinkConfig::FILE_SYSTEM_LOCAL: {
-      return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), path);
-    }
-    case CsvArrowSinkConfig::FILE_SYSTEM_S3:
-    case CsvArrowSinkConfig::FILE_SYSTEM_GCS:
-    case CsvArrowSinkConfig::FILE_SYSTEM_HDFS: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-    case CsvArrowSinkConfig::FILE_SYSTEM_AUTO:
-    default: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-  }
-}
-
-arrow::Result<arrow::Compression::type> ResolveCompression(const CsvArrowSinkConfig& config,
-                                                           const std::string& path) {
-  switch (config.compression()) {
-    case CsvArrowSinkConfig::COMPRESSION_UNCOMPRESSED:
-      return arrow::Compression::UNCOMPRESSED;
-    case CsvArrowSinkConfig::COMPRESSION_SNAPPY:
-      return arrow::Compression::SNAPPY;
-    case CsvArrowSinkConfig::COMPRESSION_GZIP:
-      return arrow::Compression::GZIP;
-    case CsvArrowSinkConfig::COMPRESSION_BROTLI:
-      return arrow::Compression::BROTLI;
-    case CsvArrowSinkConfig::COMPRESSION_ZSTD:
-      return arrow::Compression::ZSTD;
-    case CsvArrowSinkConfig::COMPRESSION_LZ4:
-      return arrow::Compression::LZ4;
-    case CsvArrowSinkConfig::COMPRESSION_LZ4_FRAME:
-      return arrow::Compression::LZ4_FRAME;
-    case CsvArrowSinkConfig::COMPRESSION_LZO:
-      return arrow::Compression::LZO;
-    case CsvArrowSinkConfig::COMPRESSION_BZ2:
-      return arrow::Compression::BZ2;
-    case CsvArrowSinkConfig::COMPRESSION_AUTO:
-    default:
-      return arrow::util::Codec::GetCompressionType(path);
   }
 }
 
@@ -217,7 +170,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto write_options = BuildWriteOptions(config_);
-    auto fs_result = ResolveFileSystem(config_);
+    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;
@@ -236,7 +189,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto compression_result = ResolveCompression(config_, fs_and_path.second);
+    auto compression_result = ResolveCompression(fs_and_path.second, config_.compression());
     if (!compression_result.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to resolve compression: " +
                    compression_result.status().ToString());
