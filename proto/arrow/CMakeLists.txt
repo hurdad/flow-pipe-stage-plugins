@@ -9,6 +9,7 @@ set(PROTO_FILES
         arrow_fs_azure.proto
         arrow_fs_gcs.proto
         arrow_fs_s3.proto
+        arrow_fs_hdfs.proto
 )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})

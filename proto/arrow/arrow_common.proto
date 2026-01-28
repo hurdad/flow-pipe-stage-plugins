@@ -30,3 +30,11 @@ enum Compression {
   COMPRESSION_LZO = 8;
   COMPRESSION_BZ2 = 9;
 }
+
+message Common  {
+  // Filesystem selection
+  arrow.common.FileSystem filesystem = 4;
+
+  // Compression selection
+  arrow.common.Compression compression = 5;
+}
