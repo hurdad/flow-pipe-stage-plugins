@@ -78,17 +78,11 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
 
 arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
     const std::shared_ptr<arrow::io::RandomAccessFile>& input) {
-  std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto status = parquet::arrow::OpenFile(input, arrow::default_memory_pool(), &reader);
-  if (!status.ok()) {
-    return status;
-  }
+  ARROW_ASSIGN_OR_RAISE(auto reader,
+                        parquet::arrow::OpenFile(input, arrow::default_memory_pool()));
 
   std::shared_ptr<arrow::Table> table;
-  status = reader->ReadTable(&table);
-  if (!status.ok()) {
-    return status;
-  }
+  ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
 
   return table;
 }
