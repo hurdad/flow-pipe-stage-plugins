@@ -17,6 +17,13 @@ message OrcArrowSourceConfig {
     FILE_SYSTEM_HDFS = 4;
   }
 
+  enum MemoryPool {
+    MEMORY_POOL_DEFAULT = 0;
+    MEMORY_POOL_SYSTEM = 1;
+    MEMORY_POOL_JEMALLOC = 2;
+    MEMORY_POOL_MIMALLOC = 3;
+  }
+
   // File path to read
   string path = 1;
 
@@ -25,4 +32,7 @@ message OrcArrowSourceConfig {
 
   // Filesystem selection
   FileSystem filesystem = 3;
+
+  // Memory pool selection
+  MemoryPool memory_pool = 4;
 }

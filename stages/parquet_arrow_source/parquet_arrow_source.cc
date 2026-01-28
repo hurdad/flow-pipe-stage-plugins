@@ -2,6 +2,7 @@
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
+#include <arrow/memory_pool.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
@@ -73,9 +74,24 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
+arrow::MemoryPool* ResolveMemoryPool(const ParquetArrowSourceConfig& config) {
+  switch (config.memory_pool()) {
+    case ParquetArrowSourceConfig::MEMORY_POOL_SYSTEM:
+      return arrow::system_memory_pool();
+    case ParquetArrowSourceConfig::MEMORY_POOL_JEMALLOC:
+      return arrow::jemalloc_memory_pool();
+    case ParquetArrowSourceConfig::MEMORY_POOL_MIMALLOC:
+      return arrow::mimalloc_memory_pool();
+    case ParquetArrowSourceConfig::MEMORY_POOL_DEFAULT:
+    default:
+      return arrow::default_memory_pool();
+  }
+}
+
 arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
-    const std::shared_ptr<arrow::io::RandomAccessFile>& input) {
-  ARROW_ASSIGN_OR_RAISE(auto reader, parquet::arrow::OpenFile(input, arrow::default_memory_pool()));
+    const std::shared_ptr<arrow::io::RandomAccessFile>& input,
+    arrow::MemoryPool* memory_pool) {
+  ARROW_ASSIGN_OR_RAISE(auto reader, parquet::arrow::OpenFile(input, memory_pool));
 
   std::shared_ptr<arrow::Table> table;
   ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
@@ -146,7 +162,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    auto table_result = ReadParquetTable(*input_result);
+    auto table_result = ReadParquetTable(*input_result, ResolveMemoryPool(config_));
     if (!table_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_source failed to read parquet: " +
                    table_result.status().ToString());

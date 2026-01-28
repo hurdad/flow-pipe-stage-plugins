@@ -2,6 +2,7 @@
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
+#include <arrow/memory_pool.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
@@ -40,6 +41,20 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
       return std::make_pair(std::move(fs), path);
     }
+  }
+}
+
+arrow::MemoryPool* ResolveMemoryPool(const ParquetArrowSinkConfig& config) {
+  switch (config.memory_pool()) {
+    case ParquetArrowSinkConfig::MEMORY_POOL_SYSTEM:
+      return arrow::system_memory_pool();
+    case ParquetArrowSinkConfig::MEMORY_POOL_JEMALLOC:
+      return arrow::jemalloc_memory_pool();
+    case ParquetArrowSinkConfig::MEMORY_POOL_MIMALLOC:
+      return arrow::mimalloc_memory_pool();
+    case ParquetArrowSinkConfig::MEMORY_POOL_DEFAULT:
+    default:
+      return arrow::default_memory_pool();
   }
 }
 
@@ -426,7 +441,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       row_group_size = config_.writer_properties().max_row_group_length();
     }
 
-    auto status = parquet::arrow::WriteTable(**table_result, arrow::default_memory_pool(),
+    auto status = parquet::arrow::WriteTable(**table_result, ResolveMemoryPool(config_),
                                              *output_result, row_group_size, properties);
     if (!status.ok()) {
       FP_LOG_ERROR("parquet_arrow_sink failed to write parquet: " + status.ToString());

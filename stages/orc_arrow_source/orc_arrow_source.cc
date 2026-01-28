@@ -3,6 +3,7 @@
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
+#include <arrow/memory_pool.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
@@ -73,10 +74,25 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
+arrow::MemoryPool* ResolveMemoryPool(const OrcArrowSourceConfig& config) {
+  switch (config.memory_pool()) {
+    case OrcArrowSourceConfig::MEMORY_POOL_SYSTEM:
+      return arrow::system_memory_pool();
+    case OrcArrowSourceConfig::MEMORY_POOL_JEMALLOC:
+      return arrow::jemalloc_memory_pool();
+    case OrcArrowSourceConfig::MEMORY_POOL_MIMALLOC:
+      return arrow::mimalloc_memory_pool();
+    case OrcArrowSourceConfig::MEMORY_POOL_DEFAULT:
+    default:
+      return arrow::default_memory_pool();
+  }
+}
+
 arrow::Result<std::shared_ptr<arrow::Table>> ReadOrcTable(
-    const std::shared_ptr<arrow::io::RandomAccessFile>& input) {
+    const std::shared_ptr<arrow::io::RandomAccessFile>& input,
+    arrow::MemoryPool* memory_pool) {
   ARROW_ASSIGN_OR_RAISE(
-      auto reader, arrow::adapters::orc::ORCFileReader::Open(input, arrow::default_memory_pool()));
+      auto reader, arrow::adapters::orc::ORCFileReader::Open(input, memory_pool));
   return reader->Read();
 }
 }  // namespace
@@ -143,7 +159,7 @@ class OrcArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    auto table_result = ReadOrcTable(*input_result);
+    auto table_result = ReadOrcTable(*input_result, ResolveMemoryPool(config_));
     if (!table_result.ok()) {
       FP_LOG_ERROR("orc_arrow_source failed to read ORC: " + table_result.status().ToString());
       return false;

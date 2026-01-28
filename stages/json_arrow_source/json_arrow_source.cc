@@ -4,6 +4,7 @@
 #include <arrow/io/compressed.h>
 #include <arrow/ipc/api.h>
 #include <arrow/json/api.h>
+#include <arrow/memory_pool.h>
 #include <arrow/table.h>
 #include <arrow/util/compression.h>
 #include <google/protobuf/struct.pb.h>
@@ -99,6 +100,20 @@ arrow::Result<arrow::Compression::type> ResolveCompression(const JsonArrowSource
     case JsonArrowSourceConfig::COMPRESSION_AUTO:
     default:
       return arrow::util::Codec::GetCompressionType(path);
+  }
+}
+
+arrow::MemoryPool* ResolveMemoryPool(const JsonArrowSourceConfig& config) {
+  switch (config.memory_pool()) {
+    case JsonArrowSourceConfig::MEMORY_POOL_SYSTEM:
+      return arrow::system_memory_pool();
+    case JsonArrowSourceConfig::MEMORY_POOL_JEMALLOC:
+      return arrow::jemalloc_memory_pool();
+    case JsonArrowSourceConfig::MEMORY_POOL_MIMALLOC:
+      return arrow::mimalloc_memory_pool();
+    case JsonArrowSourceConfig::MEMORY_POOL_DEFAULT:
+    default:
+      return arrow::default_memory_pool();
   }
 }
 
@@ -239,7 +254,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     auto reader_result = arrow::json::TableReader::Make(
-        arrow::default_memory_pool(), *input_stream_result, read_options, parse_options);
+        ResolveMemoryPool(config_), *input_stream_result, read_options, parse_options);
     if (!reader_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to create reader: " +
                    reader_result.status().ToString());
