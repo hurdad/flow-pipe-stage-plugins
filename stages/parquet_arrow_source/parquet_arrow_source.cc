@@ -17,6 +17,7 @@
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
 #include "parquet_arrow_source.pb.h"
+#include "util/arrow.h"
 
 using namespace flowpipe;
 
@@ -50,27 +51,6 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeRecordBatch(
   ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*batch));
   ARROW_RETURN_NOT_OK(writer->Close());
   return buffer_output->Finish();
-}
-
-arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
-    const ParquetArrowSourceConfig& config) {
-  std::string path = config.path();
-  switch (config.filesystem()) {
-    case ParquetArrowSourceConfig::FILE_SYSTEM_LOCAL: {
-      return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), path);
-    }
-    case ParquetArrowSourceConfig::FILE_SYSTEM_S3:
-    case ParquetArrowSourceConfig::FILE_SYSTEM_GCS:
-    case ParquetArrowSourceConfig::FILE_SYSTEM_HDFS: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-    case ParquetArrowSourceConfig::FILE_SYSTEM_AUTO:
-    default: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-  }
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
@@ -132,7 +112,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
     batch_index_ = 0;
     table_emitted_ = false;
 
-    auto fs_result = ResolveFileSystem(config_);
+    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());
@@ -155,7 +135,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
 
     table_ = *table_result;
 
-    if (config_.output_type() == ParquetArrowSourceConfig::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       arrow::TableBatchReader reader(*table_);
       if (config_.has_batch_size() && config_.batch_size() > 0) {
         reader.set_chunksize(static_cast<int64_t>(config_.batch_size()));
@@ -193,7 +173,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     std::shared_ptr<arrow::Buffer> buffer;
-    if (config_.output_type() == ParquetArrowSourceConfig::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       if (batch_index_ >= record_batches_.size()) {
         FP_LOG_DEBUG("parquet_arrow_source finished record batches");
         return false;

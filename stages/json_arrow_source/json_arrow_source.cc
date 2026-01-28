@@ -20,6 +20,7 @@
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
 #include "json_arrow_source.pb.h"
+#include "util/arrow.h"
 
 using namespace flowpipe;
 
@@ -52,54 +53,6 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeRecordBatch(
   ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*batch));
   ARROW_RETURN_NOT_OK(writer->Close());
   return buffer_output->Finish();
-}
-
-arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
-    const JsonArrowSourceConfig& config) {
-  std::string path = config.path();
-  switch (config.filesystem()) {
-    case JsonArrowSourceConfig::FILE_SYSTEM_LOCAL: {
-      return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), path);
-    }
-    case JsonArrowSourceConfig::FILE_SYSTEM_S3:
-    case JsonArrowSourceConfig::FILE_SYSTEM_GCS:
-    case JsonArrowSourceConfig::FILE_SYSTEM_HDFS: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-    case JsonArrowSourceConfig::FILE_SYSTEM_AUTO:
-    default: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-  }
-}
-
-arrow::Result<arrow::Compression::type> ResolveCompression(const JsonArrowSourceConfig& config,
-                                                           const std::string& path) {
-  switch (config.compression()) {
-    case JsonArrowSourceConfig::COMPRESSION_UNCOMPRESSED:
-      return arrow::Compression::UNCOMPRESSED;
-    case JsonArrowSourceConfig::COMPRESSION_SNAPPY:
-      return arrow::Compression::SNAPPY;
-    case JsonArrowSourceConfig::COMPRESSION_GZIP:
-      return arrow::Compression::GZIP;
-    case JsonArrowSourceConfig::COMPRESSION_BROTLI:
-      return arrow::Compression::BROTLI;
-    case JsonArrowSourceConfig::COMPRESSION_ZSTD:
-      return arrow::Compression::ZSTD;
-    case JsonArrowSourceConfig::COMPRESSION_LZ4:
-      return arrow::Compression::LZ4;
-    case JsonArrowSourceConfig::COMPRESSION_LZ4_FRAME:
-      return arrow::Compression::LZ4_FRAME;
-    case JsonArrowSourceConfig::COMPRESSION_LZO:
-      return arrow::Compression::LZO;
-    case JsonArrowSourceConfig::COMPRESSION_BZ2:
-      return arrow::Compression::BZ2;
-    case JsonArrowSourceConfig::COMPRESSION_AUTO:
-    default:
-      return arrow::util::Codec::GetCompressionType(path);
-  }
 }
 
 arrow::Result<std::shared_ptr<arrow::io::InputStream>> MaybeWrapCompressedInput(
@@ -210,7 +163,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     auto read_options = BuildReadOptions(config_);
     auto parse_options = BuildParseOptions(config_);
 
-    auto fs_result = ResolveFileSystem(config_);
+    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());
@@ -224,7 +177,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    auto compression_result = ResolveCompression(config_, fs_and_path.second);
+    auto compression_result = ResolveCompression(fs_and_path.second, config_.compression());
     if (!compression_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to resolve compression: " +
                    compression_result.status().ToString());
@@ -254,7 +207,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
 
     table_ = *table_result;
 
-    if (config_.output_type() == JsonArrowSourceConfig::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       arrow::TableBatchReader reader(*table_);
       std::shared_ptr<arrow::RecordBatch> batch;
       while (true) {
@@ -289,7 +242,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     std::shared_ptr<arrow::Buffer> buffer;
-    if (config_.output_type() == JsonArrowSourceConfig::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       if (batch_index_ >= record_batches_.size()) {
         FP_LOG_DEBUG("json_arrow_source finished record batches");
         return false;

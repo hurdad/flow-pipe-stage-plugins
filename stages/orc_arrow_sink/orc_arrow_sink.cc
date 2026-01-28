@@ -16,52 +16,33 @@
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
 #include "orc_arrow_sink.pb.h"
+#include "util/arrow.h"
 
 using namespace flowpipe;
 
 using OrcArrowSinkConfig = flowpipe::stages::orc::arrow::sink::v1::OrcArrowSinkConfig;
 
 namespace {
-arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
-    const OrcArrowSinkConfig& config) {
-  std::string path = config.path();
-  switch (config.filesystem()) {
-    case OrcArrowSinkConfig::FILE_SYSTEM_LOCAL: {
-      return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), path);
-    }
-    case OrcArrowSinkConfig::FILE_SYSTEM_S3:
-    case OrcArrowSinkConfig::FILE_SYSTEM_GCS:
-    case OrcArrowSinkConfig::FILE_SYSTEM_HDFS: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-    case OrcArrowSinkConfig::FILE_SYSTEM_AUTO:
-    default: {
-      ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(path, &path));
-      return std::make_pair(std::move(fs), path);
-    }
-  }
-}
-
-arrow::Compression::type ResolveCompression(OrcArrowSinkConfig::Compression compression) {
+arrow::Compression::type ResolveCompression(arrow::common::Compression compression) {
   switch (compression) {
-    case OrcArrowSinkConfig::COMPRESSION_SNAPPY:
+    case arrow::common::COMPRESSION_SNAPPY:
       return arrow::Compression::SNAPPY;
-    case OrcArrowSinkConfig::COMPRESSION_GZIP:
+    case arrow::common::COMPRESSION_GZIP:
       return arrow::Compression::GZIP;
-    case OrcArrowSinkConfig::COMPRESSION_BROTLI:
+    case arrow::common::COMPRESSION_BROTLI:
       return arrow::Compression::BROTLI;
-    case OrcArrowSinkConfig::COMPRESSION_ZSTD:
+    case arrow::common::COMPRESSION_ZSTD:
       return arrow::Compression::ZSTD;
-    case OrcArrowSinkConfig::COMPRESSION_LZ4:
+    case arrow::common::COMPRESSION_LZ4:
       return arrow::Compression::LZ4;
-    case OrcArrowSinkConfig::COMPRESSION_LZ4_FRAME:
+    case arrow::common::COMPRESSION_LZ4_FRAME:
       return arrow::Compression::LZ4_FRAME;
-    case OrcArrowSinkConfig::COMPRESSION_LZO:
+    case arrow::common::COMPRESSION_LZO:
       return arrow::Compression::LZO;
-    case OrcArrowSinkConfig::COMPRESSION_BZ2:
+    case arrow::common::COMPRESSION_BZ2:
       return arrow::Compression::BZ2;
-    case OrcArrowSinkConfig::COMPRESSION_UNCOMPRESSED:
+    case arrow::common::COMPRESSION_UNCOMPRESSED:
+    case arrow::common::COMPRESSION_AUTO:
     default:
       return arrow::Compression::UNCOMPRESSED;
   }
@@ -202,7 +183,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto fs_result = ResolveFileSystem(config_);
+    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("orc_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;

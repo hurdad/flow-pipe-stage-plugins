@@ -21,6 +21,10 @@ set(PROTO_FILES
         csv_arrow_sink.proto
 )
 
+set(PROTOBUF_IMPORT_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../proto
+)
+
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 add_library(stage_csv_arrow_sink_proto STATIC
@@ -30,6 +34,7 @@ add_library(stage_csv_arrow_sink_proto STATIC
 
 target_link_libraries(stage_csv_arrow_sink_proto
         PUBLIC protobuf::libprotobuf
+        stage_arrow_proto
 )
 
 target_include_directories(stage_csv_arrow_sink_proto
@@ -52,6 +57,7 @@ add_library(stage_csv_arrow_sink SHARED
 target_include_directories(stage_csv_arrow_sink
         PRIVATE
         /opt/flow-pipe/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../..
 )
 
 # ------------------------------------------------------------

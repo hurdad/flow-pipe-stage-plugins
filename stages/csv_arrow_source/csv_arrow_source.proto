@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package flowpipe.stages.csv.arrow.source.v1;
 
+import "arrow/arrow_common.proto";
+
 // Configuration for CsvArrowSource stage
 message CsvArrowSourceConfig {
   message ReadOptions {
@@ -98,37 +100,11 @@ message CsvArrowSourceConfig {
     repeated string timestamp_parsers = 13;
   }
 
-  enum OutputType {
-    OUTPUT_TYPE_TABLE = 0;
-    OUTPUT_TYPE_RECORD_BATCH = 1;
-  }
-
-  enum FileSystem {
-    FILE_SYSTEM_AUTO = 0;
-    FILE_SYSTEM_LOCAL = 1;
-    FILE_SYSTEM_S3 = 2;
-    FILE_SYSTEM_GCS = 3;
-    FILE_SYSTEM_HDFS = 4;
-  }
-
-  enum Compression {
-    COMPRESSION_AUTO = 0;
-    COMPRESSION_UNCOMPRESSED = 1;
-    COMPRESSION_SNAPPY = 2;
-    COMPRESSION_GZIP = 3;
-    COMPRESSION_BROTLI = 4;
-    COMPRESSION_ZSTD = 5;
-    COMPRESSION_LZ4 = 6;
-    COMPRESSION_LZ4_FRAME = 7;
-    COMPRESSION_LZO = 8;
-    COMPRESSION_BZ2 = 9;
-  }
-
   // File path to read
   string path = 1;
 
   // Output payload type
-  OutputType output_type = 2;
+  arrow.common.OutputType output_type = 2;
 
   // ReadOptions
   ReadOptions read_options = 3;
@@ -140,8 +116,8 @@ message CsvArrowSourceConfig {
   ConvertOptions convert_options = 5;
 
   // Filesystem selection
-  FileSystem filesystem = 6;
+  arrow.common.FileSystem filesystem = 6;
 
   // Compression selection
-  Compression compression = 7;
+  arrow.common.Compression compression = 7;
 }
