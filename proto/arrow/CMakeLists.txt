@@ -5,14 +5,18 @@ project(stage_arrow_proto LANGUAGES CXX)
 find_package(Protobuf REQUIRED)
 
 set(PROTO_FILES
-        arrow_common.proto
-        arrow_fs_azure.proto
-        arrow_fs_gcs.proto
-        arrow_fs_s3.proto
-        arrow_fs_hdfs.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_common.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_azure.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_gcs.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_s3.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_hdfs.proto
 )
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+set(PROTOBUF_IMPORT_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES} APPEND_PATH)
 
 add_library(stage_arrow_proto STATIC
         ${PROTO_SRCS}
