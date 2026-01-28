@@ -4,6 +4,100 @@ package flowpipe.stages.csv.arrow.source.v1;
 
 // Configuration for CsvArrowSource stage
 message CsvArrowSourceConfig {
+  message ReadOptions {
+    // Whether to use the global CPU thread pool
+    optional bool use_threads = 1;
+    // Block size we request from the IO layer.
+    //
+    // This will determine multi-threading granularity as well as
+    // the size of individual record batches.
+    // Minimum valid value for block size is 1
+    optional int64 block_size = 2;
+    // Number of header rows to skip (not including the row of column names, if any)
+    optional int64 skip_rows = 3;
+    // Number of rows to skip after the column names are read, if any
+    optional int64 skip_rows_after_names = 4;
+    // Column names for the target table.
+    // If empty, fall back on autogenerate_column_names.
+    repeated string column_names = 5;
+    // Whether to autogenerate column names if `column_names` is empty.
+    // If true, column names will be of the form "f0", "f1"...
+    // If false, column names will be read from the first CSV row after `skip_rows`.
+    optional bool autogenerate_column_names = 6;
+  }
+
+  message ParseOptions {
+    // Field delimiter
+    string delimiter = 1;
+    // Whether quoting is used
+    optional bool quoting = 2;
+    // Quoting character (if `quoting` is true)
+    string quote_char = 3;
+    // Whether a quote inside a value is double-quoted
+    optional bool double_quote = 4;
+    // Whether escaping is used
+    optional bool escaping = 5;
+    // Silly workaround for https://github.com/michaeljones/breathe/issues/453
+    // Escaping character (if `escaping` is true)
+    string escape_char = 6;
+    // Whether values are allowed to contain CR (0x0d) and LF (0x0a) characters
+    optional bool newlines_in_values = 7;
+    // Whether empty lines are ignored. If false, an empty line represents
+    // a single empty value (assuming a one-column CSV file).
+    optional bool ignore_empty_lines = 8;
+    // A handler function for rows which do not have the correct number of columns
+    string invalid_row_handler = 9;
+  }
+
+  message ConvertOptions {
+    // Whether to check UTF8 validity of string columns
+    optional bool check_utf8 = 1;
+    // Optional per-column types (disabling type inference on those columns)
+    map<string, string> column_types = 2;
+    // Recognized spellings for null values
+    repeated string null_values = 3;
+    // Recognized spellings for boolean true values
+    repeated string true_values = 4;
+    // Recognized spellings for boolean false values
+    repeated string false_values = 5;
+    // Whether string / binary columns can have null values.
+    //
+    // If true, then strings in "null_values" are considered null for string columns.
+    // If false, then all strings are valid string values.
+    optional bool strings_can_be_null = 6;
+    // Whether quoted values can be null.
+    //
+    // If true, then strings in "null_values" are also considered null when they
+    // appear quoted in the CSV file. Otherwise, quoted values are never considered null.
+    optional bool quoted_strings_can_be_null = 7;
+    // Whether to try to automatically dict-encode string / binary data.
+    // If true, then when type inference detects a string or binary column,
+    // it is dict-encoded up to `auto_dict_max_cardinality` distinct values
+    // (per chunk), after which it switches to regular encoding.
+    //
+    // This setting is ignored for non-inferred columns (those in `column_types`).
+    optional bool auto_dict_encode = 8;
+    optional int64 auto_dict_max_cardinality = 9;
+    // Decimal point character for floating-point and decimal data
+    string decimal_point = 10;
+    // If non-empty, indicates the names of columns from the CSV file that should
+    // be actually read and converted (in the vector's order).
+    // Columns not in this vector will be ignored.
+    repeated string include_columns = 11;
+    // If false, columns in `include_columns` but not in the CSV file will error out.
+    // If true, columns in `include_columns` but not in the CSV file will produce
+    // a column of nulls (whose type is selected using `column_types`,
+    // or null by default)
+    // This option is ignored if `include_columns` is empty.
+    optional bool include_missing_columns = 12;
+    // User-defined timestamp parsers, using the virtual parser interface in
+    // arrow/util/value_parsing.h. More than one parser can be specified, and
+    // the CSV conversion logic will try parsing values starting from the
+    // beginning of this vector. If no parsers are specified, we use the default
+    // built-in ISO-8601 parser.
+    repeated string timestamp_parsers = 13;
+  }
+
   enum OutputType {
     OUTPUT_TYPE_TABLE = 0;
     OUTPUT_TYPE_RECORD_BATCH = 1;
@@ -37,30 +131,17 @@ message CsvArrowSourceConfig {
   OutputType output_type = 2;
 
   // ReadOptions
-  optional bool use_threads = 3;
-  optional int64 block_size = 4;
-  optional int64 skip_rows = 5;
-  optional bool autogenerate_column_names = 6;
-  repeated string column_names = 7;
+  ReadOptions read_options = 3;
 
   // ParseOptions
-  string delimiter = 8;
-  string quote_char = 9;
-  string escape_char = 10;
-  optional bool double_quote = 11;
-  optional bool newlines_in_values = 12;
+  ParseOptions parse_options = 4;
 
   // ConvertOptions
-  optional bool check_utf8 = 13;
-  optional bool strings_can_be_null = 14;
-  optional bool quoted_strings_can_be_null = 15;
-  repeated string null_values = 16;
-  repeated string true_values = 17;
-  repeated string false_values = 18;
+  ConvertOptions convert_options = 5;
 
   // Filesystem selection
-  FileSystem filesystem = 19;
+  FileSystem filesystem = 6;
 
   // Compression selection
-  Compression compression = 20;
+  Compression compression = 7;
 }

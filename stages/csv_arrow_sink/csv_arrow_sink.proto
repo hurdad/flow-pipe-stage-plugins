@@ -4,6 +4,30 @@ package flowpipe.stages.csv.arrow.sink.v1;
 
 // Configuration for CsvArrowSink stage
 message CsvArrowSinkConfig {
+  message WriteOptions {
+    // Whether to write an initial header line with column names
+    optional bool include_header = 1;
+    // Maximum number of rows processed at a time
+    //
+    // The CSV writer converts and writes data in batches of N rows.
+    // This number can impact performance.
+    optional int64 batch_size = 2;
+    // Field delimiter
+    string delimiter = 3;
+    // The string to write for null values. Quotes are not allowed in this string.
+    optional string null_string = 4;
+    // IO context for writing.
+    string io_context = 5;
+    // The end of line character to use for ending rows
+    string eol = 6;
+    // Quoting style
+    optional QuotingStyle quoting_style = 7;
+    // Quoting style of header
+    //
+    // Note that `QuotingStyle::Needed` and `QuotingStyle::AllValid` have the same
+    // effect of quoting all column names.
+    optional QuotingStyle quoting_header = 8;
+  }
   enum FileSystem {
     FILE_SYSTEM_AUTO = 0;
     FILE_SYSTEM_LOCAL = 1;
@@ -38,14 +62,11 @@ message CsvArrowSinkConfig {
   bool append = 2;
 
   // WriteOptions
-  optional bool include_header = 3;
-  string delimiter = 4;
-  optional QuotingStyle quoting_style = 5;
-  optional string null_string = 6;
+  WriteOptions write_options = 3;
 
   // Filesystem selection
-  FileSystem filesystem = 7;
+  FileSystem filesystem = 4;
 
   // Compression selection
-  Compression compression = 8;
+  Compression compression = 5;
 }
