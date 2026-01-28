@@ -90,11 +90,8 @@ message ParquetArrowSinkConfig {
   // Row group size for parquet writer
   optional int64 row_group_size = 2;
 
-  // Filesystem selection
-  arrow.common.FileSystem filesystem = 3;
-
-  // Compression selection
-  arrow.common.Compression compression = 4;
+  // Common Arrow options (filesystem and compression)
+  arrow.common.Common common = 3;
 
   // Writer properties overrides
   optional WriterProperties writer_properties = 5;

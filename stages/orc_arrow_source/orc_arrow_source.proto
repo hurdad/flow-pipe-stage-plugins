@@ -12,6 +12,6 @@ message OrcArrowSourceConfig {
   // Output payload type
   arrow.common.OutputType output_type = 2;
 
-  // Filesystem selection
-  arrow.common.FileSystem filesystem = 3;
+  // Common Arrow options (filesystem and compression)
+  arrow.common.Common common = 3;
 }

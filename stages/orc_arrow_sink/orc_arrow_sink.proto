@@ -46,8 +46,8 @@ message OrcArrowSinkConfig {
   // File path to write
   string path = 1;
 
-  // Filesystem selection
-  arrow.common.FileSystem filesystem = 2;
+  // Common Arrow options (filesystem and compression)
+  arrow.common.Common common = 2;
 
   // WriteOptions
   WriteOptions write_options = 3;

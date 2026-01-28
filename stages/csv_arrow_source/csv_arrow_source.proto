@@ -115,9 +115,6 @@ message CsvArrowSourceConfig {
   // ConvertOptions
   ConvertOptions convert_options = 5;
 
-  // Filesystem selection
-  arrow.common.FileSystem filesystem = 6;
-
-  // Compression selection
-  arrow.common.Compression compression = 7;
+  // Common Arrow options (filesystem and compression)
+  arrow.common.Common common = 6;
 }

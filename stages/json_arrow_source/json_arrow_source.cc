@@ -163,7 +163,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     auto read_options = BuildReadOptions(config_);
     auto parse_options = BuildParseOptions(config_);
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());
@@ -177,7 +177,8 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    auto compression_result = ResolveCompression(fs_and_path.second, config_.compression());
+    auto compression_result =
+        ResolveCompression(fs_and_path.second, config_.common().compression());
     if (!compression_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to resolve compression: " +
                    compression_result.status().ToString());
