@@ -16,7 +16,7 @@ set(PROTOBUF_IMPORT_DIRS
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES} APPEND_PATH)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 add_library(stage_arrow_proto STATIC
         ${PROTO_SRCS}
