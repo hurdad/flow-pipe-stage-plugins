@@ -40,6 +40,7 @@ else()
 endif()
 
 # Build all plugin stages
+add_subdirectory(proto/arrow)
 add_subdirectory(stages/kafka_sink)
 add_subdirectory(stages/kafka_source)
 add_subdirectory(stages/csv_arrow_sink)
