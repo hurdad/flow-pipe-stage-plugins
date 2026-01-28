@@ -4,29 +4,6 @@ package flowpipe.stages.orc.arrow.sink.v1;
 
 // Configuration for OrcArrowSink stage
 message OrcArrowSinkConfig {
-  enum WriterId {
-    WRITER_ID_ORC_JAVA = 0;
-    WRITER_ID_ORC_CPP = 1;
-    WRITER_ID_PRESTO = 2;
-    WRITER_ID_SCRITCHLEY_GO = 3;
-    WRITER_ID_TRINO = 4;
-    WRITER_ID_UNKNOWN = 2147483647;
-  }
-
-  enum WriterVersion {
-    WRITER_VERSION_ORIGINAL = 0;
-    WRITER_VERSION_HIVE_8732 = 1;
-    WRITER_VERSION_HIVE_4243 = 2;
-    WRITER_VERSION_HIVE_12055 = 3;
-    WRITER_VERSION_HIVE_13083 = 4;
-    WRITER_VERSION_ORC_101 = 5;
-    WRITER_VERSION_ORC_135 = 6;
-    WRITER_VERSION_ORC_517 = 7;
-    WRITER_VERSION_ORC_203 = 8;
-    WRITER_VERSION_ORC_14 = 9;
-    WRITER_VERSION_MAX = 2147483647;
-  }
-
   enum CompressionStrategy {
     COMPRESSION_STRATEGY_SPEED = 0;
     COMPRESSION_STRATEGY_COMPRESSION = 1;
