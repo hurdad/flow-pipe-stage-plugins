@@ -4,12 +4,22 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 
 ## Plugins
 
+- CSV Arrow source
+- CSV Arrow sink
+- File source
+- File sink
+- HTTP sink
+- JSON Arrow source
 - Kafka source
 - Kafka sink
-- CSV source
-- CSV sink
-- ORC source
-- ORC sink
+- NATS source
+- NATS sink
+- NATS JetStream source
+- NATS JetStream sink
+- ORC Arrow source
+- ORC Arrow sink
+- Parquet Arrow source
+- Parquet Arrow sink
 - Redis pub/sub source
 - Redis pub/sub sink
 - Redis stream source
@@ -18,11 +28,6 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - TCP sink
 - UDP source
 - UDP sink
-- HTTP sink
-- NATS source
-- NATS sink
-- NATS JetStream source
-- NATS JetStream sink
 
 ## Requirements
 
