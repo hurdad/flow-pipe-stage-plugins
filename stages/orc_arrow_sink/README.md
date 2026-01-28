@@ -8,3 +8,5 @@ See `orc_arrow_sink.proto` for full options. Key settings:
 
 - `path`: ORC output path.
 - `filesystem`: select local, s3, gcs, hdfs, or auto-detect from URI.
+- `writer_options`: configure ORC writer settings such as batch size, compression,
+  stripe size, and bloom filters.

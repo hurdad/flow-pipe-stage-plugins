@@ -12,9 +12,66 @@ message OrcArrowSinkConfig {
     FILE_SYSTEM_HDFS = 4;
   }
 
+  message OrcWriterOptions {
+    enum CompressionType {
+      COMPRESSION_TYPE_UNSPECIFIED = 0;
+      COMPRESSION_UNCOMPRESSED = 1;
+      COMPRESSION_SNAPPY = 2;
+      COMPRESSION_GZIP = 3;
+      COMPRESSION_BROTLI = 4;
+      COMPRESSION_ZSTD = 5;
+      COMPRESSION_LZ4 = 6;
+    }
+
+    enum CompressionStrategy {
+      COMPRESSION_STRATEGY_UNSPECIFIED = 0;
+      COMPRESSION_STRATEGY_SPEED = 1;
+      COMPRESSION_STRATEGY_COMPRESSION = 2;
+    }
+
+    // Number of rows the ORC writer writes at a time, default 1024
+    optional int64 batch_size = 1;
+
+    // Which ORC file version to use, default FileVersion(0, 12)
+    optional int32 file_version_major = 2;
+    optional int32 file_version_minor = 3;
+
+    // Size of each ORC stripe in bytes, default 64 MiB
+    optional int64 stripe_size = 4;
+
+    // The compression codec of the ORC file, there is no compression by default
+    optional CompressionType compression = 5;
+
+    // The size of each compression block in bytes, default 64 KiB
+    optional int64 compression_block_size = 6;
+
+    // The compression strategy i.e. speed vs size reduction, default
+    // CompressionStrategy::kSpeed
+    optional CompressionStrategy compression_strategy = 7;
+
+    // The number of rows per an entry in the row index, default 10000
+    optional int64 row_index_stride = 8;
+
+    // The padding tolerance, default 0.0
+    optional double padding_tolerance = 9;
+
+    // The dictionary key size threshold. 0 to disable dictionary encoding.
+    // 1 to always enable dictionary encoding, default 0.0
+    optional double dictionary_key_size_threshold = 10;
+
+    // The array of columns that use the bloom filter, default empty
+    repeated int64 bloom_filter_columns = 11;
+
+    // The upper limit of the false-positive rate of the bloom filter, default 0.05
+    optional double bloom_filter_fpp = 12;
+  }
+
   // File path to write
   string path = 1;
 
   // Filesystem selection
   FileSystem filesystem = 2;
+
+  // ORC writer options
+  OrcWriterOptions writer_options = 3;
 }

@@ -8,6 +8,7 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -23,6 +24,105 @@ using namespace flowpipe;
 using OrcArrowSinkConfig = flowpipe::stages::orc::arrow::sink::v1::OrcArrowSinkConfig;
 
 namespace {
+arrow::adapters::orc::Compression::type MapCompressionType(
+    OrcArrowSinkConfig::OrcWriterOptions::CompressionType compression,
+    arrow::adapters::orc::Compression::type fallback) {
+  switch (compression) {
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_UNCOMPRESSED:
+      return arrow::adapters::orc::Compression::UNCOMPRESSED;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_SNAPPY:
+      return arrow::adapters::orc::Compression::SNAPPY;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_GZIP:
+      return arrow::adapters::orc::Compression::ZLIB;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_BROTLI:
+      return arrow::adapters::orc::Compression::BROTLI;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_ZSTD:
+      return arrow::adapters::orc::Compression::ZSTD;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_LZ4:
+      return arrow::adapters::orc::Compression::LZ4;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_TYPE_UNSPECIFIED:
+    default:
+      return fallback;
+  }
+}
+
+arrow::adapters::orc::CompressionStrategy MapCompressionStrategy(
+    OrcArrowSinkConfig::OrcWriterOptions::CompressionStrategy strategy,
+    arrow::adapters::orc::CompressionStrategy fallback) {
+  switch (strategy) {
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_STRATEGY_SPEED:
+      return arrow::adapters::orc::CompressionStrategy::kSpeed;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_STRATEGY_COMPRESSION:
+      return arrow::adapters::orc::CompressionStrategy::kCompression;
+    case OrcArrowSinkConfig::OrcWriterOptions::COMPRESSION_STRATEGY_UNSPECIFIED:
+    default:
+      return fallback;
+  }
+}
+
+arrow::adapters::orc::WriteOptions BuildWriteOptions(const OrcArrowSinkConfig& config) {
+  auto options = arrow::adapters::orc::WriteOptions();
+  if (!config.has_writer_options()) {
+    return options;
+  }
+
+  const auto& writer_options = config.writer_options();
+  if (writer_options.has_batch_size()) {
+    options.batch_size = writer_options.batch_size();
+  }
+
+  if (writer_options.has_file_version_major() || writer_options.has_file_version_minor()) {
+    const int32_t major =
+        writer_options.has_file_version_major() ? writer_options.file_version_major() : 0;
+    const int32_t minor =
+        writer_options.has_file_version_minor() ? writer_options.file_version_minor() : 12;
+    options.file_version = arrow::adapters::orc::FileVersion(major, minor);
+  }
+
+  if (writer_options.has_stripe_size()) {
+    options.stripe_size = writer_options.stripe_size();
+  }
+
+  if (writer_options.has_compression()) {
+    options.compression =
+        MapCompressionType(writer_options.compression(), options.compression);
+  }
+
+  if (writer_options.has_compression_block_size()) {
+    options.compression_block_size = writer_options.compression_block_size();
+  }
+
+  if (writer_options.has_compression_strategy()) {
+    options.compression_strategy =
+        MapCompressionStrategy(writer_options.compression_strategy(),
+                               options.compression_strategy);
+  }
+
+  if (writer_options.has_row_index_stride()) {
+    options.row_index_stride = writer_options.row_index_stride();
+  }
+
+  if (writer_options.has_padding_tolerance()) {
+    options.padding_tolerance = writer_options.padding_tolerance();
+  }
+
+  if (writer_options.has_dictionary_key_size_threshold()) {
+    options.dictionary_key_size_threshold = writer_options.dictionary_key_size_threshold();
+  }
+
+  if (writer_options.bloom_filter_columns_size() > 0) {
+    options.bloom_filter_columns = std::vector<int64_t>(
+        writer_options.bloom_filter_columns().begin(),
+        writer_options.bloom_filter_columns().end());
+  }
+
+  if (writer_options.has_bloom_filter_fpp()) {
+    options.bloom_filter_fpp = writer_options.bloom_filter_fpp();
+  }
+
+  return options;
+}
+
 arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> ResolveFileSystem(
     const OrcArrowSinkConfig& config) {
   std::string path = config.path();
@@ -146,7 +246,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto output_stream = *output_result;
-    auto write_options = arrow::adapters::orc::WriteOptions();
+    auto write_options = BuildWriteOptions(config_);
     auto writer_result =
         arrow::adapters::orc::ORCFileWriter::Open(output_stream.get(), write_options);
     if (!writer_result.ok()) {
