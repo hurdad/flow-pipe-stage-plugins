@@ -55,11 +55,6 @@ message ParquetArrowSinkConfig {
     COMPRESSION_LZO = 7;
     COMPRESSION_BZ2 = 8;
   }
-//
-//  message BloomFilterOptions {
-//    int32 ndv = 1;
-//    double fpp = 2;
-//  }
 
   message SortingColumn {
     int32 column_index = 1;
@@ -80,7 +75,6 @@ message ParquetArrowSinkConfig {
     optional Encoding encoding = 4;
     optional Compression compression = 5;
     optional int32 compression_level = 6;
-   // optional BloomFilterOptions bloom_filter_options = 7;
   }
 
   message WriterProperties {

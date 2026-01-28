@@ -131,18 +131,6 @@ parquet::SizeStatisticsLevel ResolveSizeStatisticsLevel(
       return parquet::SizeStatisticsLevel::PageAndColumnChunk;
   }
 }
-//
-// parquet::BloomFilterOptions ResolveBloomFilterOptions(
-//     const ParquetArrowSinkConfig::BloomFilterOptions& options) {
-//   parquet::BloomFilterOptions resolved;
-//   if (options.ndv() > 0) {
-//     resolved.ndv = options.ndv();
-//   }
-//   if (options.fpp() > 0.0) {
-//     resolved.fpp = options.fpp();
-//   }
-//   return resolved;
-// }
 
 parquet::CdcOptions ResolveCdcOptions(const ParquetArrowSinkConfig::CdcOptions& options) {
   parquet::CdcOptions resolved;
@@ -194,11 +182,6 @@ void ApplyColumnProperties(const ParquetArrowSinkConfig::WriterProperties& confi
     if (column.has_compression_level()) {
       builder->compression_level(path, column.compression_level());
     }
-
-    // if (column.has_bloom_filter_options()) {
-    //   builder->enable_bloom_filter(path,
-    //   ResolveBloomFilterOptions(column.bloom_filter_options()));
-    // }
   }
 }
 

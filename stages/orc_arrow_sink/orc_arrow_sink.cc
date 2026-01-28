@@ -43,8 +43,7 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
-arrow::Compression::type ResolveCompression(
-    OrcArrowSinkConfig::Compression compression) {
+arrow::Compression::type ResolveCompression(OrcArrowSinkConfig::Compression compression) {
   switch (compression) {
     case OrcArrowSinkConfig::COMPRESSION_SNAPPY:
       return arrow::Compression::SNAPPY;
@@ -86,8 +85,8 @@ arrow::adapters::orc::WriteOptions ResolveWriteOptions(
     options.batch_size = config.batch_size();
   }
   if (config.file_version().major_version() != 0 || config.file_version().minor_version() != 0) {
-    options.file_version = arrow::adapters::orc::FileVersion(
-        config.file_version().major_version(), config.file_version().minor_version());
+    options.file_version = arrow::adapters::orc::FileVersion(config.file_version().major_version(),
+                                                             config.file_version().minor_version());
   }
   if (config.stripe_size() > 0) {
     options.stripe_size = config.stripe_size();
