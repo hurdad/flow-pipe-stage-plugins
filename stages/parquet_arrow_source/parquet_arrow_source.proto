@@ -10,7 +10,7 @@ message ParquetArrowSourceConfig {
   string path = 1;
 
   // Output payload type
-  arrow.common.OutputType output_type = 2;
+  .arrow.common.OutputType output_type = 2;
 
   // Reader options
   optional int64 batch_size = 3;

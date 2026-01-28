@@ -35,7 +35,7 @@ message JsonArrowSourceConfig {
   string path = 1;
 
   // Output payload type
-  arrow.common.OutputType output_type = 2;
+  .arrow.common.OutputType output_type = 2;
 
   // ReadOptions
   ReadOptions read_options = 3;
@@ -44,5 +44,5 @@ message JsonArrowSourceConfig {
   ParseOptions parse_options = 4;
 
   // Common Arrow options (filesystem and compression)
-  arrow.common.Common common = 5;
+  .arrow.common.Common common = 5;
 }
