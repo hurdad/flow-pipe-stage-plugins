@@ -42,6 +42,8 @@ endif()
 # Build all plugin stages
 add_subdirectory(stages/kafka_sink)
 add_subdirectory(stages/kafka_source)
+add_subdirectory(stages/csv_arrow_sink)
+add_subdirectory(stages/csv_arrow_source)
 add_subdirectory(stages/csv_sink)
 add_subdirectory(stages/csv_source)
 add_subdirectory(stages/file_sink)
