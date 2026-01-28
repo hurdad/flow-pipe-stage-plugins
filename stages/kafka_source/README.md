@@ -9,6 +9,7 @@ group_id: "flowpipe"
 client_id: "flowpipe-source"
 auto_offset_reset: "earliest"
 poll_timeout_ms: 1000
+partition: -1
 consumer_config:
   enable.auto.commit: "true"
 ```
