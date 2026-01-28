@@ -1,14 +1,13 @@
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
-#include <arrow/csv/api.h>
 #include <arrow/buffer.h>
+#include <arrow/csv/api.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/io/compressed.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <arrow/util/compression.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <string>
 #include <vector>
@@ -64,8 +63,8 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
-arrow::Result<arrow::Compression::type> ResolveCompression(
-    const CsvArrowSinkConfig& config, const std::string& path) {
+arrow::Result<arrow::Compression::type> ResolveCompression(const CsvArrowSinkConfig& config,
+                                                           const std::string& path) {
   switch (config.compression()) {
     case CsvArrowSinkConfig::COMPRESSION_UNCOMPRESSED:
       return arrow::Compression::UNCOMPRESSED;
@@ -92,8 +91,7 @@ arrow::Result<arrow::Compression::type> ResolveCompression(
 }
 
 arrow::Result<std::shared_ptr<arrow::io::OutputStream>> MaybeWrapCompressedOutput(
-    const std::shared_ptr<arrow::io::OutputStream>& output,
-    arrow::Compression::type compression) {
+    const std::shared_ptr<arrow::io::OutputStream>& output, arrow::Compression::type compression) {
   if (compression == arrow::Compression::UNCOMPRESSED) {
     return output;
   }
@@ -208,8 +206,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
     auto write_options = BuildWriteOptions(config_);
     auto fs_result = ResolveFileSystem(config_);
     if (!fs_result.ok()) {
-      FP_LOG_ERROR("csv_arrow_sink failed to resolve filesystem: " +
-                   fs_result.status().ToString());
+      FP_LOG_ERROR("csv_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;
     }
 
@@ -240,8 +237,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto status = arrow::csv::WriteCSV(**table_result, write_options,
-                                       output_stream_result->get());
+    auto status = arrow::csv::WriteCSV(**table_result, write_options, output_stream_result->get());
     if (!status.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to write CSV: " + status.ToString());
       return;

@@ -1,11 +1,10 @@
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <arrow/buffer.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 #include <parquet/arrow/writer.h>
 #include <parquet/properties.h>
 
@@ -132,18 +131,18 @@ parquet::SizeStatisticsLevel ResolveSizeStatisticsLevel(
       return parquet::SizeStatisticsLevel::PageAndColumnChunk;
   }
 }
-
-parquet::BloomFilterOptions ResolveBloomFilterOptions(
-    const ParquetArrowSinkConfig::BloomFilterOptions& options) {
-  parquet::BloomFilterOptions resolved;
-  if (options.ndv() > 0) {
-    resolved.ndv = options.ndv();
-  }
-  if (options.fpp() > 0.0) {
-    resolved.fpp = options.fpp();
-  }
-  return resolved;
-}
+//
+// parquet::BloomFilterOptions ResolveBloomFilterOptions(
+//     const ParquetArrowSinkConfig::BloomFilterOptions& options) {
+//   parquet::BloomFilterOptions resolved;
+//   if (options.ndv() > 0) {
+//     resolved.ndv = options.ndv();
+//   }
+//   if (options.fpp() > 0.0) {
+//     resolved.fpp = options.fpp();
+//   }
+//   return resolved;
+// }
 
 parquet::CdcOptions ResolveCdcOptions(const ParquetArrowSinkConfig::CdcOptions& options) {
   parquet::CdcOptions resolved;
@@ -196,9 +195,10 @@ void ApplyColumnProperties(const ParquetArrowSinkConfig::WriterProperties& confi
       builder->compression_level(path, column.compression_level());
     }
 
-    if (column.has_bloom_filter_options()) {
-      builder->enable_bloom_filter(path, ResolveBloomFilterOptions(column.bloom_filter_options()));
-    }
+    // if (column.has_bloom_filter_options()) {
+    //   builder->enable_bloom_filter(path,
+    //   ResolveBloomFilterOptions(column.bloom_filter_options()));
+    // }
   }
 }
 
@@ -300,8 +300,7 @@ void ApplyWriterProperties(const ParquetArrowSinkConfig& config,
     sorting_columns.reserve(properties.sorting_columns().size());
     for (const auto& column : properties.sorting_columns()) {
       sorting_columns.push_back(
-          parquet::SortingColumn{column.column_index(), column.descending(),
-                                 column.nulls_first()});
+          parquet::SortingColumn{column.column_index(), column.descending(), column.nulls_first()});
     }
     builder->set_sorting_columns(std::move(sorting_columns));
   }
@@ -406,8 +405,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
     auto fs_and_path = *fs_result;
     auto output_result = fs_and_path.first->OpenOutputStream(fs_and_path.second);
     if (!output_result.ok()) {
-      FP_LOG_ERROR("parquet_arrow_sink failed to open file: " +
-                   output_result.status().ToString());
+      FP_LOG_ERROR("parquet_arrow_sink failed to open file: " + output_result.status().ToString());
       return;
     }
 

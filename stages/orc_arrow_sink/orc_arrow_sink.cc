@@ -1,12 +1,11 @@
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <arrow/adapters/orc/adapter.h>
 #include <arrow/buffer.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <string>
 #include <utility>
@@ -133,8 +132,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
 
     auto fs_result = ResolveFileSystem(config_);
     if (!fs_result.ok()) {
-      FP_LOG_ERROR("orc_arrow_sink failed to resolve filesystem: " +
-                   fs_result.status().ToString());
+      FP_LOG_ERROR("orc_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;
     }
 

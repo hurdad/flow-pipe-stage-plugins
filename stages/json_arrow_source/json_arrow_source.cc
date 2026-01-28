@@ -1,6 +1,3 @@
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <arrow/buffer.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
@@ -9,6 +6,8 @@
 #include <arrow/json/api.h>
 #include <arrow/table.h>
 #include <arrow/util/compression.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <cstring>
 #include <memory>
@@ -30,8 +29,7 @@ namespace {
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
     const std::shared_ptr<arrow::Table>& table) {
   ARROW_ASSIGN_OR_RAISE(auto buffer_output, arrow::io::BufferOutputStream::Create());
-  ARROW_ASSIGN_OR_RAISE(auto writer,
-                        arrow::ipc::MakeStreamWriter(buffer_output, table->schema()));
+  ARROW_ASSIGN_OR_RAISE(auto writer, arrow::ipc::MakeStreamWriter(buffer_output, table->schema()));
 
   arrow::TableBatchReader reader(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
@@ -50,8 +48,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeRecordBatch(
     const std::shared_ptr<arrow::RecordBatch>& batch) {
   ARROW_ASSIGN_OR_RAISE(auto buffer_output, arrow::io::BufferOutputStream::Create());
-  ARROW_ASSIGN_OR_RAISE(auto writer,
-                        arrow::ipc::MakeStreamWriter(buffer_output, batch->schema()));
+  ARROW_ASSIGN_OR_RAISE(auto writer, arrow::ipc::MakeStreamWriter(buffer_output, batch->schema()));
   ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*batch));
   ARROW_RETURN_NOT_OK(writer->Close());
   return buffer_output->Finish();
@@ -78,8 +75,8 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
-arrow::Result<arrow::Compression::type> ResolveCompression(
-    const JsonArrowSourceConfig& config, const std::string& path) {
+arrow::Result<arrow::Compression::type> ResolveCompression(const JsonArrowSourceConfig& config,
+                                                           const std::string& path) {
   switch (config.compression()) {
     case JsonArrowSourceConfig::COMPRESSION_UNCOMPRESSED:
       return arrow::Compression::UNCOMPRESSED;
@@ -106,8 +103,7 @@ arrow::Result<arrow::Compression::type> ResolveCompression(
 }
 
 arrow::Result<std::shared_ptr<arrow::io::InputStream>> MaybeWrapCompressedInput(
-    const std::shared_ptr<arrow::io::InputStream>& input,
-    arrow::Compression::type compression) {
+    const std::shared_ptr<arrow::io::InputStream>& input, arrow::Compression::type compression) {
   if (compression == arrow::Compression::UNCOMPRESSED) {
     return input;
   }
@@ -212,9 +208,8 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    auto reader_result =
-        arrow::json::TableReader::Make(arrow::default_memory_pool(), *input_stream_result,
-                                       read_options, parse_options);
+    auto reader_result = arrow::json::TableReader::Make(
+        arrow::default_memory_pool(), *input_stream_result, read_options, parse_options);
     if (!reader_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to create reader: " +
                    reader_result.status().ToString());

@@ -1,12 +1,11 @@
-#include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <arrow/adapters/orc/adapter.h>
 #include <arrow/buffer.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
+#include <google/protobuf/struct.pb.h>
+#include <google/protobuf/util/json_util.h>
 
 #include <cstring>
 #include <memory>
@@ -28,8 +27,7 @@ namespace {
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
     const std::shared_ptr<arrow::Table>& table) {
   ARROW_ASSIGN_OR_RAISE(auto buffer_output, arrow::io::BufferOutputStream::Create());
-  ARROW_ASSIGN_OR_RAISE(auto writer,
-                        arrow::ipc::MakeStreamWriter(buffer_output, table->schema()));
+  ARROW_ASSIGN_OR_RAISE(auto writer, arrow::ipc::MakeStreamWriter(buffer_output, table->schema()));
 
   arrow::TableBatchReader reader(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
@@ -48,8 +46,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeRecordBatch(
     const std::shared_ptr<arrow::RecordBatch>& batch) {
   ARROW_ASSIGN_OR_RAISE(auto buffer_output, arrow::io::BufferOutputStream::Create());
-  ARROW_ASSIGN_OR_RAISE(auto writer,
-                        arrow::ipc::MakeStreamWriter(buffer_output, batch->schema()));
+  ARROW_ASSIGN_OR_RAISE(auto writer, arrow::ipc::MakeStreamWriter(buffer_output, batch->schema()));
   ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*batch));
   ARROW_RETURN_NOT_OK(writer->Close());
   return buffer_output->Finish();
@@ -79,8 +76,7 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
 arrow::Result<std::shared_ptr<arrow::Table>> ReadOrcTable(
     const std::shared_ptr<arrow::io::RandomAccessFile>& input) {
   ARROW_ASSIGN_OR_RAISE(
-      auto reader,
-      arrow::adapters::orc::ORCFileReader::Open(input, arrow::default_memory_pool()));
+      auto reader, arrow::adapters::orc::ORCFileReader::Open(input, arrow::default_memory_pool()));
   return reader->Read();
 }
 }  // namespace
