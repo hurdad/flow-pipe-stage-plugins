@@ -8,6 +8,8 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - Kafka sink
 - CSV source
 - CSV sink
+- ORC source
+- ORC sink
 - Redis pub/sub source
 - Redis pub/sub sink
 - Redis stream source

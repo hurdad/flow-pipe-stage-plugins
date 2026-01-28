@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package flowpipe.stages.orc.arrow.sink.v1;
+
+// Configuration for OrcArrowSink stage
+message OrcArrowSinkConfig {
+  enum FileSystem {
+    FILE_SYSTEM_AUTO = 0;
+    FILE_SYSTEM_LOCAL = 1;
+    FILE_SYSTEM_S3 = 2;
+    FILE_SYSTEM_GCS = 3;
+    FILE_SYSTEM_HDFS = 4;
+  }
+
+  // File path to write
+  string path = 1;
+
+  // Filesystem selection
+  FileSystem filesystem = 2;
+}
