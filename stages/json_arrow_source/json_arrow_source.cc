@@ -115,17 +115,47 @@ arrow::Result<std::shared_ptr<arrow::io::InputStream>> MaybeWrapCompressedInput(
 
 arrow::json::ReadOptions BuildReadOptions(const JsonArrowSourceConfig& config) {
   auto options = arrow::json::ReadOptions::Defaults();
-  if (config.has_use_threads()) {
-    options.use_threads = config.use_threads();
-  }
-  if (config.has_block_size()) {
-    options.block_size = config.block_size();
+  if (config.has_read_options()) {
+    const auto& read_options = config.read_options();
+    if (read_options.has_use_threads()) {
+      options.use_threads = read_options.use_threads();
+    }
+    if (read_options.has_block_size()) {
+      options.block_size = read_options.block_size();
+    }
   }
   return options;
 }
 
-arrow::json::ParseOptions BuildParseOptions() {
-  return arrow::json::ParseOptions::Defaults();
+arrow::json::ParseOptions BuildParseOptions(const JsonArrowSourceConfig& config) {
+  auto options = arrow::json::ParseOptions::Defaults();
+  if (!config.has_parse_options()) {
+    return options;
+  }
+
+  const auto& parse_options = config.parse_options();
+  if (parse_options.has_newlines_in_values()) {
+    options.newlines_in_values = parse_options.newlines_in_values();
+  }
+
+  switch (parse_options.unexpected_field_behavior()) {
+    case JsonArrowSourceConfig::UNEXPECTED_FIELD_BEHAVIOR_IGNORE:
+      options.unexpected_field_behavior = arrow::json::UnexpectedFieldBehavior::Ignore;
+      break;
+    case JsonArrowSourceConfig::UNEXPECTED_FIELD_BEHAVIOR_ERROR:
+      options.unexpected_field_behavior = arrow::json::UnexpectedFieldBehavior::Error;
+      break;
+    case JsonArrowSourceConfig::UNEXPECTED_FIELD_BEHAVIOR_INFER_TYPE:
+    default:
+      options.unexpected_field_behavior = arrow::json::UnexpectedFieldBehavior::InferType;
+      break;
+  }
+
+  if (!parse_options.explicit_schema().empty()) {
+    FP_LOG_WARN("json_arrow_source explicit_schema is not yet supported; ignoring value");
+  }
+
+  return options;
 }
 }  // namespace
 
@@ -178,7 +208,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     table_emitted_ = false;
 
     auto read_options = BuildReadOptions(config_);
-    auto parse_options = BuildParseOptions();
+    auto parse_options = BuildParseOptions(config_);
 
     auto fs_result = ResolveFileSystem(config_);
     if (!fs_result.ok()) {
