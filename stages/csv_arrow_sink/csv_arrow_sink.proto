@@ -55,13 +55,6 @@ message CsvArrowSinkConfig {
     QUOTING_STYLE_NONE = 2;
   }
 
-  enum MemoryPool {
-    MEMORY_POOL_DEFAULT = 0;
-    MEMORY_POOL_SYSTEM = 1;
-    MEMORY_POOL_JEMALLOC = 2;
-    MEMORY_POOL_MIMALLOC = 3;
-  }
-
   // File path to write
   string path = 1;
 
@@ -76,7 +69,4 @@ message CsvArrowSinkConfig {
 
   // Compression selection
   Compression compression = 5;
-
-  // Memory pool selection
-  MemoryPool memory_pool = 6;
 }

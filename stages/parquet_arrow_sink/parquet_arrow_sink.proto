@@ -55,13 +55,6 @@ message ParquetArrowSinkConfig {
     COMPRESSION_LZO = 7;
     COMPRESSION_BZ2 = 8;
   }
-
-  enum MemoryPool {
-    MEMORY_POOL_DEFAULT = 0;
-    MEMORY_POOL_SYSTEM = 1;
-    MEMORY_POOL_JEMALLOC = 2;
-    MEMORY_POOL_MIMALLOC = 3;
-  }
 //
 //  message BloomFilterOptions {
 //    int32 ndv = 1;
@@ -129,7 +122,4 @@ message ParquetArrowSinkConfig {
 
   // Writer properties overrides
   optional WriterProperties writer_properties = 5;
-
-  // Memory pool selection
-  MemoryPool memory_pool = 6;
 }
