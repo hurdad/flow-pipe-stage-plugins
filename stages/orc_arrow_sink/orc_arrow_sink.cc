@@ -147,7 +147,6 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
 
     auto output_stream = *output_result;
     auto write_options = arrow::adapters::orc::WriteOptions();
-    write_options.memory_pool = arrow::default_memory_pool();
     auto writer_result =
         arrow::adapters::orc::ORCFileWriter::Open(output_stream.get(), write_options);
     if (!writer_result.ok()) {
