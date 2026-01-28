@@ -61,13 +61,6 @@ message OrcArrowSinkConfig {
     FILE_SYSTEM_HDFS = 4;
   }
 
-  enum MemoryPool {
-    MEMORY_POOL_DEFAULT = 0;
-    MEMORY_POOL_SYSTEM = 1;
-    MEMORY_POOL_JEMALLOC = 2;
-    MEMORY_POOL_MIMALLOC = 3;
-  }
-
   // File path to write
   string path = 1;
 
@@ -76,7 +69,4 @@ message OrcArrowSinkConfig {
 
   // WriteOptions
   WriteOptions write_options = 3;
-
-  // Memory pool selection
-  MemoryPool memory_pool = 4;
 }
