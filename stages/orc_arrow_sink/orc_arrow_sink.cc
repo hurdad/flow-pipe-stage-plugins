@@ -146,8 +146,10 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto output_stream = *output_result;
-    auto writer_result = arrow::adapters::orc::ORCFileWriter::Open(
-        output_stream.get(), arrow::default_memory_pool());
+    auto write_options = arrow::adapters::orc::WriteOptions();
+    write_options.memory_pool = arrow::default_memory_pool();
+    auto writer_result =
+        arrow::adapters::orc::ORCFileWriter::Open(output_stream.get(), write_options);
     if (!writer_result.ok()) {
       FP_LOG_ERROR("orc_arrow_sink failed to create ORC writer: " +
                    writer_result.status().ToString());
