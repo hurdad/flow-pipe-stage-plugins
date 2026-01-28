@@ -4,6 +4,31 @@ package flowpipe.stages.json.arrow.source.v1;
 
 // Configuration for JsonArrowSource stage
 message JsonArrowSourceConfig {
+  message ReadOptions {
+    // Whether to use the global CPU thread pool
+    optional bool use_threads = 1;
+    // Block size we request from the IO layer; also determines the size of
+    // chunks when use_threads is true
+    optional int64 block_size = 2;
+  }
+
+  enum UnexpectedFieldBehavior {
+    UNEXPECTED_FIELD_BEHAVIOR_INFER_TYPE = 0;
+    UNEXPECTED_FIELD_BEHAVIOR_IGNORE = 1;
+    UNEXPECTED_FIELD_BEHAVIOR_ERROR = 2;
+  }
+
+  message ParseOptions {
+    // Optional explicit schema (disables type inference on those fields)
+    bytes explicit_schema = 1;
+    // Whether objects may be printed across multiple lines (for example pretty-printed)
+    //
+    // If true, parsing may be slower.
+    optional bool newlines_in_values = 2;
+    // How JSON fields outside of explicit_schema (if given) are treated
+    UnexpectedFieldBehavior unexpected_field_behavior = 3;
+  }
+
   enum OutputType {
     OUTPUT_TYPE_TABLE = 0;
     OUTPUT_TYPE_RECORD_BATCH = 1;
@@ -37,8 +62,10 @@ message JsonArrowSourceConfig {
   OutputType output_type = 2;
 
   // ReadOptions
-  optional bool use_threads = 3;
-  optional int64 block_size = 4;
+  ReadOptions read_options = 3;
+
+  // ParseOptions
+  ParseOptions parse_options = 4;
 
   // Filesystem selection
   FileSystem filesystem = 5;

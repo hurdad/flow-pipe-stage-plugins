@@ -6,5 +6,6 @@ See `json_arrow_source.proto` for full options. Key settings:
 
 - `path`: file path or URI to read.
 - `output_type`: emit a single table payload or individual record batches.
-- `use_threads` and `block_size`: Arrow JSON read options.
+- `read_options` and `parse_options`: Arrow JSON read and parse options (including
+  `use_threads`, `block_size`, `newlines_in_values`, and `unexpected_field_behavior`).
 - `filesystem` and `compression`: storage and compression handling.
