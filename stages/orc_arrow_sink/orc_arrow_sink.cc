@@ -43,6 +43,79 @@ arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>> Re
   }
 }
 
+arrow::Compression::type ResolveCompression(
+    OrcArrowSinkConfig::Compression compression) {
+  switch (compression) {
+    case OrcArrowSinkConfig::COMPRESSION_SNAPPY:
+      return arrow::Compression::SNAPPY;
+    case OrcArrowSinkConfig::COMPRESSION_GZIP:
+      return arrow::Compression::GZIP;
+    case OrcArrowSinkConfig::COMPRESSION_BROTLI:
+      return arrow::Compression::BROTLI;
+    case OrcArrowSinkConfig::COMPRESSION_ZSTD:
+      return arrow::Compression::ZSTD;
+    case OrcArrowSinkConfig::COMPRESSION_LZ4:
+      return arrow::Compression::LZ4;
+    case OrcArrowSinkConfig::COMPRESSION_LZ4_FRAME:
+      return arrow::Compression::LZ4_FRAME;
+    case OrcArrowSinkConfig::COMPRESSION_LZO:
+      return arrow::Compression::LZO;
+    case OrcArrowSinkConfig::COMPRESSION_BZ2:
+      return arrow::Compression::BZ2;
+    case OrcArrowSinkConfig::COMPRESSION_UNCOMPRESSED:
+    default:
+      return arrow::Compression::UNCOMPRESSED;
+  }
+}
+
+arrow::adapters::orc::CompressionStrategy ResolveCompressionStrategy(
+    OrcArrowSinkConfig::CompressionStrategy strategy) {
+  switch (strategy) {
+    case OrcArrowSinkConfig::COMPRESSION_STRATEGY_COMPRESSION:
+      return arrow::adapters::orc::CompressionStrategy::kCompression;
+    case OrcArrowSinkConfig::COMPRESSION_STRATEGY_SPEED:
+    default:
+      return arrow::adapters::orc::CompressionStrategy::kSpeed;
+  }
+}
+
+arrow::adapters::orc::WriteOptions ResolveWriteOptions(
+    const OrcArrowSinkConfig::WriteOptions& config) {
+  auto options = arrow::adapters::orc::WriteOptions();
+  if (config.batch_size() > 0) {
+    options.batch_size = config.batch_size();
+  }
+  if (config.file_version().major_version() != 0 || config.file_version().minor_version() != 0) {
+    options.file_version = arrow::adapters::orc::FileVersion(
+        config.file_version().major_version(), config.file_version().minor_version());
+  }
+  if (config.stripe_size() > 0) {
+    options.stripe_size = config.stripe_size();
+  }
+  options.compression = ResolveCompression(config.compression());
+  if (config.compression_block_size() > 0) {
+    options.compression_block_size = config.compression_block_size();
+  }
+  options.compression_strategy = ResolveCompressionStrategy(config.compression_strategy());
+  if (config.row_index_stride() > 0) {
+    options.row_index_stride = config.row_index_stride();
+  }
+  if (config.padding_tolerance() > 0.0) {
+    options.padding_tolerance = config.padding_tolerance();
+  }
+  if (config.dictionary_key_size_threshold() > 0.0) {
+    options.dictionary_key_size_threshold = config.dictionary_key_size_threshold();
+  }
+  if (!config.bloom_filter_columns().empty()) {
+    options.bloom_filter_columns.assign(config.bloom_filter_columns().begin(),
+                                        config.bloom_filter_columns().end());
+  }
+  if (config.bloom_filter_fpp() > 0.0) {
+    options.bloom_filter_fpp = config.bloom_filter_fpp();
+  }
+  return options;
+}
+
 arrow::Result<std::shared_ptr<arrow::Table>> ReadTableFromPayload(const Payload& payload) {
   auto buffer = arrow::Buffer::Wrap(payload.data(), static_cast<int64_t>(payload.size));
   auto reader = std::make_shared<arrow::io::BufferReader>(buffer);
@@ -144,7 +217,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto output_stream = *output_result;
-    auto write_options = arrow::adapters::orc::WriteOptions();
+    auto write_options = ResolveWriteOptions(config_.write_options());
     auto writer_result =
         arrow::adapters::orc::ORCFileWriter::Open(output_stream.get(), write_options);
     if (!writer_result.ok()) {

@@ -4,6 +4,78 @@ package flowpipe.stages.orc.arrow.sink.v1;
 
 // Configuration for OrcArrowSink stage
 message OrcArrowSinkConfig {
+  enum WriterId {
+    WRITER_ID_ORC_JAVA = 0;
+    WRITER_ID_ORC_CPP = 1;
+    WRITER_ID_PRESTO = 2;
+    WRITER_ID_SCRITCHLEY_GO = 3;
+    WRITER_ID_TRINO = 4;
+    WRITER_ID_UNKNOWN = 2147483647;
+  }
+
+  enum WriterVersion {
+    WRITER_VERSION_ORIGINAL = 0;
+    WRITER_VERSION_HIVE_8732 = 1;
+    WRITER_VERSION_HIVE_4243 = 2;
+    WRITER_VERSION_HIVE_12055 = 3;
+    WRITER_VERSION_HIVE_13083 = 4;
+    WRITER_VERSION_ORC_101 = 5;
+    WRITER_VERSION_ORC_135 = 6;
+    WRITER_VERSION_ORC_517 = 7;
+    WRITER_VERSION_ORC_203 = 8;
+    WRITER_VERSION_ORC_14 = 9;
+    WRITER_VERSION_MAX = 2147483647;
+  }
+
+  enum CompressionStrategy {
+    COMPRESSION_STRATEGY_SPEED = 0;
+    COMPRESSION_STRATEGY_COMPRESSION = 1;
+  }
+
+  enum Compression {
+    COMPRESSION_UNCOMPRESSED = 0;
+    COMPRESSION_SNAPPY = 1;
+    COMPRESSION_GZIP = 2;
+    COMPRESSION_BROTLI = 3;
+    COMPRESSION_ZSTD = 4;
+    COMPRESSION_LZ4 = 5;
+    COMPRESSION_LZ4_FRAME = 6;
+    COMPRESSION_LZO = 7;
+    COMPRESSION_BZ2 = 8;
+  }
+
+  message FileVersion {
+    // File format major version.
+    int32 major_version = 1;
+    // File format minor version.
+    int32 minor_version = 2;
+  }
+
+  message WriteOptions {
+    // Number of rows the ORC writer writes at a time.
+    int64 batch_size = 1;
+    // Which ORC file version to use.
+    FileVersion file_version = 2;
+    // Size of each ORC stripe in bytes.
+    int64 stripe_size = 3;
+    // The compression codec of the ORC file.
+    Compression compression = 4;
+    // The size of each compression block in bytes.
+    int64 compression_block_size = 5;
+    // The compression strategy (speed vs size reduction).
+    CompressionStrategy compression_strategy = 6;
+    // The number of rows per an entry in the row index.
+    int64 row_index_stride = 7;
+    // The padding tolerance.
+    double padding_tolerance = 8;
+    // The dictionary key size threshold. 0 disables dictionary encoding.
+    double dictionary_key_size_threshold = 9;
+    // The array of columns that use the bloom filter.
+    repeated int64 bloom_filter_columns = 10;
+    // The upper limit of the false-positive rate of the bloom filter.
+    double bloom_filter_fpp = 11;
+  }
+
   enum FileSystem {
     FILE_SYSTEM_AUTO = 0;
     FILE_SYSTEM_LOCAL = 1;
@@ -17,4 +89,7 @@ message OrcArrowSinkConfig {
 
   // Filesystem selection
   FileSystem filesystem = 2;
+
+  // WriteOptions
+  WriteOptions write_options = 3;
 }
