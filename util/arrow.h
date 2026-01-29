@@ -195,6 +195,11 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
         case arrow::fs::azure::AZURE_CREDENTIAL_KIND_ENVIRONMENT:
           ARROW_RETURN_NOT_OK(options.ConfigureEnvironmentCredential());
           break;
+        case arrow::fs::azure::AzureCredentialKind_INT_MIN_SENTINEL_DO_NOT_USE_:
+        case arrow::fs::azure::AzureCredentialKind_INT_MAX_SENTINEL_DO_NOT_USE_:
+        default:
+          return arrow::Status::Invalid("Unsupported Azure credential kind: ",
+                                        proto_credentials.kind());
       }
 
       ARROW_RETURN_NOT_OK(resolve_uri_path());
