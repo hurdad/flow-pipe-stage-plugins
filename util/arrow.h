@@ -8,12 +8,14 @@
 #include <arrow/filesystem/s3fs.h>
 #include <arrow/result.h>
 #include <arrow/util/compression.h>
+#include <arrow/util/key_value_metadata.h>
 
 #include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "arrow/arrow_common.pb.h"  // generated from your proto
 
@@ -29,6 +31,20 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       result.emplace(key, value);
     }
     return result;
+  };
+  auto to_key_value_metadata = [](const auto& proto_map) {
+    std::vector<std::string> keys;
+    std::vector<std::string> values;
+    keys.reserve(static_cast<size_t>(proto_map.size()));
+    values.reserve(static_cast<size_t>(proto_map.size()));
+    for (const auto& [key, value] : proto_map) {
+      keys.push_back(key);
+      values.push_back(value);
+    }
+    if (keys.empty()) {
+      return std::shared_ptr<const arrow::KeyValueMetadata>{};
+    }
+    return arrow::KeyValueMetadata::Make(std::move(keys), std::move(values));
   };
 
   auto resolve_uri_path = [&resolved_path]() -> arrow::Result<std::string> {
@@ -83,7 +99,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       options.check_directory_existence_before_creation =
           proto_options.check_directory_existence_before_creation();
       options.allow_delayed_open = proto_options.allow_delayed_open();
-      options.default_metadata = to_std_map(proto_options.default_metadata());
+      options.default_metadata = to_key_value_metadata(proto_options.default_metadata());
       options.retry_strategy = arrow::fs::S3RetryStrategy{
           static_cast<arrow::fs::S3RetryStrategyKind>(proto_options.retry_strategy().kind()),
           proto_options.retry_strategy().max_attempts(),
@@ -119,7 +135,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       if (proto_options.has_retry_limit_seconds()) {
         options.retry_limit_seconds = proto_options.retry_limit_seconds();
       }
-      options.default_metadata = to_std_map(proto_options.default_metadata());
+      options.default_metadata = to_key_value_metadata(proto_options.default_metadata());
       if (proto_options.has_project_id()) {
         options.project_id = proto_options.project_id();
       }
@@ -136,7 +152,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       options.dfs_storage_authority = proto_options.dfs_storage_authority();
       options.blob_storage_scheme = proto_options.blob_storage_scheme();
       options.dfs_storage_scheme = proto_options.dfs_storage_scheme();
-      options.default_metadata = to_std_map(proto_options.default_metadata());
+      options.default_metadata = to_key_value_metadata(proto_options.default_metadata());
       options.background_writes = proto_options.background_writes();
       options.credentials.kind =
           static_cast<arrow::fs::AzureCredentialKind>(proto_options.credentials().kind());
