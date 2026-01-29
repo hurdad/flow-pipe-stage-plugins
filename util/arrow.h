@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "arrow/arrow_common.pb.h"  // generated from your proto
+#include "arrow/arrow_common.pb.h"  // generated from arrow_common.proto
 
 inline arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>>
 ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
