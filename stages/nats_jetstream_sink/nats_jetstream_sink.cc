@@ -98,7 +98,7 @@ class NatsJetStreamSink final : public ISinkStage, public ConfigurableStage {
     }
 
     jsPubAck* ack = nullptr;
-    jsErrCode err_code = 0;
+    jsErrCode err_code = static_cast<jsErrCode>(0);
     natsStatus status = js_Publish(&ack,
                                    jetstream_,
                                    subject_.c_str(),
