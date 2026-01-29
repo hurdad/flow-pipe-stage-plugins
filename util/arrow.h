@@ -115,17 +115,30 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
     }
     case arrow::common::FileSystemOptions::kGcs: {
       const auto& proto_options = filesystem_options.gcs();
-      arrow::fs::GcsOptions options;
-      options.credentials.anonymous = proto_options.credentials().anonymous();
-      options.credentials.access_token = proto_options.credentials().access_token();
-      options.credentials.target_service_account = proto_options.credentials().target_service_account();
-      options.credentials.json_credentials = proto_options.credentials().json_credentials();
-      if (proto_options.credentials().expiration().seconds() != 0 ||
-          proto_options.credentials().expiration().nanos() != 0) {
-        options.credentials.expiration =
-            std::chrono::system_clock::from_time_t(
-                proto_options.credentials().expiration().seconds()) +
-            std::chrono::nanoseconds(proto_options.credentials().expiration().nanos());
+      const auto& proto_credentials = proto_options.credentials();
+      const auto to_time_point = [](const auto& timestamp) {
+        return std::chrono::system_clock::from_time_t(timestamp.seconds()) +
+               std::chrono::nanoseconds(timestamp.nanos());
+      };
+      arrow::fs::GcsOptions base_options = arrow::fs::GcsOptions::Defaults();
+      if (proto_credentials.anonymous()) {
+        base_options = arrow::fs::GcsOptions::Anonymous();
+      } else if (!proto_credentials.json_credentials().empty()) {
+        base_options =
+            arrow::fs::GcsOptions::FromServiceAccountCredentials(proto_credentials.json_credentials());
+      } else if (!proto_credentials.access_token().empty()) {
+        auto expiration = std::chrono::system_clock::time_point{};
+        if (proto_credentials.expiration().seconds() != 0 ||
+            proto_credentials.expiration().nanos() != 0) {
+          expiration = to_time_point(proto_credentials.expiration());
+        }
+        base_options =
+            arrow::fs::GcsOptions::FromAccessToken(proto_credentials.access_token(), expiration);
+      }
+      arrow::fs::GcsOptions options = base_options;
+      if (!proto_credentials.target_service_account().empty()) {
+        options = arrow::fs::GcsOptions::FromImpersonatedServiceAccount(
+            base_options.credentials, proto_credentials.target_service_account());
       }
       options.endpoint_override = proto_options.endpoint_override();
       options.scheme = proto_options.scheme();
@@ -152,13 +165,40 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       options.dfs_storage_scheme = proto_options.dfs_storage_scheme();
       options.default_metadata = to_key_value_metadata(proto_options.default_metadata());
       options.background_writes = proto_options.background_writes();
-      options.credentials.kind =
-          static_cast<arrow::fs::AzureCredentialKind>(proto_options.credentials().kind());
-      options.credentials.storage_shared_key = proto_options.credentials().storage_shared_key();
-      options.credentials.sas_token = proto_options.credentials().sas_token();
-      options.credentials.tenant_id = proto_options.credentials().tenant_id();
-      options.credentials.client_id = proto_options.credentials().client_id();
-      options.credentials.client_secret = proto_options.credentials().client_secret();
+      const auto& proto_credentials = proto_options.credentials();
+      switch (proto_credentials.kind()) {
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_DEFAULT:
+          ARROW_RETURN_NOT_OK(options.ConfigureDefaultCredential());
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_ANONYMOUS:
+          ARROW_RETURN_NOT_OK(options.ConfigureAnonymousCredential());
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_STORAGE_SHARED_KEY:
+          ARROW_RETURN_NOT_OK(
+              options.ConfigureAccountKeyCredential(proto_credentials.storage_shared_key()));
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_SAS_TOKEN:
+          ARROW_RETURN_NOT_OK(options.ConfigureSASCredential(proto_credentials.sas_token()));
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLIENT_SECRET:
+          ARROW_RETURN_NOT_OK(options.ConfigureClientSecretCredential(
+              proto_credentials.tenant_id(), proto_credentials.client_id(),
+              proto_credentials.client_secret()));
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_MANAGED_IDENTITY:
+          ARROW_RETURN_NOT_OK(
+              options.ConfigureManagedIdentityCredential(proto_credentials.client_id()));
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLI:
+          ARROW_RETURN_NOT_OK(options.ConfigureCLICredential());
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_WORKLOAD_IDENTITY:
+          ARROW_RETURN_NOT_OK(options.ConfigureWorkloadIdentityCredential());
+          break;
+        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_ENVIRONMENT:
+          ARROW_RETURN_NOT_OK(options.ConfigureEnvironmentCredential());
+          break;
+      }
 
       ARROW_RETURN_NOT_OK(resolve_uri_path());
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::AzureFileSystem::Make(options));
