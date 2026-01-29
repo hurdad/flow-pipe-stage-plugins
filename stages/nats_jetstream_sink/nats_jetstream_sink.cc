@@ -98,16 +98,15 @@ class NatsJetStreamSink final : public ISinkStage, public ConfigurableStage {
     }
 
     jsPubAck* ack = nullptr;
-    // natsStatus status = js_Publish(&ack,
-    //                                jetstream_,
-    //                                subject_.c_str(),
-    //                                payload.data(),
-    //                                payload.size,
-    //                                nullptr);
-    // if (status != NATS_OK) {
-    //   FP_LOG_ERROR("nats_jetstream_sink publish failed: "
-    //                + StatusToString(status));
-    // }
+    natsStatus status = js_Publish(&ack,
+                                   jetstream_,
+                                   subject_.c_str(),
+                                   payload.data(),
+                                   payload.size,
+                                   nullptr);
+    if (status != NATS_OK) {
+      FP_LOG_ERROR("nats_jetstream_sink publish failed: " + StatusToString(status));
+    }
 
     if (ack) {
       jsPubAck_Destroy(ack);

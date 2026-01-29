@@ -129,11 +129,10 @@ class NatsJetStreamSource final : public ISourceStage, public ConfigurableStage 
 
     payload = Payload(std::move(buffer), static_cast<size_t>(data_len));
 
-    // status = natsMsg_Ack(msg);
-    // if (status != NATS_OK) {
-    //   FP_LOG_ERROR("nats_jetstream_source ack failed: "
-    //                + StatusToString(status));
-    // }
+    status = natsMsg_Ack(msg);
+    if (status != NATS_OK) {
+      FP_LOG_ERROR("nats_jetstream_source ack failed: " + StatusToString(status));
+    }
 
     natsMsg_Destroy(msg);
     return true;
@@ -169,15 +168,15 @@ class NatsJetStreamSource final : public ISourceStage, public ConfigurableStage 
     }
 
     if (!durable_name.empty()) {
-      // sub_options.Durable = durable_name.c_str();
+      sub_options.Durable = durable_name.c_str();
       options_ptr = &sub_options;
     }
 
     natsSubscription* subscription = nullptr;
-    // status = js_SubscribeSync(&subscription,
-    //                           jetstream,
-    //                           subject.c_str(),
-    //                           options_ptr);
+    status = js_SubscribeSync(&subscription,
+                              jetstream,
+                              subject.c_str(),
+                              options_ptr);
     if (status != NATS_OK) {
       FP_LOG_ERROR("nats_jetstream_source subscribe failed: " + StatusToString(status));
       jsCtx_Destroy(jetstream);
