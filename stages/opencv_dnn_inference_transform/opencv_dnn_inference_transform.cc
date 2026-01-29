@@ -17,7 +17,7 @@
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
 #include "flowpipe/stage.h"
-#include "opencv_dnn_inference.pb.h"
+#include "opencv_dnn_inference_transform.pb.h"
 
 using namespace flowpipe;
 
@@ -106,15 +106,15 @@ void AppendOutputJson(std::ostringstream& stream, const std::string& name, const
 class OpenCVDnnInference final : public ITransformStage, public ConfigurableStage {
  public:
   std::string name() const override {
-    return "opencv_dnn_inference";
+    return "opencv_dnn_inference_transform";
   }
 
   OpenCVDnnInference() {
-    FP_LOG_INFO("opencv_dnn_inference constructed");
+    FP_LOG_INFO("opencv_dnn_inference_transform constructed");
   }
 
   ~OpenCVDnnInference() override {
-    FP_LOG_INFO("opencv_dnn_inference destroyed");
+    FP_LOG_INFO("opencv_dnn_inference_transform destroyed");
   }
 
   // ------------------------------------------------------------
@@ -125,7 +125,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     auto status = google::protobuf::util::MessageToJsonString(config, &json);
 
     if (!status.ok()) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to serialize config");
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to serialize config");
       return false;
     }
 
@@ -133,34 +133,34 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     status = google::protobuf::util::JsonStringToMessage(json, &cfg);
 
     if (!status.ok()) {
-      FP_LOG_ERROR("opencv_dnn_inference invalid config");
+      FP_LOG_ERROR("opencv_dnn_inference_transform invalid config");
       return false;
     }
 
     if (cfg.model_path().empty()) {
-      FP_LOG_ERROR("opencv_dnn_inference requires model_path");
+      FP_LOG_ERROR("opencv_dnn_inference_transform requires model_path");
       return false;
     }
 
     if (!std::filesystem::exists(cfg.model_path())) {
-      FP_LOG_ERROR("opencv_dnn_inference model_path does not exist: " + cfg.model_path());
+      FP_LOG_ERROR("opencv_dnn_inference_transform model_path does not exist: " + cfg.model_path());
       return false;
     }
 
     if (!cfg.config_path().empty() && !std::filesystem::exists(cfg.config_path())) {
-      FP_LOG_ERROR("opencv_dnn_inference config_path does not exist: " + cfg.config_path());
+      FP_LOG_ERROR("opencv_dnn_inference_transform config_path does not exist: " + cfg.config_path());
       return false;
     }
 
     try {
       net_ = cv::dnn::readNet(cfg.model_path(), cfg.config_path(), cfg.framework());
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to load network: " + std::string(ex.what()));
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to load network: " + std::string(ex.what()));
       return false;
     }
 
     config_ = std::move(cfg);
-    FP_LOG_INFO("opencv_dnn_inference configured");
+    FP_LOG_INFO("opencv_dnn_inference_transform configured");
     return true;
   }
 
@@ -169,19 +169,19 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
   // ------------------------------------------------------------
   void process(StageContext& ctx, const Payload& input, Payload& output) override {
     if (ctx.stop.stop_requested()) {
-      FP_LOG_DEBUG("opencv_dnn_inference stop requested, skipping transform");
+      FP_LOG_DEBUG("opencv_dnn_inference_transform stop requested, skipping transform");
       return;
     }
 
     if (input.empty()) {
-      FP_LOG_DEBUG("opencv_dnn_inference received empty payload");
+      FP_LOG_DEBUG("opencv_dnn_inference_transform received empty payload");
       return;
     }
 
     cv::Mat encoded(1, static_cast<int>(input.size), CV_8U, const_cast<uint8_t*>(input.data()));
     cv::Mat image = cv::imdecode(encoded, cv::IMREAD_COLOR);
     if (image.empty()) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to decode image bytes");
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to decode image bytes");
       return;
     }
 
@@ -200,7 +200,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
         net_.setInput(blob, config_.input_name());
       }
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to set input: " + std::string(ex.what()));
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to set input: " + std::string(ex.what()));
       return;
     }
 
@@ -224,7 +224,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
         }
       }
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference forward failed: " + std::string(ex.what()));
+      FP_LOG_ERROR("opencv_dnn_inference_transform forward failed: " + std::string(ex.what()));
       return;
     }
 
@@ -233,7 +233,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
 
     auto buffer = AllocatePayloadBuffer(json.size());
     if (!buffer) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to allocate payload");
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to allocate payload");
       return;
     }
 
@@ -242,7 +242,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     }
 
     output = Payload(std::move(buffer), json.size());
-    FP_LOG_DEBUG("opencv_dnn_inference emitted inference payload");
+    FP_LOG_DEBUG("opencv_dnn_inference_transform emitted inference payload");
   }
 
  private:
@@ -257,13 +257,13 @@ extern "C" {
 
 FLOWPIPE_PLUGIN_API
 IStage* flowpipe_create_stage() {
-  FP_LOG_INFO("creating opencv_dnn_inference stage");
+  FP_LOG_INFO("creating opencv_dnn_inference_transform stage");
   return new OpenCVDnnInference();
 }
 
 FLOWPIPE_PLUGIN_API
 void flowpipe_destroy_stage(IStage* stage) {
-  FP_LOG_INFO("destroying opencv_dnn_inference stage");
+  FP_LOG_INFO("destroying opencv_dnn_inference_transform stage");
   delete stage;
 }
 }

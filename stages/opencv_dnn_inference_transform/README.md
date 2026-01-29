@@ -1,4 +1,4 @@
-# opencv_dnn_inference
+# opencv_dnn_inference_transform
 
 ## Configuration
 

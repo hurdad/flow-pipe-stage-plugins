@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(stage_opencv_dnn_inference LANGUAGES CXX)
+project(stage_opencv_dnn_inference_transform LANGUAGES CXX)
 
 # ------------------------------------------------------------
 # Locate installed Flow-Pipe runtime
@@ -18,38 +18,38 @@ find_package(OpenCV REQUIRED COMPONENTS core dnn imgcodecs imgproc)
 # Proto
 # ------------------------------------------------------------
 set(PROTO_FILES
-        opencv_dnn_inference.proto
+        opencv_dnn_inference_transform.proto
 )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
-add_library(stage_opencv_dnn_inference_proto STATIC
+add_library(stage_opencv_dnn_inference_transform_proto STATIC
         ${PROTO_SRCS}
         ${PROTO_HDRS}
 )
 
-target_link_libraries(stage_opencv_dnn_inference_proto
+target_link_libraries(stage_opencv_dnn_inference_transform_proto
         PUBLIC protobuf::libprotobuf
 )
 
-target_include_directories(stage_opencv_dnn_inference_proto
+target_include_directories(stage_opencv_dnn_inference_transform_proto
         PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_compile_features(stage_opencv_dnn_inference_proto
+target_compile_features(stage_opencv_dnn_inference_transform_proto
         PUBLIC cxx_std_20
 )
 
 # ------------------------------------------------------------
 # Stage plugin
 # ------------------------------------------------------------
-add_library(stage_opencv_dnn_inference SHARED
-        opencv_dnn_inference.cc
+add_library(stage_opencv_dnn_inference_transform SHARED
+        opencv_dnn_inference_transform.cc
 )
 
 # Flow-Pipe public headers
-target_include_directories(stage_opencv_dnn_inference
+target_include_directories(stage_opencv_dnn_inference_transform
         PRIVATE
         /opt/flow-pipe/include
 )
@@ -57,17 +57,17 @@ target_include_directories(stage_opencv_dnn_inference
 # ------------------------------------------------------------
 # Link against runtime shared library
 # ------------------------------------------------------------
-target_link_libraries(stage_opencv_dnn_inference
+target_link_libraries(stage_opencv_dnn_inference_transform
         PRIVATE
         flowpipe::flowpipe_runtime
-        stage_opencv_dnn_inference_proto
+        stage_opencv_dnn_inference_transform_proto
         ${OpenCV_LIBS}
 )
 
 # ------------------------------------------------------------
 # C++ standard
 # ------------------------------------------------------------
-target_compile_features(stage_opencv_dnn_inference
+target_compile_features(stage_opencv_dnn_inference_transform
         PRIVATE
         cxx_std_20
 )
@@ -75,7 +75,7 @@ target_compile_features(stage_opencv_dnn_inference
 # ------------------------------------------------------------
 # Warnings (recommended)
 # ------------------------------------------------------------
-target_compile_options(stage_opencv_dnn_inference
+target_compile_options(stage_opencv_dnn_inference_transform
         PRIVATE
         -Wall -Wextra -Wpedantic
 )
@@ -83,8 +83,8 @@ target_compile_options(stage_opencv_dnn_inference
 # ------------------------------------------------------------
 # Hide all symbols by default (ABI safety)
 # ------------------------------------------------------------
-set_target_properties(stage_opencv_dnn_inference PROPERTIES
-        OUTPUT_NAME stage_opencv_dnn_inference
+set_target_properties(stage_opencv_dnn_inference_transform PROPERTIES
+        OUTPUT_NAME stage_opencv_dnn_inference_transform
         PREFIX "lib"
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN YES
@@ -96,6 +96,6 @@ set_target_properties(stage_opencv_dnn_inference PROPERTIES
 # ------------------------------------------------------------
 # Install
 # ------------------------------------------------------------
-install(TARGETS stage_opencv_dnn_inference
+install(TARGETS stage_opencv_dnn_inference_transform
         LIBRARY DESTINATION /opt/flow-pipe/plugins
 )
