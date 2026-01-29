@@ -84,10 +84,6 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
           proto_options.check_directory_existence_before_creation();
       options.allow_delayed_open = proto_options.allow_delayed_open();
       options.default_metadata = to_std_map(proto_options.default_metadata());
-      options.retry_strategy = arrow::fs::S3RetryStrategy{
-          static_cast<arrow::fs::S3RetryStrategyKind>(proto_options.retry_strategy().kind()),
-          proto_options.retry_strategy().max_attempts(),
-      };
       options.sse_customer_key =
           std::string(proto_options.sse_customer_key().begin(),
                       proto_options.sse_customer_key().end());
