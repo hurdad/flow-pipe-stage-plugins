@@ -22,7 +22,7 @@ set(PROTO_FILES
 )
 
 set(PROTOBUF_IMPORT_DIRS
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../proto/arrow
 )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})

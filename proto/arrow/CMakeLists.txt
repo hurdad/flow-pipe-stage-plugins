@@ -5,11 +5,11 @@ project(stage_arrow_proto LANGUAGES CXX)
 find_package(Protobuf REQUIRED)
 
 set(PROTO_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_common.proto
-        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_azure.proto
-        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_gcs.proto
-        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_s3.proto
-        ${CMAKE_CURRENT_SOURCE_DIR}/arrow_fs_hdfs.proto
+        arrow_common.proto
+        arrow_fs_azure.proto
+        arrow_fs_gcs.proto
+        arrow_fs_s3.proto
+        arrow_fs_hdfs.proto
 )
 
 set(PROTOBUF_IMPORT_DIRS

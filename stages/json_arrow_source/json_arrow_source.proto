@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package flowpipe.stages.json.arrow.source.v1;
 
-import "arrow/arrow_common.proto";
+import "arrow_common.proto";
 
 // Configuration for JsonArrowSource stage
 message JsonArrowSourceConfig {

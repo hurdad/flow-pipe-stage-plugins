@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package flowpipe.stages.csv.arrow.sink.v1;
 
-import "arrow/arrow_common.proto";
+import "arrow_common.proto";
 
 // Configuration for CsvArrowSink stage
 message CsvArrowSinkConfig {

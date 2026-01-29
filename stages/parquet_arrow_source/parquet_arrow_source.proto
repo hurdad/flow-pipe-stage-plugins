@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package flowpipe.stages.parquet.arrow.source.v1;
 
-import "arrow/arrow_common.proto";
+import "arrow_common.proto";
 
 // Configuration for ParquetArrowSource stage
 message ParquetArrowSourceConfig {

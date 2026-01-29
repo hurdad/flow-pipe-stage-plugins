@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package flowpipe.stages.orc.arrow.sink.v1;
 
-import "arrow/arrow_common.proto";
+import "arrow_common.proto";
 
 // Configuration for OrcArrowSink stage
 message OrcArrowSinkConfig {
