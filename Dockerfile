@@ -22,6 +22,7 @@ RUN apt-get update \
     librdkafka-dev \
     libcurlpp-dev \
     libnats-dev \
+    libopencv-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -57,6 +58,10 @@ RUN apt-get update \
     librdkafka1 \
     libcurlpp0t64 \
     libnats3.7t64 \
+    libopencv-core406 \
+    libopencv-dnn406 \
+    libopencv-imgcodecs406 \
+    libopencv-imgproc406 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dev \

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package flowpipe.stages.opencv.dnn.inference.v1;
+
+message OpenCVDnnInferenceConfig {
+  string model_path = 1;
+  string config_path = 2;
+  string framework = 3;
+
+  int32 input_width = 4;
+  int32 input_height = 5;
+  float scale = 6;
+  repeated float mean_values = 7;
+  bool swap_rb = 8;
+  bool crop = 9;
+  string input_name = 10;
+  repeated string output_names = 11;
+}
