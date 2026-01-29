@@ -32,7 +32,8 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
     }
     return result;
   };
-  auto to_key_value_metadata = [](const auto& proto_map) {
+  auto to_key_value_metadata =
+      [](const auto& proto_map) -> std::shared_ptr<const arrow::KeyValueMetadata> {
     std::vector<std::string> keys;
     std::vector<std::string> values;
     keys.reserve(static_cast<size_t>(proto_map.size()));
@@ -42,9 +43,10 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       values.push_back(value);
     }
     if (keys.empty()) {
-      return std::shared_ptr<const arrow::KeyValueMetadata>{};
+      return {};
     }
-    return arrow::KeyValueMetadata::Make(std::move(keys), std::move(values));
+    return std::static_pointer_cast<const arrow::KeyValueMetadata>(
+        arrow::KeyValueMetadata::Make(std::move(keys), std::move(values)));
   };
 
   auto resolve_uri_path = [&resolved_path]() -> arrow::Result<std::string> {
