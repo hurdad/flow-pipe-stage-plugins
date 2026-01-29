@@ -16,6 +16,7 @@ Collection of Flow-Pipe stage plugins implemented in C++20.
 - NATS sink
 - NATS JetStream source
 - NATS JetStream sink
+- OpenCV DNN inference transform
 - ORC Arrow source
 - ORC Arrow sink
 - Parquet Arrow source
