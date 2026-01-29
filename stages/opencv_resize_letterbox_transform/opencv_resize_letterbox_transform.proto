@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package flowpipe.stages.opencv.resize.letterbox.v1;
+
+message OpenCVResizeLetterboxConfig {
+  enum Interpolation {
+    INTERPOLATION_UNSPECIFIED = 0;
+    INTERPOLATION_NEAREST = 1;
+    INTERPOLATION_LINEAR = 2;
+    INTERPOLATION_AREA = 3;
+    INTERPOLATION_CUBIC = 4;
+    INTERPOLATION_LANCZOS4 = 5;
+  }
+
+  int32 output_width = 1;
+  int32 output_height = 2;
+  string resize_mode = 3;
+  Interpolation interpolation = 4;
+  repeated float pad_color = 5;
+  string output_format = 6;
+  repeated int32 output_params = 7;
+}
