@@ -86,14 +86,12 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       options.external_id = proto_options.external_id();
       options.load_frequency = proto_options.load_frequency();
       options.proxy_options = arrow::fs::S3ProxyOptions{
-          proto_options.proxy_options().scheme(),
-          proto_options.proxy_options().host(),
-          proto_options.proxy_options().port(),
-          proto_options.proxy_options().username(),
+          proto_options.proxy_options().scheme(),   proto_options.proxy_options().host(),
+          proto_options.proxy_options().port(),     proto_options.proxy_options().username(),
           proto_options.proxy_options().password(),
       };
-      options.credentials_kind = static_cast<arrow::fs::S3CredentialsKind>(
-          proto_options.credentials_kind());
+      options.credentials_kind =
+          static_cast<arrow::fs::S3CredentialsKind>(proto_options.credentials_kind());
       options.force_virtual_addressing = proto_options.force_virtual_addressing();
       options.background_writes = proto_options.background_writes();
       options.allow_bucket_creation = proto_options.allow_bucket_creation();
@@ -102,9 +100,8 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
           proto_options.check_directory_existence_before_creation();
       options.allow_delayed_open = proto_options.allow_delayed_open();
       options.default_metadata = to_key_value_metadata(proto_options.default_metadata());
-      options.sse_customer_key =
-          std::string(proto_options.sse_customer_key().begin(),
-                      proto_options.sse_customer_key().end());
+      options.sse_customer_key = std::string(proto_options.sse_customer_key().begin(),
+                                             proto_options.sse_customer_key().end());
       options.tls_ca_file_path = proto_options.tls_ca_file_path();
       options.tls_ca_dir_path = proto_options.tls_ca_dir_path();
       options.tls_verify_certificates = proto_options.tls_verify_certificates();
@@ -124,8 +121,8 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       if (proto_credentials.anonymous()) {
         base_options = arrow::fs::GcsOptions::Anonymous();
       } else if (!proto_credentials.json_credentials().empty()) {
-        base_options =
-            arrow::fs::GcsOptions::FromServiceAccountCredentials(proto_credentials.json_credentials());
+        base_options = arrow::fs::GcsOptions::FromServiceAccountCredentials(
+            proto_credentials.json_credentials());
       } else if (!proto_credentials.access_token().empty()) {
         auto expiration = std::chrono::system_clock::time_point{};
         if (proto_credentials.expiration().seconds() != 0 ||
