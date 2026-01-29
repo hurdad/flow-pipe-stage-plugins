@@ -2,6 +2,11 @@ syntax = "proto3";
 
 package arrow.common;
 
+import "arrow_fs_azure.proto";
+import "arrow_fs_gcs.proto";
+import "arrow_fs_hdfs.proto";
+import "arrow_fs_s3.proto";
+
 // Output payload type for Arrow-based stages.
 enum OutputType {
   OUTPUT_TYPE_TABLE = 0;
@@ -37,4 +42,16 @@ message Common  {
 
   // Compression selection
   arrow.common.Compression compression = 5;
+
+  // Filesystem-specific options (for S3, GCS, Azure, HDFS).
+  FileSystemOptions filesystem_options = 6;
+}
+
+message FileSystemOptions {
+  oneof options {
+    arrow.fs.s3.S3Options s3 = 1;
+    arrow.fs.gcs.GcsOptions gcs = 2;
+    arrow.fs.azure.AzureOptions azure = 3;
+    arrow.fs.hdfs.HdfsOptions hdfs = 4;
+  }
 }

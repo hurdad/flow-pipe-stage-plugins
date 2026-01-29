@@ -183,7 +183,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("orc_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;

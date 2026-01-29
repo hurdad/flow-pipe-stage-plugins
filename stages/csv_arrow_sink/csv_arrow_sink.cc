@@ -170,7 +170,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto write_options = BuildWriteOptions(config_);
-    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("csv_arrow_sink failed to resolve filesystem: " + fs_result.status().ToString());
       return;
