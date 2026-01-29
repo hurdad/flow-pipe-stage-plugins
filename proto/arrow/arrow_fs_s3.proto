@@ -44,52 +44,6 @@ enum S3CredentialsKind {
 }
 
 // ----------------------------------------------------------------------
-// Retry strategy configuration
-// ----------------------------------------------------------------------
-
-/// AWS error details exposed to retry strategy logic
-message S3RetryErrorDetail {
-  /// Corresponds to AWSError::GetErrorType()
-  int32 error_type = 1;
-
-  /// Corresponds to AWSError::GetMessage()
-  string message = 2;
-
-  /// Corresponds to AWSError::GetExceptionName()
-  string exception_name = 3;
-
-  /// Corresponds to AWSError::ShouldRetry()
-  bool should_retry = 4;
-}
-
-/// Stock retry strategy types
-enum S3RetryStrategyKind {
-  S3_RETRY_STRATEGY_KIND_UNSPECIFIED = 0;
-
-  /// AWS Default retry strategy
-  S3_RETRY_STRATEGY_KIND_AWS_DEFAULT = 1;
-
-  /// AWS Standard retry strategy
-  S3_RETRY_STRATEGY_KIND_AWS_STANDARD = 2;
-
-  /// Custom retry strategy (defined by application)
-  S3_RETRY_STRATEGY_KIND_CUSTOM = 3;
-}
-
-/// Retry strategy configuration
-///
-/// NOTE:
-/// - Protobuf represents *configuration only*
-/// - Actual retry logic is implemented in application code
-message S3RetryStrategy {
-  /// Which retry strategy to use
-  S3RetryStrategyKind kind = 1;
-
-  /// Maximum retry attempts (used by AWS strategies)
-  int64 max_attempts = 2;
-}
-
-// ----------------------------------------------------------------------
 // S3 filesystem options
 // ----------------------------------------------------------------------
 
@@ -165,9 +119,6 @@ message S3Options {
   ///
   /// Ignored if metadata is explicitly provided.
   map<string, string> default_metadata = 19;
-
-  /// Retry strategy configuration
-  S3RetryStrategy retry_strategy = 20;
 
   /// Optional customer-provided key for server-side encryption (SSE-C)
   ///
