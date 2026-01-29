@@ -163,7 +163,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     auto read_options = BuildReadOptions(config_);
     auto parse_options = BuildParseOptions(config_);
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("json_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());

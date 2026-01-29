@@ -109,7 +109,7 @@ class OrcArrowSource final : public ISourceStage, public ConfigurableStage {
     batch_index_ = 0;
     table_emitted_ = false;
 
-    auto fs_result = ResolveFileSystem(config_.path(), config_.common().filesystem());
+    auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {
       FP_LOG_ERROR("orc_arrow_source failed to resolve filesystem: " +
                    fs_result.status().ToString());
