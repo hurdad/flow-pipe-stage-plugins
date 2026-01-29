@@ -18,8 +18,6 @@ message CsvArrowSinkConfig {
     string delimiter = 3;
     // The string to write for null values. Quotes are not allowed in this string.
     optional string null_string = 4;
-    // IO context for writing.
-    string io_context = 5;
     // The end of line character to use for ending rows
     string eol = 6;
     // Quoting style

@@ -47,8 +47,6 @@ message CsvArrowSourceConfig {
     // Whether empty lines are ignored. If false, an empty line represents
     // a single empty value (assuming a one-column CSV file).
     optional bool ignore_empty_lines = 8;
-    // A handler function for rows which do not have the correct number of columns
-    string invalid_row_handler = 9;
   }
 
   message ConvertOptions {
@@ -92,12 +90,6 @@ message CsvArrowSourceConfig {
     // or null by default)
     // This option is ignored if `include_columns` is empty.
     optional bool include_missing_columns = 12;
-    // User-defined timestamp parsers, using the virtual parser interface in
-    // arrow/util/value_parsing.h. More than one parser can be specified, and
-    // the CSV conversion logic will try parsing values starting from the
-    // beginning of this vector. If no parsers are specified, we use the default
-    // built-in ISO-8601 parser.
-    repeated string timestamp_parsers = 13;
   }
 
   // File path to read
