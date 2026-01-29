@@ -1,13 +1,13 @@
 #include <google/protobuf/struct.pb.h>
 #include <google/protobuf/util/json_util.h>
-#include <opencv2/dnn.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cstring>
 #include <filesystem>
+#include <opencv2/dnn.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -79,8 +79,7 @@ void AppendJsonArray(std::ostringstream& stream, const float* values, size_t cou
   stream << ']';
 }
 
-void AppendOutputJson(std::ostringstream& stream, const std::string& name,
-                      const cv::Mat& output) {
+void AppendOutputJson(std::ostringstream& stream, const std::string& name, const cv::Mat& output) {
   cv::Mat float_output;
   if (output.depth() == CV_32F) {
     float_output = output;
@@ -144,23 +143,19 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     }
 
     if (!std::filesystem::exists(cfg.model_path())) {
-      FP_LOG_ERROR("opencv_dnn_inference model_path does not exist: " +
-                   cfg.model_path());
+      FP_LOG_ERROR("opencv_dnn_inference model_path does not exist: " + cfg.model_path());
       return false;
     }
 
-    if (!cfg.config_path().empty() &&
-        !std::filesystem::exists(cfg.config_path())) {
-      FP_LOG_ERROR("opencv_dnn_inference config_path does not exist: " +
-                   cfg.config_path());
+    if (!cfg.config_path().empty() && !std::filesystem::exists(cfg.config_path())) {
+      FP_LOG_ERROR("opencv_dnn_inference config_path does not exist: " + cfg.config_path());
       return false;
     }
 
     try {
       net_ = cv::dnn::readNet(cfg.model_path(), cfg.config_path(), cfg.framework());
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to load network: " +
-                   std::string(ex.what()));
+      FP_LOG_ERROR("opencv_dnn_inference failed to load network: " + std::string(ex.what()));
       return false;
     }
 
@@ -172,34 +167,30 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
   // ------------------------------------------------------------
   // ITransformStage
   // ------------------------------------------------------------
-  bool transform(StageContext& ctx, const Payload& input, Payload& output) override {
+  void process(StageContext& ctx, const Payload& input, Payload& output) override {
     if (ctx.stop.stop_requested()) {
       FP_LOG_DEBUG("opencv_dnn_inference stop requested, skipping transform");
-      return false;
+      return;
     }
 
     if (input.empty()) {
       FP_LOG_DEBUG("opencv_dnn_inference received empty payload");
-      return false;
+      return;
     }
 
-    cv::Mat encoded(1, static_cast<int>(input.size), CV_8U,
-                    const_cast<uint8_t*>(input.data()));
+    cv::Mat encoded(1, static_cast<int>(input.size), CV_8U, const_cast<uint8_t*>(input.data()));
     cv::Mat image = cv::imdecode(encoded, cv::IMREAD_COLOR);
     if (image.empty()) {
       FP_LOG_ERROR("opencv_dnn_inference failed to decode image bytes");
-      return false;
+      return;
     }
 
     const int width = config_.input_width() > 0 ? config_.input_width() : image.cols;
-    const int height =
-        config_.input_height() > 0 ? config_.input_height() : image.rows;
+    const int height = config_.input_height() > 0 ? config_.input_height() : image.rows;
 
-    const cv::Scalar mean = BuildMean({config_.mean_values().begin(),
-                                       config_.mean_values().end()});
+    const cv::Scalar mean = BuildMean({config_.mean_values().begin(), config_.mean_values().end()});
     const float scale = config_.scale() == 0.0f ? 1.0f : config_.scale();
-    cv::Mat blob = cv::dnn::blobFromImage(image, scale,
-                                          cv::Size(width, height), mean,
+    cv::Mat blob = cv::dnn::blobFromImage(image, scale, cv::Size(width, height), mean,
                                           config_.swap_rb(), config_.crop());
 
     try {
@@ -209,9 +200,8 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
         net_.setInput(blob, config_.input_name());
       }
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference failed to set input: " +
-                   std::string(ex.what()));
-      return false;
+      FP_LOG_ERROR("opencv_dnn_inference failed to set input: " + std::string(ex.what()));
+      return;
     }
 
     std::ostringstream json_stream;
@@ -235,7 +225,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
       }
     } catch (const cv::Exception& ex) {
       FP_LOG_ERROR("opencv_dnn_inference forward failed: " + std::string(ex.what()));
-      return false;
+      return;
     }
 
     json_stream << '}';
@@ -244,7 +234,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     auto buffer = AllocatePayloadBuffer(json.size());
     if (!buffer) {
       FP_LOG_ERROR("opencv_dnn_inference failed to allocate payload");
-      return false;
+      return;
     }
 
     if (!json.empty()) {
@@ -253,7 +243,6 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
 
     output = Payload(std::move(buffer), json.size());
     FP_LOG_DEBUG("opencv_dnn_inference emitted inference payload");
-    return true;
   }
 
  private:
