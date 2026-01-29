@@ -1,0 +1,27 @@
+queues:
+  - name: csv_records
+    capacity: 256
+
+stages:
+  - name: csv_reader
+    type: csv_arrow_source
+    threads: 1
+    output_queue: csv_records
+    config:
+      path: "data/input.csv"
+      output_type: OUTPUT_TYPE_TABLE
+      read_options:
+        autogenerate_column_names: true
+      common:
+        filesystem: FILE_SYSTEM_LOCAL
+        compression: COMPRESSION_AUTO
+
+  - name: parquet_writer
+    type: parquet_arrow_sink
+    threads: 1
+    input_queue: csv_records
+    config:
+      path: "data/output.parquet"
+      common:
+        filesystem: FILE_SYSTEM_LOCAL
+        compression: COMPRESSION_SNAPPY
