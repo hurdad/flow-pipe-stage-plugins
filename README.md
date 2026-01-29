@@ -61,3 +61,8 @@ The shared libraries install to `/opt/flow-pipe/plugins`.
 ```sh
 cmake --install build
 ```
+
+## Flow examples
+
+Sample flow definitions live in `flows/`, including a CSV-to-Parquet Arrow
+pipeline that uses the `csv_arrow_source` and `parquet_arrow_sink` stages.
