@@ -1,0 +1,35 @@
+queues:
+  - name: csv_records
+    capacity: 256
+
+stages:
+  - name: csv_reader
+    type: csv_arrow_source
+    threads: 1
+    output_queue: csv_records
+    config:
+      path: "s3://my-bucket/path/input.csv"
+      output_type: OUTPUT_TYPE_TABLE
+      read_options:
+        autogenerate_column_names: true
+      common:
+        filesystem: FILE_SYSTEM_S3
+        compression: COMPRESSION_AUTO
+        filesystem_options:
+          s3:
+            region: "us-east-1"
+            credentials_kind: S3_CREDENTIALS_KIND_DEFAULT
+
+  - name: parquet_writer
+    type: parquet_arrow_sink
+    threads: 1
+    input_queue: csv_records
+    config:
+      path: "s3://my-bucket/path/output.parquet"
+      common:
+        filesystem: FILE_SYSTEM_S3
+        compression: COMPRESSION_SNAPPY
+        filesystem_options:
+          s3:
+            region: "us-east-1"
+            credentials_kind: S3_CREDENTIALS_KIND_DEFAULT

@@ -9,6 +9,7 @@ repository. These flows are written in YAML and can be executed with the
 | File | Description |
 | --- | --- |
 | `csv_to_parquet_arrow.yaml` | Read a CSV file with `csv_arrow_source` and write a Parquet file with `parquet_arrow_sink`. |
+| `csv_to_parquet_s3.yaml` | Read a CSV file from an S3 bucket and write a Parquet file back to S3. |
 
 ## Running a flow
 
