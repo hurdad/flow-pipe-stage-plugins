@@ -103,6 +103,9 @@ message CsvArrowSourceConfig {
   // File path to read
   string path = 1;
 
+  // Output payload type
+  .arrow.common.OutputType output_type = 2;
+
   // ReadOptions
   ReadOptions read_options = 3;
 
