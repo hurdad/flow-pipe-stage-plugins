@@ -29,6 +29,39 @@ using ParquetArrowSourceConfig =
     flowpipe::stages::parquet::arrow::source::v1::ParquetArrowSourceConfig;
 
 namespace {
+bool IsHiveSegment(const std::filesystem::path& segment) {
+  auto segment_string = segment.string();
+  auto separator = segment_string.find('=');
+  return separator != std::string::npos && separator > 0 &&
+         separator + 1 < segment_string.size();
+}
+
+std::filesystem::path PartitionBaseDirForFile(const std::filesystem::path& file_path) {
+  auto parent = file_path.parent_path();
+  std::filesystem::path base;
+  bool found_hive_segment = false;
+  for (const auto& part : parent) {
+    if (IsHiveSegment(part)) {
+      found_hive_segment = true;
+      break;
+    }
+    base /= part;
+  }
+
+  if (!found_hive_segment) {
+    return parent;
+  }
+
+  if (base.empty()) {
+    if (parent.has_root_path()) {
+      return parent.root_path();
+    }
+    return ".";
+  }
+
+  return base;
+}
+
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
     const std::shared_ptr<arrow::Table>& table) {
   ARROW_ASSIGN_OR_RAISE(auto buffer_output, arrow::io::BufferOutputStream::Create());
@@ -68,7 +101,8 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
   std::shared_ptr<arrow::dataset::DatasetFactory> factory;
   if (info.type() == arrow::fs::FileType::File) {
     std::vector<arrow::fs::FileInfo> files{info};
-    options.partition_base_dir = std::filesystem::path(info.path()).parent_path().string();
+    options.partition_base_dir =
+        PartitionBaseDirForFile(std::filesystem::path(info.path())).string();
     ARROW_ASSIGN_OR_RAISE(
         factory,
         arrow::dataset::FileSystemDatasetFactory::Make(filesystem, files, format, options));
