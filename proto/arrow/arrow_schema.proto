@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package arrow.schema;
+
+message ColumnType {
+  enum DataType {
+    DATA_TYPE_UNSPECIFIED = 0;
+    DATA_TYPE_NULL = 1;
+    DATA_TYPE_BOOL = 2;
+    DATA_TYPE_INT8 = 3;
+    DATA_TYPE_INT16 = 4;
+    DATA_TYPE_INT32 = 5;
+    DATA_TYPE_INT64 = 6;
+    DATA_TYPE_UINT8 = 7;
+    DATA_TYPE_UINT16 = 8;
+    DATA_TYPE_UINT32 = 9;
+    DATA_TYPE_UINT64 = 10;
+    DATA_TYPE_FLOAT16 = 11;
+    DATA_TYPE_FLOAT32 = 12;
+    DATA_TYPE_FLOAT64 = 13;
+    DATA_TYPE_STRING = 14;
+    DATA_TYPE_LARGE_STRING = 15;
+    DATA_TYPE_BINARY = 16;
+    DATA_TYPE_LARGE_BINARY = 17;
+    DATA_TYPE_DATE32 = 18;
+    DATA_TYPE_DATE64 = 19;
+    DATA_TYPE_TIMESTAMP = 20;
+    DATA_TYPE_TIME32 = 21;
+    DATA_TYPE_TIME64 = 22;
+    DATA_TYPE_DURATION = 23;
+    DATA_TYPE_DECIMAL128 = 24;
+    DATA_TYPE_DECIMAL256 = 25;
+    DATA_TYPE_FIXED_SIZE_BINARY = 26;
+  }
+
+  enum TimeUnit {
+    TIME_UNIT_UNSPECIFIED = 0;
+    TIME_UNIT_SECOND = 1;
+    TIME_UNIT_MILLI = 2;
+    TIME_UNIT_MICRO = 3;
+    TIME_UNIT_NANO = 4;
+  }
+
+  DataType type = 1;
+  TimeUnit time_unit = 2;
+  optional int32 fixed_size_binary_length = 3;
+  optional int32 decimal_precision = 4;
+  optional int32 decimal_scale = 5;
+}

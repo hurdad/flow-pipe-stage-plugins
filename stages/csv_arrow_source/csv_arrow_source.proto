@@ -3,6 +3,7 @@ syntax = "proto3";
 package flowpipe.stages.csv.arrow.source.v1;
 
 import "arrow_common.proto";
+import "arrow_schema.proto";
 
 // Configuration for CsvArrowSource stage
 message CsvArrowSourceConfig {
@@ -53,7 +54,7 @@ message CsvArrowSourceConfig {
     // Whether to check UTF8 validity of string columns
     optional bool check_utf8 = 1;
     // Optional per-column types (disabling type inference on those columns)
-    map<string, string> column_types = 2;
+    map<string, .arrow.schema.ColumnType> column_types = 2;
     // Recognized spellings for null values
     repeated string null_values = 3;
     // Recognized spellings for boolean true values
