@@ -23,26 +23,26 @@ using namespace flowpipe;
 using OrcArrowSinkConfig = flowpipe::stages::orc::arrow::sink::v1::OrcArrowSinkConfig;
 
 namespace {
-arrow::Compression::type ResolveCompression(arrow::common::Compression compression) {
+arrow::Compression::type ResolveCompression(flowpipe_arrow::common::Compression compression) {
   switch (compression) {
-    case arrow::common::COMPRESSION_SNAPPY:
+    case flowpipe_arrow::common::COMPRESSION_SNAPPY:
       return arrow::Compression::SNAPPY;
-    case arrow::common::COMPRESSION_GZIP:
+    case flowpipe_arrow::common::COMPRESSION_GZIP:
       return arrow::Compression::GZIP;
-    case arrow::common::COMPRESSION_BROTLI:
+    case flowpipe_arrow::common::COMPRESSION_BROTLI:
       return arrow::Compression::BROTLI;
-    case arrow::common::COMPRESSION_ZSTD:
+    case flowpipe_arrow::common::COMPRESSION_ZSTD:
       return arrow::Compression::ZSTD;
-    case arrow::common::COMPRESSION_LZ4:
+    case flowpipe_arrow::common::COMPRESSION_LZ4:
       return arrow::Compression::LZ4;
-    case arrow::common::COMPRESSION_LZ4_FRAME:
+    case flowpipe_arrow::common::COMPRESSION_LZ4_FRAME:
       return arrow::Compression::LZ4_FRAME;
-    case arrow::common::COMPRESSION_LZO:
+    case flowpipe_arrow::common::COMPRESSION_LZO:
       return arrow::Compression::LZO;
-    case arrow::common::COMPRESSION_BZ2:
+    case flowpipe_arrow::common::COMPRESSION_BZ2:
       return arrow::Compression::BZ2;
-    case arrow::common::COMPRESSION_UNCOMPRESSED:
-    case arrow::common::COMPRESSION_AUTO:
+    case flowpipe_arrow::common::COMPRESSION_UNCOMPRESSED:
+    case flowpipe_arrow::common::COMPRESSION_AUTO:
     default:
       return arrow::Compression::UNCOMPRESSED;
   }

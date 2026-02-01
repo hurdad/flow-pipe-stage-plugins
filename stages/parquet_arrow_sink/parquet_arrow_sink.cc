@@ -27,26 +27,26 @@ using namespace flowpipe;
 using ParquetArrowSinkConfig = flowpipe::stages::parquet::arrow::sink::v1::ParquetArrowSinkConfig;
 
 namespace {
-parquet::Compression::type ResolveCompression(arrow::common::Compression compression) {
+parquet::Compression::type ResolveCompression(flowpipe_arrow::common::Compression compression) {
   switch (compression) {
-    case arrow::common::COMPRESSION_SNAPPY:
+    case flowpipe_arrow::common::COMPRESSION_SNAPPY:
       return parquet::Compression::SNAPPY;
-    case arrow::common::COMPRESSION_GZIP:
+    case flowpipe_arrow::common::COMPRESSION_GZIP:
       return parquet::Compression::GZIP;
-    case arrow::common::COMPRESSION_BROTLI:
+    case flowpipe_arrow::common::COMPRESSION_BROTLI:
       return parquet::Compression::BROTLI;
-    case arrow::common::COMPRESSION_ZSTD:
+    case flowpipe_arrow::common::COMPRESSION_ZSTD:
       return parquet::Compression::ZSTD;
-    case arrow::common::COMPRESSION_LZ4:
+    case flowpipe_arrow::common::COMPRESSION_LZ4:
       return parquet::Compression::LZ4;
-    case arrow::common::COMPRESSION_LZ4_FRAME:
+    case flowpipe_arrow::common::COMPRESSION_LZ4_FRAME:
       return parquet::Compression::LZ4_FRAME;
-    case arrow::common::COMPRESSION_LZO:
+    case flowpipe_arrow::common::COMPRESSION_LZO:
       return parquet::Compression::LZO;
-    case arrow::common::COMPRESSION_BZ2:
+    case flowpipe_arrow::common::COMPRESSION_BZ2:
       return parquet::Compression::BZ2;
-    case arrow::common::COMPRESSION_UNCOMPRESSED:
-    case arrow::common::COMPRESSION_AUTO:
+    case flowpipe_arrow::common::COMPRESSION_UNCOMPRESSED:
+    case flowpipe_arrow::common::COMPRESSION_AUTO:
     default:
       return parquet::Compression::UNCOMPRESSED;
   }

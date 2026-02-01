@@ -278,7 +278,7 @@ class CsvArrowSource final : public ISourceStage, public ConfigurableStage {
 
     table_ = *table_result;
 
-    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == flowpipe_arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       arrow::TableBatchReader reader(*table_);
       std::shared_ptr<arrow::RecordBatch> batch;
       while (true) {
@@ -313,7 +313,7 @@ class CsvArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     std::shared_ptr<arrow::Buffer> buffer;
-    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == flowpipe_arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       if (batch_index_ >= record_batches_.size()) {
         FP_LOG_DEBUG("csv_arrow_source finished record batches");
         return false;
