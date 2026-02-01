@@ -23,7 +23,7 @@ message JsonArrowSourceConfig {
 
   message ParseOptions {
     // Optional explicit schema (disables type inference on those fields)
-    map<string, .arrow.schema.ColumnType> explicit_schema = 1;
+    map<string, .flowpipe.v1.arrow.schema.ColumnType> explicit_schema = 1;
     // Whether objects may be printed across multiple lines (for example pretty-printed)
     //
     // If true, parsing may be slower.
@@ -36,7 +36,7 @@ message JsonArrowSourceConfig {
   string path = 1;
 
   // Output payload type
-  .arrow.common.OutputType output_type = 2;
+  .flowpipe.v1.arrow.common.OutputType output_type = 2;
 
   // ReadOptions
   ReadOptions read_options = 3;
@@ -45,5 +45,5 @@ message JsonArrowSourceConfig {
   ParseOptions parse_options = 4;
 
   // Common Arrow options (filesystem and compression)
-  .arrow.common.Common common = 5;
+  .flowpipe.v1.arrow.common.Common common = 5;
 }

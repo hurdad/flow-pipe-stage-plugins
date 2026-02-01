@@ -55,7 +55,7 @@ message ParquetArrowSinkConfig {
     optional bool statistics_enabled = 2;
     optional bool page_index_enabled = 3;
     optional Encoding encoding = 4;
-    optional .arrow.common.Compression compression = 5;
+    optional .flowpipe.v1.arrow.common.Compression compression = 5;
     optional int32 compression_level = 6;
   }
 
@@ -75,7 +75,7 @@ message ParquetArrowSinkConfig {
     optional bool statistics_enabled = 13;
     optional bool page_index_enabled = 14;
     optional Encoding encoding = 15;
-    optional .arrow.common.Compression compression = 16;
+    optional .flowpipe.v1.arrow.common.Compression compression = 16;
     optional int32 compression_level = 17;
     optional int64 max_statistics_size = 18;
     repeated SortingColumn sorting_columns = 19;
@@ -99,7 +99,7 @@ message ParquetArrowSinkConfig {
   optional int64 row_group_size = 2;
 
   // Common Arrow options (filesystem and compression)
-  .arrow.common.Common common = 3;
+  .flowpipe.v1.arrow.common.Common common = 3;
 
   // FileSystemDataset write options (uses hive partitioning)
   optional FileSystemDatasetWriteOptions write_opts = 4;

@@ -54,7 +54,7 @@ message CsvArrowSourceConfig {
     // Whether to check UTF8 validity of string columns
     optional bool check_utf8 = 1;
     // Optional per-column types (disabling type inference on those columns)
-    map<string, .arrow.schema.ColumnType> column_types = 2;
+    map<string, .flowpipe.v1.arrow.schema.ColumnType> column_types = 2;
     // Recognized spellings for null values
     repeated string null_values = 3;
     // Recognized spellings for boolean true values
@@ -97,7 +97,7 @@ message CsvArrowSourceConfig {
   string path = 1;
 
   // Output payload type
-  .arrow.common.OutputType output_type = 2;
+  .flowpipe.v1.arrow.common.OutputType output_type = 2;
 
   // ReadOptions
   ReadOptions read_options = 3;
@@ -109,5 +109,5 @@ message CsvArrowSourceConfig {
   ConvertOptions convert_options = 5;
 
   // Common Arrow options (filesystem and compression)
-  .arrow.common.Common common = 6;
+  .flowpipe.v1.arrow.common.Common common = 6;
 }

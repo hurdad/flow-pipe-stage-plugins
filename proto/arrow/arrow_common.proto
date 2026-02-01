@@ -38,10 +38,10 @@ enum Compression {
 
 message Common  {
   // Filesystem selection
-  arrow.common.FileSystem filesystem = 4;
+  flowpipe.v1.arrow.common.FileSystem filesystem = 4;
 
   // Compression selection
-  arrow.common.Compression compression = 5;
+  flowpipe.v1.arrow.common.Compression compression = 5;
 
   // Filesystem-specific options (for S3, GCS, Azure, HDFS).
   FileSystemOptions filesystem_options = 6;
@@ -49,9 +49,9 @@ message Common  {
 
 message FileSystemOptions {
   oneof options {
-    arrow.fs.s3.S3Options s3 = 1;
-    arrow.fs.gcs.GcsOptions gcs = 2;
-    arrow.fs.azure.AzureOptions azure = 3;
-    arrow.fs.hdfs.HdfsOptions hdfs = 4;
+    flowpipe.v1.arrow.fs.s3.S3Options s3 = 1;
+    flowpipe.v1.arrow.fs.gcs.GcsOptions gcs = 2;
+    flowpipe.v1.arrow.fs.azure.AzureOptions azure = 3;
+    flowpipe.v1.arrow.fs.hdfs.HdfsOptions hdfs = 4;
   }
 }

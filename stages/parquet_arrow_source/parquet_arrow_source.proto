@@ -10,11 +10,11 @@ message ParquetArrowSourceConfig {
   string path = 1;
 
   // Output payload type
-  .arrow.common.OutputType output_type = 2;
+  .flowpipe.v1.arrow.common.OutputType output_type = 2;
 
   // Reader options
   optional int64 batch_size = 3;
 
   // Common Arrow options (filesystem and compression).
-  .arrow.common.Common common = 4;
+  .flowpipe.v1.arrow.common.Common common = 4;
 }
