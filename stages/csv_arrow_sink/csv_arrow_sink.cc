@@ -7,7 +7,7 @@
 #include <arrow/table.h>
 #include <arrow/util/compression.h>
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 
 #include <string>
 #include <vector>
@@ -122,19 +122,10 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
   // ConfigurableStage
   // ------------------------------------------------------------
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("csv_arrow_sink failed to serialize config");
-      return false;
-    }
-
     CsvArrowSinkConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("csv_arrow_sink invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<CsvArrowSinkConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("csv_arrow_sink invalid config: " + error);
       return false;
     }
 

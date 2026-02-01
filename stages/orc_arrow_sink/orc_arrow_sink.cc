@@ -5,7 +5,7 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 
 #include <string>
 #include <utility>
@@ -136,19 +136,10 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
   // ConfigurableStage
   // ------------------------------------------------------------
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("orc_arrow_sink failed to serialize config");
-      return false;
-    }
-
     OrcArrowSinkConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("orc_arrow_sink invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<OrcArrowSinkConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("orc_arrow_sink invalid config: " + error);
       return false;
     }
 

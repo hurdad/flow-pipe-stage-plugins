@@ -1,5 +1,5 @@
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 
 #include <curlpp/Easy.hpp>
 #include <curlpp/Exception.hpp>
@@ -53,19 +53,10 @@ class HttpSink final : public ISinkStage, public ConfigurableStage {
   // ConfigurableStage
   // ------------------------------------------------------------
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("http_sink failed to serialize config");
-      return false;
-    }
-
     HttpSinkConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("http_sink invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<HttpSinkConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("http_sink invalid config: " + error);
       return false;
     }
 
