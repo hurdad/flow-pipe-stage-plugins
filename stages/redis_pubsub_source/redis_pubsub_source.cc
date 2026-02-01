@@ -15,7 +15,7 @@
 using namespace flowpipe;
 
 using RedisPubSubSourceConfig =
-    flowpipe::stages::redis::pubsub::source::v1::RedisPubSubSourceConfig;
+    flowpipe::v1::stages::redis::pubsub::source::v1::RedisPubSubSourceConfig;
 
 // ============================================================
 // RedisPubSubSource
@@ -113,20 +113,20 @@ class RedisPubSubSource final : public ISourceStage, public ConfigurableStage {
   bool InitializeConnection() {
     ShutdownConnection();
 
-    flowpipe::stages::util::RedisConnectionConfig options;
+    flowpipe::v1::stages::util::RedisConnectionConfig options;
     options.host = config_.host();
     options.port = static_cast<int>(config_.port());
     options.username = config_.username();
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_pubsub_source");
+    context_ = flowpipe::v1::stages::util::ConnectRedis(options, "redis_pubsub_source");
     if (!context_) {
       return false;
     }
 
     const int timeout_ms = config_.poll_timeout_ms() > 0 ? config_.poll_timeout_ms() : 1000;
-    flowpipe::stages::util::ApplyRedisTimeout(context_, timeout_ms);
+    flowpipe::v1::stages::util::ApplyRedisTimeout(context_, timeout_ms);
 
     redisReply* reply =
         static_cast<redisReply*>(redisCommand(context_, "SUBSCRIBE %s", config_.channel().c_str()));
@@ -151,7 +151,7 @@ class RedisPubSubSource final : public ISourceStage, public ConfigurableStage {
   }
 
   void ShutdownConnection() {
-    flowpipe::stages::util::CloseRedis(context_);
+    flowpipe::v1::stages::util::CloseRedis(context_);
   }
 
   RedisPubSubSourceConfig config_{};

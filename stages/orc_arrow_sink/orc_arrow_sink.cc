@@ -20,7 +20,7 @@
 
 using namespace flowpipe;
 
-using OrcArrowSinkConfig = flowpipe::stages::orc::arrow::sink::v1::OrcArrowSinkConfig;
+using OrcArrowSinkConfig = flowpipe::v1::stages::orc::arrow::sink::v1::OrcArrowSinkConfig;
 
 namespace {
 arrow::Compression::type ResolveCompression(flowpipe_arrow::common::Compression compression) {

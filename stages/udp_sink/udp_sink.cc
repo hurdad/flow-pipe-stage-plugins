@@ -18,7 +18,7 @@
 
 using namespace flowpipe;
 
-using UdpSinkConfig = flowpipe::stages::udp::sink::v1::UdpSinkConfig;
+using UdpSinkConfig = flowpipe::v1::stages::udp::sink::v1::UdpSinkConfig;
 
 namespace {
 void CloseSocket(int& fd) {

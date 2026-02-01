@@ -17,7 +17,7 @@
 
 using namespace flowpipe;
 
-using HttpSinkConfig = flowpipe::stages::http::sink::v1::HttpSinkConfig;
+using HttpSinkConfig = flowpipe::v1::stages::http::sink::v1::HttpSinkConfig;
 
 namespace {
 HttpSinkConfig::Method ResolveMethod(HttpSinkConfig::Method method) {

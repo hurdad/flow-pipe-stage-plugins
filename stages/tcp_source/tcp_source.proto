@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.tcp.source.v1;
+package flowpipe.v1.stages.tcp.source.v1;
 
 // Configuration for TcpSource stage
 message TcpSourceConfig {

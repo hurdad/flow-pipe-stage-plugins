@@ -14,7 +14,7 @@
 
 using namespace flowpipe;
 
-using KafkaSinkConfig = flowpipe::stages::kafka::sink::v1::KafkaSinkConfig;
+using KafkaSinkConfig = flowpipe::v1::stages::kafka::sink::v1::KafkaSinkConfig;
 
 // ============================================================
 // KafkaSink

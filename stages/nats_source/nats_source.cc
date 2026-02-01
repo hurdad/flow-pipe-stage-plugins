@@ -13,7 +13,7 @@
 
 using namespace flowpipe;
 
-using NatsSourceConfig = flowpipe::stages::nats::source::v1::NatsSourceConfig;
+using NatsSourceConfig = flowpipe::v1::stages::nats::source::v1::NatsSourceConfig;
 
 namespace {
 constexpr int kDefaultPollTimeoutMs = 1000;

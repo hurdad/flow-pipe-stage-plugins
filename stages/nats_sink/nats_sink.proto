@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.nats.sink.v1;
+package flowpipe.v1.stages.nats.sink.v1;
 
 // Configuration for NatsSink stage
 message NatsSinkConfig {

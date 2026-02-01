@@ -18,7 +18,7 @@
 
 using namespace flowpipe;
 
-using TcpSinkConfig = flowpipe::stages::tcp::sink::v1::TcpSinkConfig;
+using TcpSinkConfig = flowpipe::v1::stages::tcp::sink::v1::TcpSinkConfig;
 
 namespace {
 void CloseSocket(int& fd) {

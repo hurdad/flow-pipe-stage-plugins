@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.nats.source.v1;
+package flowpipe.v1.stages.nats.source.v1;
 
 // Configuration for NatsSource stage
 message NatsSourceConfig {

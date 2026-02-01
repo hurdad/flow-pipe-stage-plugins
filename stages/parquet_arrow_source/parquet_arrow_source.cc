@@ -26,7 +26,7 @@
 using namespace flowpipe;
 
 using ParquetArrowSourceConfig =
-    flowpipe::stages::parquet::arrow::source::v1::ParquetArrowSourceConfig;
+    flowpipe::v1::stages::parquet::arrow::source::v1::ParquetArrowSourceConfig;
 
 namespace {
 bool IsHiveSegment(const std::filesystem::path& segment) {

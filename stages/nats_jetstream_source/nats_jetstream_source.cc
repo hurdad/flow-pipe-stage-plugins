@@ -14,7 +14,7 @@
 using namespace flowpipe;
 
 using NatsJetStreamSourceConfig =
-    flowpipe::stages::nats::jetstream::source::v1::NatsJetStreamSourceConfig;
+    flowpipe::v1::stages::nats::jetstream::source::v1::NatsJetStreamSourceConfig;
 
 namespace {
 constexpr int kDefaultPollTimeoutMs = 1000;

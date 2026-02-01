@@ -15,7 +15,7 @@
 
 using namespace flowpipe;
 
-using FileSourceConfig = flowpipe::stages::file::source::v1::FileSourceConfig;
+using FileSourceConfig = flowpipe::v1::stages::file::source::v1::FileSourceConfig;
 
 namespace {
 using CompressionType = FileSourceConfig::CompressionType;

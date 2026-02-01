@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.file.source.v1;
+package flowpipe.v1.stages.file.source.v1;
 
 // Configuration for FileSource stage
 message FileSourceConfig {

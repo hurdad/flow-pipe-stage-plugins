@@ -23,7 +23,7 @@
 
 using namespace flowpipe;
 
-using CsvArrowSourceConfig = flowpipe::stages::csv::arrow::source::v1::CsvArrowSourceConfig;
+using CsvArrowSourceConfig = flowpipe::v1::stages::csv::arrow::source::v1::CsvArrowSourceConfig;
 
 namespace {
 char ResolveChar(const std::string& value, char fallback) {

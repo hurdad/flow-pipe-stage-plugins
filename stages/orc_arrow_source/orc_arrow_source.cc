@@ -22,7 +22,7 @@
 
 using namespace flowpipe;
 
-using OrcArrowSourceConfig = flowpipe::stages::orc::arrow::source::v1::OrcArrowSourceConfig;
+using OrcArrowSourceConfig = flowpipe::v1::stages::orc::arrow::source::v1::OrcArrowSourceConfig;
 
 namespace {
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(

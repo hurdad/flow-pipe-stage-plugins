@@ -12,7 +12,7 @@
 
 using namespace flowpipe;
 
-using NatsSinkConfig = flowpipe::stages::nats::sink::v1::NatsSinkConfig;
+using NatsSinkConfig = flowpipe::v1::stages::nats::sink::v1::NatsSinkConfig;
 
 namespace {
 constexpr int kDefaultFlushTimeoutMs = 1000;

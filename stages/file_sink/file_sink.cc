@@ -13,7 +13,7 @@
 
 using namespace flowpipe;
 
-using FileSinkConfig = flowpipe::stages::file::sink::v1::FileSinkConfig;
+using FileSinkConfig = flowpipe::v1::stages::file::sink::v1::FileSinkConfig;
 
 namespace {
 using CompressionType = FileSinkConfig::CompressionType;
