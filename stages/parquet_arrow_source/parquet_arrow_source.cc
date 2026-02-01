@@ -1,13 +1,17 @@
 #include <arrow/buffer.h>
+#include <arrow/dataset/dataset.h>
+#include <arrow/dataset/file_base.h>
+#include <arrow/dataset/file_parquet.h>
+#include <arrow/dataset/partition.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
 #include "flowpipe/protobuf_config.h"
-#include <parquet/arrow/reader.h>
 
 #include <cstring>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,13 +58,36 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeRecordBatch(
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
-    const std::shared_ptr<arrow::io::RandomAccessFile>& input) {
-  ARROW_ASSIGN_OR_RAISE(auto reader, parquet::arrow::OpenFile(input, arrow::default_memory_pool()));
+    const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& path) {
+  ARROW_ASSIGN_OR_RAISE(auto info, filesystem->GetFileInfo(path));
 
-  std::shared_ptr<arrow::Table> table;
-  ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+  arrow::dataset::FileSystemFactoryOptions options;
+  options.partitioning = arrow::dataset::HivePartitioning::MakeFactory();
 
-  return table;
+  std::shared_ptr<arrow::dataset::DatasetFactory> factory;
+  if (info.type() == arrow::fs::FileType::File) {
+    std::vector<arrow::fs::FileInfo> files{info};
+    options.partition_base_dir = std::filesystem::path(info.path()).parent_path().string();
+    ARROW_ASSIGN_OR_RAISE(
+        factory,
+        arrow::dataset::FileSystemDatasetFactory::Make(filesystem, files, format, options));
+  } else if (info.type() == arrow::fs::FileType::Directory) {
+    arrow::fs::FileSelector selector;
+    selector.base_dir = info.path();
+    selector.recursive = true;
+    options.partition_base_dir = info.path();
+    ARROW_ASSIGN_OR_RAISE(
+        factory,
+        arrow::dataset::FileSystemDatasetFactory::Make(filesystem, selector, format, options));
+  } else {
+    return arrow::Status::Invalid("Unsupported parquet path: ", path);
+  }
+
+  ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
+  ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
+  ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
+  return scanner->ToTable();
 }
 }  // namespace
 
@@ -111,13 +138,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     auto fs_and_path = *fs_result;
-    auto input_result = fs_and_path.first->OpenInputFile(fs_and_path.second);
-    if (!input_result.ok()) {
-      FP_LOG_ERROR("parquet_arrow_source failed to open file: " + input_result.status().ToString());
-      return false;
-    }
-
-    auto table_result = ReadParquetTable(*input_result);
+    auto table_result = ReadParquetTable(fs_and_path.first, fs_and_path.second);
     if (!table_result.ok()) {
       FP_LOG_ERROR("parquet_arrow_source failed to read parquet: " +
                    table_result.status().ToString());
