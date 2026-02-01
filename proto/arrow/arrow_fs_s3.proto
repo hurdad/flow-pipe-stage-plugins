@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package arrow.fs.s3;
+package flowpipe.v1.arrow.fs.s3;
 
 // ----------------------------------------------------------------------
 // S3 proxy configuration

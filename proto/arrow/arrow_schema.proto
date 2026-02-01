@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package arrow.schema;
+package flowpipe.v1.arrow.schema;
 
 message ColumnType {
   enum DataType {
