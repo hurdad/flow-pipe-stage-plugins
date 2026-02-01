@@ -26,7 +26,7 @@ message OrcArrowSinkConfig {
     // Size of each ORC stripe in bytes.
     int64 stripe_size = 3;
     // The compression codec of the ORC file.
-    .arrow.common.Compression compression = 4;
+    .flowpipe.v1.arrow.common.Compression compression = 4;
     // The size of each compression block in bytes.
     int64 compression_block_size = 5;
     // The compression strategy (speed vs size reduction).
@@ -47,7 +47,7 @@ message OrcArrowSinkConfig {
   string path = 1;
 
   // Common Arrow options (filesystem and compression)
-  .arrow.common.Common common = 2;
+  .flowpipe.v1.arrow.common.Common common = 2;
 
   // WriteOptions
   WriteOptions write_options = 3;
