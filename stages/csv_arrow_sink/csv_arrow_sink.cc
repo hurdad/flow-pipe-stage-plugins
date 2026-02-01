@@ -121,7 +121,7 @@ class CsvArrowSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     CsvArrowSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<CsvArrowSinkConfig>::Parse(config, &cfg, &error)) {

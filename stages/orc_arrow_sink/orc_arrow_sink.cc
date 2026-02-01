@@ -135,7 +135,7 @@ class OrcArrowSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     OrcArrowSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<OrcArrowSinkConfig>::Parse(config, &cfg, &error)) {

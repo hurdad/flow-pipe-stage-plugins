@@ -37,7 +37,7 @@ class KafkaSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     KafkaSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<KafkaSourceConfig>::Parse(config, &cfg, &error)) {

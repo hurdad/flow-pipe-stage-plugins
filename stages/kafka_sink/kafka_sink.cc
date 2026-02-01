@@ -37,7 +37,7 @@ class KafkaSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     KafkaSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<KafkaSinkConfig>::Parse(config, &cfg, &error)) {

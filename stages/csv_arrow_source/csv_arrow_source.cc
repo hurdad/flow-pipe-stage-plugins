@@ -197,7 +197,7 @@ class CsvArrowSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     CsvArrowSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<CsvArrowSourceConfig>::Parse(config, &cfg, &error)) {

@@ -52,7 +52,7 @@ class HttpSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     HttpSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<HttpSinkConfig>::Parse(config, &cfg, &error)) {

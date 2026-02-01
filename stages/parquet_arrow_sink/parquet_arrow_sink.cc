@@ -311,7 +311,7 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     ParquetArrowSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<ParquetArrowSinkConfig>::Parse(config, &cfg, &error)) {

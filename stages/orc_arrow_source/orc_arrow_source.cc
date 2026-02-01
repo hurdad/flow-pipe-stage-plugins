@@ -81,7 +81,7 @@ class OrcArrowSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     OrcArrowSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<OrcArrowSourceConfig>::Parse(config, &cfg, &error)) {

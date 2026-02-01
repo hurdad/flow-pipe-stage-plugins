@@ -74,7 +74,7 @@ class RedisStreamSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     RedisStreamSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<RedisStreamSinkConfig>::Parse(config, &cfg, &error)) {
