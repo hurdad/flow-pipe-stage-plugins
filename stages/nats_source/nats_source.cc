@@ -1,5 +1,5 @@
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 #include <nats/nats.h>
 
 #include <cstring>
@@ -46,19 +46,10 @@ class NatsSource final : public ISourceStage, public ConfigurableStage {
   // ConfigurableStage
   // ------------------------------------------------------------
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("nats_source failed to serialize config");
-      return false;
-    }
-
     NatsSourceConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("nats_source invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<NatsSourceConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("nats_source invalid config: " + error);
       return false;
     }
 

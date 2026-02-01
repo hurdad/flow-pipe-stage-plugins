@@ -1,5 +1,5 @@
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 
 #include <algorithm>
 #include <array>
@@ -89,19 +89,10 @@ class OpenCVResizeLetterbox final : public ITransformStage, public ConfigurableS
   }
 
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("opencv_resize_letterbox_transform failed to serialize config");
-      return false;
-    }
-
     OpenCVResizeLetterboxConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("opencv_resize_letterbox_transform invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<OpenCVResizeLetterboxConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("opencv_resize_letterbox_transform invalid config: " + error);
       return false;
     }
 

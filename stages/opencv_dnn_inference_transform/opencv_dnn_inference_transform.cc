@@ -1,5 +1,5 @@
 #include <google/protobuf/struct.pb.h>
-#include <google/protobuf/util/json_util.h>
+#include "flowpipe/protobuf_config.h"
 
 #include <algorithm>
 #include <array>
@@ -121,19 +121,10 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
   // ConfigurableStage
   // ------------------------------------------------------------
   bool Configure(const google::protobuf::Struct& config) override {
-    std::string json;
-    auto status = google::protobuf::util::MessageToJsonString(config, &json);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("opencv_dnn_inference_transform failed to serialize config");
-      return false;
-    }
-
     OpenCVDnnInferenceConfig cfg;
-    status = google::protobuf::util::JsonStringToMessage(json, &cfg);
-
-    if (!status.ok()) {
-      FP_LOG_ERROR("opencv_dnn_inference_transform invalid config");
+    std::string error;
+    if (!ProtobufConfigParser<OpenCVDnnInferenceConfig>::Parse(config, &cfg, &error)) {
+      FP_LOG_ERROR("opencv_dnn_inference_transform invalid config: " + error);
       return false;
     }
 
