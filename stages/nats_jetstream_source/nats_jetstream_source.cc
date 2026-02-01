@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 #include <nats/nats.h>
 
 #include <cstring>
@@ -8,6 +7,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "nats_jetstream_source.pb.h"
 
@@ -164,12 +164,8 @@ class NatsJetStreamSource final : public ISourceStage, public ConfigurableStage 
     }
 
     natsSubscription* subscription = nullptr;
-    status = js_SubscribeSync(&subscription,
-                              jetstream,
-                              subject.c_str(),
-                              nullptr,
-                              options_ptr,
-                              nullptr);
+    status =
+        js_SubscribeSync(&subscription, jetstream, subject.c_str(), nullptr, options_ptr, nullptr);
     if (status != NATS_OK) {
       FP_LOG_ERROR("nats_jetstream_source subscribe failed: " + StatusToString(status));
       jsCtx_Destroy(jetstream);

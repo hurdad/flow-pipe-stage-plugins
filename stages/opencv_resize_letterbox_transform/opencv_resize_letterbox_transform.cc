@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <algorithm>
 #include <array>
@@ -14,6 +13,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "opencv_resize_letterbox_transform.pb.h"
 
@@ -140,8 +140,7 @@ class OpenCVResizeLetterbox final : public ITransformStage, public ConfigurableS
       const int resized_width = std::max(1, static_cast<int>(std::round(image.cols * scale)));
       const int resized_height = std::max(1, static_cast<int>(std::round(image.rows * scale)));
 
-      cv::resize(image, resized, cv::Size(resized_width, resized_height), 0.0, 0.0,
-                 interpolation_);
+      cv::resize(image, resized, cv::Size(resized_width, resized_height), 0.0, 0.0, interpolation_);
 
       cv::Mat canvas(target_height, target_width, resized.type(), pad_color_);
       const int offset_x = (target_width - resized_width) / 2;

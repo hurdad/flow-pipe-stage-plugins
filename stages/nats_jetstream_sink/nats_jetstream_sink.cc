@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 #include <nats/nats.h>
 
 #include <string>
@@ -7,6 +6,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "nats_jetstream_sink.pb.h"
 
@@ -90,13 +90,8 @@ class NatsJetStreamSink final : public ISinkStage, public ConfigurableStage {
 
     jsPubAck* ack = nullptr;
     jsErrCode err_code = static_cast<jsErrCode>(0);
-    natsStatus status = js_Publish(&ack,
-                                   jetstream_,
-                                   subject_.c_str(),
-                                   payload.data(),
-                                   payload.size,
-                                   nullptr,
-                                   &err_code);
+    natsStatus status = js_Publish(&ack, jetstream_, subject_.c_str(), payload.data(), payload.size,
+                                   nullptr, &err_code);
     if (status != NATS_OK) {
       FP_LOG_ERROR("nats_jetstream_sink publish failed: " + StatusToString(status) +
                    " (err_code=" + std::to_string(err_code) + ")");

@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <curlpp/Easy.hpp>
 #include <curlpp/Exception.hpp>
@@ -12,6 +11,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "http_sink.pb.h"
 

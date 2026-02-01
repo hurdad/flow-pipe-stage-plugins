@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -13,6 +12,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "tcp_sink.pb.h"
 

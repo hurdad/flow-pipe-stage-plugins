@@ -8,7 +8,6 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <cstring>
 #include <filesystem>
@@ -19,6 +18,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "parquet_arrow_source.pb.h"
 #include "util/arrow.h"
@@ -32,8 +32,7 @@ namespace {
 bool IsHiveSegment(const std::filesystem::path& segment) {
   auto segment_string = segment.string();
   auto separator = segment_string.find('=');
-  return separator != std::string::npos && separator > 0 &&
-         separator + 1 < segment_string.size();
+  return separator != std::string::npos && separator > 0 && separator + 1 < segment_string.size();
 }
 
 std::filesystem::path PartitionBaseDirForFile(const std::filesystem::path& file_path) {
@@ -103,17 +102,15 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
     std::vector<arrow::fs::FileInfo> files{info};
     options.partition_base_dir =
         PartitionBaseDirForFile(std::filesystem::path(info.path())).string();
-    ARROW_ASSIGN_OR_RAISE(
-        factory,
-        arrow::dataset::FileSystemDatasetFactory::Make(filesystem, files, format, options));
+    ARROW_ASSIGN_OR_RAISE(factory, arrow::dataset::FileSystemDatasetFactory::Make(filesystem, files,
+                                                                                  format, options));
   } else if (info.type() == arrow::fs::FileType::Directory) {
     arrow::fs::FileSelector selector;
     selector.base_dir = info.path();
     selector.recursive = true;
     options.partition_base_dir = info.path();
-    ARROW_ASSIGN_OR_RAISE(
-        factory,
-        arrow::dataset::FileSystemDatasetFactory::Make(filesystem, selector, format, options));
+    ARROW_ASSIGN_OR_RAISE(factory, arrow::dataset::FileSystemDatasetFactory::Make(
+                                       filesystem, selector, format, options));
   } else {
     return arrow::Status::Invalid("Unsupported parquet path: ", path);
   }

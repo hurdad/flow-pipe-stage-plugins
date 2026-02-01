@@ -1,5 +1,4 @@
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <algorithm>
 #include <array>
@@ -16,6 +15,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "opencv_dnn_inference_transform.pb.h"
 
@@ -139,14 +139,16 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
     }
 
     if (!cfg.config_path().empty() && !std::filesystem::exists(cfg.config_path())) {
-      FP_LOG_ERROR("opencv_dnn_inference_transform config_path does not exist: " + cfg.config_path());
+      FP_LOG_ERROR("opencv_dnn_inference_transform config_path does not exist: " +
+                   cfg.config_path());
       return false;
     }
 
     try {
       net_ = cv::dnn::readNet(cfg.model_path(), cfg.config_path(), cfg.framework());
     } catch (const cv::Exception& ex) {
-      FP_LOG_ERROR("opencv_dnn_inference_transform failed to load network: " + std::string(ex.what()));
+      FP_LOG_ERROR("opencv_dnn_inference_transform failed to load network: " +
+                   std::string(ex.what()));
       return false;
     }
 

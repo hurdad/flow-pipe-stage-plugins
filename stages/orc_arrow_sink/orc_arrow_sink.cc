@@ -5,7 +5,6 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <string>
 #include <utility>
@@ -14,6 +13,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "orc_arrow_sink.pb.h"
 #include "util/arrow.h"

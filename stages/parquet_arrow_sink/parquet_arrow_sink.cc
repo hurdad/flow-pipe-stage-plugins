@@ -8,7 +8,6 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 #include <parquet/arrow/writer.h>
 #include <parquet/properties.h>
 
@@ -18,6 +17,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "parquet_arrow_sink.pb.h"
 #include "util/arrow.h"
@@ -317,10 +317,9 @@ arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioni
 }
 
 arrow::Result<arrow::dataset::FileSystemDatasetWriteOptions> BuildDatasetWriteOptions(
-    const ParquetArrowSinkConfig& config,
-  const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& base_dir,
-  const std::shared_ptr<arrow::Schema>& schema,
-  const std::shared_ptr<parquet::WriterProperties>& properties) {
+    const ParquetArrowSinkConfig& config, const std::shared_ptr<arrow::fs::FileSystem>& filesystem,
+    const std::string& base_dir, const std::shared_ptr<arrow::Schema>& schema,
+    const std::shared_ptr<parquet::WriterProperties>& properties) {
   auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
   auto file_write_options = format->DefaultWriteOptions();
   auto parquet_write_options =

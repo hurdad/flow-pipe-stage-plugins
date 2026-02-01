@@ -8,7 +8,6 @@
 #include <arrow/type.h>
 #include <arrow/util/compression.h>
 #include <google/protobuf/struct.pb.h>
-#include "flowpipe/protobuf_config.h"
 
 #include <cstring>
 #include <memory>
@@ -19,6 +18,7 @@
 #include "flowpipe/configurable_stage.h"
 #include "flowpipe/observability/logging.h"
 #include "flowpipe/plugin.h"
+#include "flowpipe/protobuf_config.h"
 #include "flowpipe/stage.h"
 #include "json_arrow_source.pb.h"
 #include "util/arrow.h"
