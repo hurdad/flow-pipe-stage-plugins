@@ -3,6 +3,7 @@ syntax = "proto3";
 package flowpipe.stages.json.arrow.source.v1;
 
 import "arrow_common.proto";
+import "arrow_schema.proto";
 
 // Configuration for JsonArrowSource stage
 message JsonArrowSourceConfig {
@@ -22,7 +23,7 @@ message JsonArrowSourceConfig {
 
   message ParseOptions {
     // Optional explicit schema (disables type inference on those fields)
-    bytes explicit_schema = 1;
+    map<string, .arrow.schema.ColumnType> explicit_schema = 1;
     // Whether objects may be printed across multiple lines (for example pretty-printed)
     //
     // If true, parsing may be slower.

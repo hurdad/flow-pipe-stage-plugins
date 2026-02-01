@@ -5,6 +5,7 @@
 #include <arrow/ipc/api.h>
 #include <arrow/json/api.h>
 #include <arrow/table.h>
+#include <arrow/type.h>
 #include <arrow/util/compression.h>
 #include <google/protobuf/struct.pb.h>
 #include "flowpipe/protobuf_config.h"
@@ -80,7 +81,7 @@ arrow::json::ReadOptions BuildReadOptions(const JsonArrowSourceConfig& config) {
   return options;
 }
 
-arrow::json::ParseOptions BuildParseOptions(const JsonArrowSourceConfig& config) {
+arrow::Result<arrow::json::ParseOptions> BuildParseOptions(const JsonArrowSourceConfig& config) {
   auto options = arrow::json::ParseOptions::Defaults();
   if (!config.has_parse_options()) {
     return options;
@@ -105,7 +106,13 @@ arrow::json::ParseOptions BuildParseOptions(const JsonArrowSourceConfig& config)
   }
 
   if (!parse_options.explicit_schema().empty()) {
-    FP_LOG_WARN("json_arrow_source explicit_schema is not yet supported; ignoring value");
+    std::vector<std::shared_ptr<arrow::Field>> fields;
+    fields.reserve(static_cast<size_t>(parse_options.explicit_schema_size()));
+    for (const auto& entry : parse_options.explicit_schema()) {
+      ARROW_ASSIGN_OR_RAISE(auto type, ConvertColumnType(entry.second));
+      fields.push_back(arrow::field(entry.first, std::move(type)));
+    }
+    options.explicit_schema = arrow::schema(std::move(fields));
   }
 
   return options;
@@ -152,7 +159,13 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
     table_emitted_ = false;
 
     auto read_options = BuildReadOptions(config_);
-    auto parse_options = BuildParseOptions(config_);
+    auto parse_options_result = BuildParseOptions(config_);
+    if (!parse_options_result.ok()) {
+      FP_LOG_ERROR("json_arrow_source invalid parse options: " +
+                   parse_options_result.status().ToString());
+      return false;
+    }
+    auto parse_options = *parse_options_result;
 
     auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {

@@ -9,4 +9,5 @@ See `json_arrow_source.proto` for full options. Key settings:
 - `read_options` and `parse_options`: Arrow JSON read and parse options (including
   `use_threads`, `block_size`, `newlines_in_values`, `unexpected_field_behavior`, and
   `explicit_schema`).
+- `explicit_schema` maps column names to Arrow types as defined in `arrow_schema.proto`.
 - `filesystem` and `compression`: storage and compression handling.
