@@ -1,6 +1,6 @@
 # parquet_arrow_sink
 
-Writes Arrow IPC stream payloads to a Parquet file using Apache Arrow.
+Reads Arrow IPC stream payloads into a table and writes Parquet files using Apache Arrow.
 
 ## Configuration
 
@@ -12,3 +12,5 @@ See `parquet_arrow_sink.proto` for full options. Key settings:
 - `compression`: compression codec for parquet output (uncompressed, snappy, gzip, brotli, zstd, lz4, lz4_frame, lzo, bz2).
 - `writer_properties`: optional block for all Parquet writer properties, including page sizes, encoding,
   statistics, page index, sorting columns, bloom filters, and content-defined chunking options.
+- `write_opts`: optional block to write via Arrow Dataset with hive partitioning. When set, `path`
+  is treated as the dataset base directory, and `partition_columns` controls hive partition keys.
