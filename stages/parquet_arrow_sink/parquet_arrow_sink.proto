@@ -84,6 +84,14 @@ message ParquetArrowSinkConfig {
     optional CdcOptions content_defined_chunking_options = 22;
   }
 
+  message FileSystemDatasetWriteOptions {
+    optional string basename_template = 1;
+    optional int64 max_rows_per_file = 2;
+    optional int64 max_rows_per_group = 3;
+    optional int32 max_partitions = 4;
+    repeated string partition_columns = 5;
+  }
+
   // File path to write
   string path = 1;
 
@@ -92,6 +100,9 @@ message ParquetArrowSinkConfig {
 
   // Common Arrow options (filesystem and compression)
   .arrow.common.Common common = 3;
+
+  // FileSystemDataset write options (uses hive partitioning)
+  optional FileSystemDatasetWriteOptions write_opts = 4;
 
   // Writer properties overrides
   optional WriterProperties writer_properties = 5;

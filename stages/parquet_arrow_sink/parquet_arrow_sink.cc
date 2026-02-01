@@ -1,4 +1,8 @@
 #include <arrow/buffer.h>
+#include <arrow/dataset/dataset.h>
+#include <arrow/dataset/file_base.h>
+#include <arrow/dataset/file_parquet.h>
+#include <arrow/dataset/partition.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
@@ -289,6 +293,69 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadTableFromPayload(const Payload&
 
   return arrow::Table::FromRecordBatches(stream_reader->schema(), batches);
 }
+
+arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioning(
+    const std::shared_ptr<arrow::Schema>& schema,
+    const ParquetArrowSinkConfig::FileSystemDatasetWriteOptions& write_opts) {
+  if (write_opts.partition_columns().empty()) {
+    return arrow::Status::Invalid(
+        "parquet_arrow_sink write_opts.partition_columns is required for hive partitioning");
+  }
+
+  std::vector<std::shared_ptr<arrow::Field>> partition_fields;
+  partition_fields.reserve(static_cast<size_t>(write_opts.partition_columns().size()));
+  for (const auto& name : write_opts.partition_columns()) {
+    auto field = schema->GetFieldByName(name);
+    if (!field) {
+      return arrow::Status::Invalid("parquet_arrow_sink missing partition column: ", name);
+    }
+    partition_fields.push_back(field);
+  }
+  auto partition_schema = arrow::schema(std::move(partition_fields));
+  return arrow::dataset::HivePartitioning::Make(partition_schema);
+}
+
+arrow::Result<arrow::dataset::FileSystemDatasetWriteOptions> BuildDatasetWriteOptions(
+    const ParquetArrowSinkConfig& config,
+    const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& base_dir,
+    const std::shared_ptr<arrow::Schema>& schema,
+    const std::shared_ptr<parquet::WriterProperties>& properties) {
+  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+  ARROW_ASSIGN_OR_RAISE(auto file_write_options, format->MakeWriteOptions());
+  auto parquet_write_options =
+      std::dynamic_pointer_cast<arrow::dataset::ParquetFileWriteOptions>(file_write_options);
+  if (parquet_write_options && properties) {
+    parquet_write_options->writer_properties = properties;
+  }
+
+  arrow::dataset::FileSystemDatasetWriteOptions options;
+  options.file_write_options = std::move(file_write_options);
+  options.filesystem = filesystem;
+  options.base_dir = base_dir;
+
+  const auto& write_opts = config.write_opts();
+  if (write_opts.has_basename_template()) {
+    options.basename_template = write_opts.basename_template();
+  }
+  if (write_opts.has_max_rows_per_file()) {
+    options.max_rows_per_file = write_opts.max_rows_per_file();
+  }
+  if (write_opts.has_max_rows_per_group()) {
+    options.max_rows_per_group = write_opts.max_rows_per_group();
+  } else if (config.has_row_group_size() && config.row_group_size() > 0) {
+    options.max_rows_per_group = config.row_group_size();
+  } else if (config.has_writer_properties() &&
+             config.writer_properties().has_max_row_group_length() &&
+             config.writer_properties().max_row_group_length() > 0) {
+    options.max_rows_per_group = config.writer_properties().max_row_group_length();
+  }
+  if (write_opts.has_max_partitions()) {
+    options.max_partitions = write_opts.max_partitions();
+  }
+
+  ARROW_ASSIGN_OR_RAISE(options.partitioning, BuildHivePartitioning(schema, write_opts));
+  return options;
+}
 }  // namespace
 
 // ============================================================
@@ -358,11 +425,6 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
     }
 
     auto fs_and_path = *fs_result;
-    auto output_result = fs_and_path.first->OpenOutputStream(fs_and_path.second);
-    if (!output_result.ok()) {
-      FP_LOG_ERROR("parquet_arrow_sink failed to open file: " + output_result.status().ToString());
-      return;
-    }
 
     parquet::WriterProperties::Builder builder;
     if (config_.has_writer_properties()) {
@@ -371,6 +433,33 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       builder.compression(ResolveCompression(config_.common().compression()));
     }
     auto properties = builder.build();
+
+    if (config_.has_write_opts()) {
+      auto write_options_result = BuildDatasetWriteOptions(
+          config_, fs_and_path.first, fs_and_path.second, (*table_result)->schema(), properties);
+      if (!write_options_result.ok()) {
+        FP_LOG_ERROR("parquet_arrow_sink failed to build dataset write options: " +
+                     write_options_result.status().ToString());
+        return;
+      }
+
+      ARROW_ASSIGN_OR_RAISE(auto dataset,
+                            arrow::dataset::InMemoryDataset::Make(*table_result));
+      auto status = arrow::dataset::FileSystemDataset::Write(*write_options_result, dataset);
+      if (!status.ok()) {
+        FP_LOG_ERROR("parquet_arrow_sink failed to write parquet dataset: " + status.ToString());
+        return;
+      }
+
+      FP_LOG_DEBUG("parquet_arrow_sink wrote arrow payload to parquet dataset");
+      return;
+    }
+
+    auto output_result = fs_and_path.first->OpenOutputStream(fs_and_path.second);
+    if (!output_result.ok()) {
+      FP_LOG_ERROR("parquet_arrow_sink failed to open file: " + output_result.status().ToString());
+      return;
+    }
 
     int64_t row_group_size = static_cast<int64_t>((*table_result)->num_rows());
     if (config_.has_row_group_size() && config_.row_group_size() > 0) {
