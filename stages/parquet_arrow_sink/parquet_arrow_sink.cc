@@ -444,7 +444,9 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       }
 
       auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(*table_result);
-      auto status = arrow::dataset::FileSystemDataset::Write(*write_options_result, dataset);
+      ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
+      ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
+      auto status = arrow::dataset::FileSystemDataset::Write(*write_options_result, scanner);
       if (!status.ok()) {
         FP_LOG_ERROR("parquet_arrow_sink failed to write parquet dataset: " + status.ToString());
         return;
