@@ -1,6 +1,6 @@
 # parquet_arrow_sink
 
-Reads Arrow IPC stream payloads into a table and writes Parquet files using Apache Arrow.
+Reads Arrow table stream payloads into a table and writes Parquet files using Apache Arrow.
 
 ## Configuration
 
