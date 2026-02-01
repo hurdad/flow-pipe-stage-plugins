@@ -318,11 +318,11 @@ arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioni
 
 arrow::Result<arrow::dataset::FileSystemDatasetWriteOptions> BuildDatasetWriteOptions(
     const ParquetArrowSinkConfig& config,
-    const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& base_dir,
-    const std::shared_ptr<arrow::Schema>& schema,
-    const std::shared_ptr<parquet::WriterProperties>& properties) {
+  const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& base_dir,
+  const std::shared_ptr<arrow::Schema>& schema,
+  const std::shared_ptr<parquet::WriterProperties>& properties) {
   auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
-  ARROW_ASSIGN_OR_RAISE(auto file_write_options, format->MakeWriteOptions());
+  auto file_write_options = format->DefaultWriteOptions();
   auto parquet_write_options =
       std::dynamic_pointer_cast<arrow::dataset::ParquetFileWriteOptions>(file_write_options);
   if (parquet_write_options && properties) {
@@ -445,8 +445,19 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       }
 
       auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(*table_result);
-      ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
-      ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
+      auto scanner_builder_result = dataset->NewScan();
+      if (!scanner_builder_result.ok()) {
+        FP_LOG_ERROR("parquet_arrow_sink failed to create scan builder: " +
+                     scanner_builder_result.status().ToString());
+        return;
+      }
+      auto scanner_result = (*scanner_builder_result)->Finish();
+      if (!scanner_result.ok()) {
+        FP_LOG_ERROR("parquet_arrow_sink failed to finish scan: " +
+                     scanner_result.status().ToString());
+        return;
+      }
+      auto scanner = *scanner_result;
       auto status = arrow::dataset::FileSystemDataset::Write(*write_options_result, scanner);
       if (!status.ok()) {
         FP_LOG_ERROR("parquet_arrow_sink failed to write parquet dataset: " + status.ToString());
