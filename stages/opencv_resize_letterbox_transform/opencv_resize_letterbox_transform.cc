@@ -88,7 +88,7 @@ class OpenCVResizeLetterbox final : public ITransformStage, public ConfigurableS
     FP_LOG_INFO("opencv_resize_letterbox_transform destroyed");
   }
 
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     OpenCVResizeLetterboxConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<OpenCVResizeLetterboxConfig>::Parse(config, &cfg, &error)) {

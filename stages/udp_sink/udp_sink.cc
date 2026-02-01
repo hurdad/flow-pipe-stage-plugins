@@ -75,7 +75,7 @@ class UdpSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     UdpSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<UdpSinkConfig>::Parse(config, &cfg, &error)) {

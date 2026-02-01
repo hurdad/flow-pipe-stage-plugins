@@ -38,7 +38,7 @@ class RedisPubSubSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     RedisPubSubSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<RedisPubSubSourceConfig>::Parse(config, &cfg, &error)) {

@@ -44,7 +44,7 @@ class NatsSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     NatsSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<NatsSinkConfig>::Parse(config, &cfg, &error)) {

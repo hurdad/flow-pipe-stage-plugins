@@ -124,7 +124,7 @@ class TcpSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     TcpSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<TcpSinkConfig>::Parse(config, &cfg, &error)) {

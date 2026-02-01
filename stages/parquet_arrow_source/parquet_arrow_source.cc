@@ -84,7 +84,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     ParquetArrowSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<ParquetArrowSourceConfig>::Parse(config, &cfg, &error)) {

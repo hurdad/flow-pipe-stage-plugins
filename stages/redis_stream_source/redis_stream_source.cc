@@ -141,7 +141,7 @@ class RedisStreamSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     RedisStreamSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<RedisStreamSourceConfig>::Parse(config, &cfg, &error)) {

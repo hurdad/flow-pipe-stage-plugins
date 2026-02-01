@@ -126,7 +126,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     FileSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<FileSourceConfig>::Parse(config, &cfg, &error)) {

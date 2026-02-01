@@ -44,7 +44,7 @@ class NatsJetStreamSink final : public ISinkStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     NatsJetStreamSinkConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<NatsJetStreamSinkConfig>::Parse(config, &cfg, &error)) {

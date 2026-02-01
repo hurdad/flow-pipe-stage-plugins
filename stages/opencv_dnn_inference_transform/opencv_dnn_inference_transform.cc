@@ -120,7 +120,7 @@ class OpenCVDnnInference final : public ITransformStage, public ConfigurableStag
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     OpenCVDnnInferenceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<OpenCVDnnInferenceConfig>::Parse(config, &cfg, &error)) {

@@ -132,7 +132,7 @@ class JsonArrowSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     JsonArrowSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<JsonArrowSourceConfig>::Parse(config, &cfg, &error)) {

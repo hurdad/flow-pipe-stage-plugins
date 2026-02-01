@@ -45,7 +45,7 @@ class NatsSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     NatsSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<NatsSourceConfig>::Parse(config, &cfg, &error)) {

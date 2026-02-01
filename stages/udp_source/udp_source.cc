@@ -120,7 +120,7 @@ class UdpSource final : public ISourceStage, public ConfigurableStage {
   // ------------------------------------------------------------
   // ConfigurableStage
   // ------------------------------------------------------------
-  bool Configure(const google::protobuf::Struct& config) override {
+  bool configure(const google::protobuf::Struct& config) override {
     UdpSourceConfig cfg;
     std::string error;
     if (!ProtobufConfigParser<UdpSourceConfig>::Parse(config, &cfg, &error)) {
