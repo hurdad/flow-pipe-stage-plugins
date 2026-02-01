@@ -181,7 +181,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
 
     table_ = *table_result;
 
-    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == flowpipe_arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       arrow::TableBatchReader reader(*table_);
       if (config_.has_batch_size() && config_.batch_size() > 0) {
         reader.set_chunksize(static_cast<int64_t>(config_.batch_size()));
@@ -219,7 +219,7 @@ class ParquetArrowSource final : public ISourceStage, public ConfigurableStage {
     }
 
     std::shared_ptr<arrow::Buffer> buffer;
-    if (config_.output_type() == arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
+    if (config_.output_type() == flowpipe_arrow::common::OUTPUT_TYPE_RECORD_BATCH) {
       if (batch_index_ >= record_batches_.size()) {
         FP_LOG_DEBUG("parquet_arrow_source finished record batches");
         return false;
