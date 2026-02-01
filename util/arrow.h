@@ -7,6 +7,7 @@
 #include <arrow/filesystem/localfs.h>
 #include <arrow/filesystem/s3fs.h>
 #include <arrow/result.h>
+#include <arrow/type.h>
 #include <arrow/util/compression.h>
 #include <arrow/util/key_value_metadata.h>
 
@@ -18,6 +19,7 @@
 #include <vector>
 
 #include "arrow/arrow_common.pb.h"  // generated from arrow_common.proto
+#include "arrow/arrow_schema.pb.h"  // generated from arrow_schema.proto
 
 inline arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>>
 ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
@@ -284,5 +286,109 @@ inline arrow::Result<arrow::Compression::type> ResolveCompression(
     case arrow::common::COMPRESSION_AUTO:
     default:
       return arrow::util::Codec::GetCompressionType(path);
+  }
+}
+
+inline arrow::Result<arrow::TimeUnit::type> ConvertTimeUnit(
+    arrow::schema::ColumnType::TimeUnit unit) {
+  switch (unit) {
+    case arrow::schema::ColumnType::TIME_UNIT_SECOND:
+      return arrow::TimeUnit::SECOND;
+    case arrow::schema::ColumnType::TIME_UNIT_MILLI:
+      return arrow::TimeUnit::MILLI;
+    case arrow::schema::ColumnType::TIME_UNIT_MICRO:
+      return arrow::TimeUnit::MICRO;
+    case arrow::schema::ColumnType::TIME_UNIT_NANO:
+      return arrow::TimeUnit::NANO;
+    case arrow::schema::ColumnType::TIME_UNIT_UNSPECIFIED:
+    default:
+      return arrow::Status::Invalid("Time unit must be specified");
+  }
+}
+
+inline arrow::Result<std::shared_ptr<arrow::DataType>> ConvertColumnType(
+    const arrow::schema::ColumnType& column_type) {
+  switch (column_type.type()) {
+    case arrow::schema::ColumnType::DATA_TYPE_NULL:
+      return arrow::null();
+    case arrow::schema::ColumnType::DATA_TYPE_BOOL:
+      return arrow::boolean();
+    case arrow::schema::ColumnType::DATA_TYPE_INT8:
+      return arrow::int8();
+    case arrow::schema::ColumnType::DATA_TYPE_INT16:
+      return arrow::int16();
+    case arrow::schema::ColumnType::DATA_TYPE_INT32:
+      return arrow::int32();
+    case arrow::schema::ColumnType::DATA_TYPE_INT64:
+      return arrow::int64();
+    case arrow::schema::ColumnType::DATA_TYPE_UINT8:
+      return arrow::uint8();
+    case arrow::schema::ColumnType::DATA_TYPE_UINT16:
+      return arrow::uint16();
+    case arrow::schema::ColumnType::DATA_TYPE_UINT32:
+      return arrow::uint32();
+    case arrow::schema::ColumnType::DATA_TYPE_UINT64:
+      return arrow::uint64();
+    case arrow::schema::ColumnType::DATA_TYPE_FLOAT16:
+      return arrow::float16();
+    case arrow::schema::ColumnType::DATA_TYPE_FLOAT32:
+      return arrow::float32();
+    case arrow::schema::ColumnType::DATA_TYPE_FLOAT64:
+      return arrow::float64();
+    case arrow::schema::ColumnType::DATA_TYPE_STRING:
+      return arrow::utf8();
+    case arrow::schema::ColumnType::DATA_TYPE_LARGE_STRING:
+      return arrow::large_utf8();
+    case arrow::schema::ColumnType::DATA_TYPE_BINARY:
+      return arrow::binary();
+    case arrow::schema::ColumnType::DATA_TYPE_LARGE_BINARY:
+      return arrow::large_binary();
+    case arrow::schema::ColumnType::DATA_TYPE_DATE32:
+      return arrow::date32();
+    case arrow::schema::ColumnType::DATA_TYPE_DATE64:
+      return arrow::date64();
+    case arrow::schema::ColumnType::DATA_TYPE_TIMESTAMP: {
+      ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
+      return arrow::timestamp(time_unit);
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_TIME32: {
+      ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
+      if (time_unit != arrow::TimeUnit::SECOND && time_unit != arrow::TimeUnit::MILLI) {
+        return arrow::Status::Invalid("time32 supports only seconds or milliseconds");
+      }
+      return arrow::time32(time_unit);
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_TIME64: {
+      ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
+      if (time_unit != arrow::TimeUnit::MICRO && time_unit != arrow::TimeUnit::NANO) {
+        return arrow::Status::Invalid("time64 supports only microseconds or nanoseconds");
+      }
+      return arrow::time64(time_unit);
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_DURATION: {
+      ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
+      return arrow::duration(time_unit);
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_DECIMAL128: {
+      if (!column_type.has_decimal_precision() || !column_type.has_decimal_scale()) {
+        return arrow::Status::Invalid("decimal128 requires precision and scale");
+      }
+      return arrow::decimal128(column_type.decimal_precision(), column_type.decimal_scale());
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_DECIMAL256: {
+      if (!column_type.has_decimal_precision() || !column_type.has_decimal_scale()) {
+        return arrow::Status::Invalid("decimal256 requires precision and scale");
+      }
+      return arrow::decimal256(column_type.decimal_precision(), column_type.decimal_scale());
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_FIXED_SIZE_BINARY: {
+      if (!column_type.has_fixed_size_binary_length()) {
+        return arrow::Status::Invalid("fixed_size_binary requires length");
+      }
+      return arrow::fixed_size_binary(column_type.fixed_size_binary_length());
+    }
+    case arrow::schema::ColumnType::DATA_TYPE_UNSPECIFIED:
+    default:
+      return arrow::Status::Invalid("Column type must be specified");
   }
 }

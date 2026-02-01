@@ -129,7 +129,7 @@ arrow::csv::ParseOptions BuildParseOptions(const CsvArrowSourceConfig& config) {
   return options;
 }
 
-arrow::csv::ConvertOptions BuildConvertOptions(const CsvArrowSourceConfig& config) {
+arrow::Result<arrow::csv::ConvertOptions> BuildConvertOptions(const CsvArrowSourceConfig& config) {
   auto options = arrow::csv::ConvertOptions::Defaults();
   if (!config.has_convert_options()) {
     return options;
@@ -172,6 +172,12 @@ arrow::csv::ConvertOptions BuildConvertOptions(const CsvArrowSourceConfig& confi
   }
   if (convert_options.has_include_missing_columns()) {
     options.include_missing_columns = convert_options.include_missing_columns();
+  }
+  if (!convert_options.column_types().empty()) {
+    for (const auto& entry : convert_options.column_types()) {
+      ARROW_ASSIGN_OR_RAISE(auto type, ConvertColumnType(entry.second));
+      options.column_types.emplace(entry.first, std::move(type));
+    }
   }
   return options;
 }
@@ -218,7 +224,13 @@ class CsvArrowSource final : public ISourceStage, public ConfigurableStage {
 
     auto read_options = BuildReadOptions(config_);
     auto parse_options = BuildParseOptions(config_);
-    auto convert_options = BuildConvertOptions(config_);
+    auto convert_options_result = BuildConvertOptions(config_);
+    if (!convert_options_result.ok()) {
+      FP_LOG_ERROR("csv_arrow_source invalid convert options: " +
+                   convert_options_result.status().ToString());
+      return false;
+    }
+    auto convert_options = *convert_options_result;
 
     auto fs_result = ResolveFileSystem(config_.path(), config_.common());
     if (!fs_result.ok()) {

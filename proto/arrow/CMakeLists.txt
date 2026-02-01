@@ -6,6 +6,7 @@ find_package(Protobuf REQUIRED)
 
 set(PROTO_FILES
         arrow_common.proto
+        arrow_schema.proto
         arrow_fs_azure.proto
         arrow_fs_gcs.proto
         arrow_fs_s3.proto
