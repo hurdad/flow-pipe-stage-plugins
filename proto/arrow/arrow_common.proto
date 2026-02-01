@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package arrow.common;
+package flowpipe.v1.arrow.common;
 
 import "arrow_fs_azure.proto";
 import "arrow_fs_gcs.proto";

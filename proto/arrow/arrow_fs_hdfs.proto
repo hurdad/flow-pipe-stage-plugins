@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package arrow.fs.hdfs;
+package flowpipe.v1.arrow.fs.hdfs;
 
 // ----------------------------------------------------------------------
 // HDFS connection configuration

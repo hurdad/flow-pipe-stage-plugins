@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package arrow.fs.azure;
+package flowpipe.v1.arrow.fs.azure;
 
 // ----------------------------------------------------------------------
 // Azure credentials
