@@ -312,7 +312,8 @@ arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioni
     partition_fields.push_back(field);
   }
   auto partition_schema = arrow::schema(std::move(partition_fields));
-  return arrow::dataset::HivePartitioning::Make(partition_schema);
+  auto factory = arrow::dataset::HivePartitioning::MakeFactory();
+  return factory->Finish(partition_schema);
 }
 
 arrow::Result<arrow::dataset::FileSystemDatasetWriteOptions> BuildDatasetWriteOptions(
