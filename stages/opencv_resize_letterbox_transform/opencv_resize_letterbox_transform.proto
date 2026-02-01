@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.opencv.resize.letterbox.v1;
+package flowpipe.v1.stages.opencv.resize.letterbox.v1;
 
 message OpenCVResizeLetterboxConfig {
   enum Interpolation {

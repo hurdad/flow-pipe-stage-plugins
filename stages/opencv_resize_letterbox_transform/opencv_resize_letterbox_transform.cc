@@ -20,7 +20,7 @@
 using namespace flowpipe;
 
 using OpenCVResizeLetterboxConfig =
-    flowpipe::stages::opencv::resize::letterbox::v1::OpenCVResizeLetterboxConfig;
+    flowpipe::v1::stages::opencv::resize::letterbox::v1::OpenCVResizeLetterboxConfig;
 
 namespace {
 constexpr int kMaxColorChannels = 3;

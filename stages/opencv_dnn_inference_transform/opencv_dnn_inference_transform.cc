@@ -22,7 +22,7 @@
 using namespace flowpipe;
 
 using OpenCVDnnInferenceConfig =
-    flowpipe::stages::opencv::dnn::inference::v1::OpenCVDnnInferenceConfig;
+    flowpipe::v1::stages::opencv::dnn::inference::v1::OpenCVDnnInferenceConfig;
 
 namespace {
 constexpr int kMaxMeanValues = 3;

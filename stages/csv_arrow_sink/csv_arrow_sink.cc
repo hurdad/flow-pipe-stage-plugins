@@ -21,7 +21,7 @@
 
 using namespace flowpipe;
 
-using CsvArrowSinkConfig = flowpipe::stages::csv::arrow::sink::v1::CsvArrowSinkConfig;
+using CsvArrowSinkConfig = flowpipe::v1::stages::csv::arrow::sink::v1::CsvArrowSinkConfig;
 
 namespace {
 char ResolveChar(const std::string& value, char fallback) {

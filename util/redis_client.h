@@ -7,7 +7,7 @@
 
 #include "flowpipe/observability/logging.h"
 
-namespace flowpipe::stages::util {
+namespace flowpipe::v1::stages::util {
 
 struct RedisConnectionConfig {
   std::string host;
@@ -110,4 +110,4 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
   return context;
 }
 
-}  // namespace flowpipe::stages::util
+}  // namespace flowpipe::v1::stages::util

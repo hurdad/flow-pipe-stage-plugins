@@ -14,7 +14,7 @@
 
 using namespace flowpipe;
 
-using RedisStreamSinkConfig = flowpipe::stages::redis::stream::sink::v1::RedisStreamSinkConfig;
+using RedisStreamSinkConfig = flowpipe::v1::stages::redis::stream::sink::v1::RedisStreamSinkConfig;
 
 namespace {
 redisReply* ExecuteXAdd(redisContext* context, const RedisStreamSinkConfig& config,
@@ -130,27 +130,27 @@ class RedisStreamSink final : public ISinkStage, public ConfigurableStage {
   bool InitializeConnection() {
     ShutdownConnection();
 
-    flowpipe::stages::util::RedisConnectionConfig options;
+    flowpipe::v1::stages::util::RedisConnectionConfig options;
     options.host = config_.host();
     options.port = static_cast<int>(config_.port());
     options.username = config_.username();
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_stream_sink");
+    context_ = flowpipe::v1::stages::util::ConnectRedis(options, "redis_stream_sink");
     if (!context_) {
       return false;
     }
 
     if (config_.command_timeout_ms() > 0) {
-      flowpipe::stages::util::ApplyRedisTimeout(context_, config_.command_timeout_ms());
+      flowpipe::v1::stages::util::ApplyRedisTimeout(context_, config_.command_timeout_ms());
     }
 
     return true;
   }
 
   void ShutdownConnection() {
-    flowpipe::stages::util::CloseRedis(context_);
+    flowpipe::v1::stages::util::CloseRedis(context_);
   }
 
   RedisStreamSinkConfig config_{};

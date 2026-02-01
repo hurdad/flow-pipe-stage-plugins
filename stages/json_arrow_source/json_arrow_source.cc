@@ -25,7 +25,7 @@
 
 using namespace flowpipe;
 
-using JsonArrowSourceConfig = flowpipe::stages::json::arrow::source::v1::JsonArrowSourceConfig;
+using JsonArrowSourceConfig = flowpipe::v1::stages::json::arrow::source::v1::JsonArrowSourceConfig;
 
 namespace {
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(

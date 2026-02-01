@@ -14,7 +14,7 @@
 
 using namespace flowpipe;
 
-using KafkaSourceConfig = flowpipe::stages::kafka::source::v1::KafkaSourceConfig;
+using KafkaSourceConfig = flowpipe::v1::stages::kafka::source::v1::KafkaSourceConfig;
 
 // ============================================================
 // KafkaSource

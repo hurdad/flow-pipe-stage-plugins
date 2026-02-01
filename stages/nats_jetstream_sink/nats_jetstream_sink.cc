@@ -13,7 +13,7 @@
 using namespace flowpipe;
 
 using NatsJetStreamSinkConfig =
-    flowpipe::stages::nats::jetstream::sink::v1::NatsJetStreamSinkConfig;
+    flowpipe::v1::stages::nats::jetstream::sink::v1::NatsJetStreamSinkConfig;
 
 namespace {
 const char* kDefaultNatsUrl = "nats://127.0.0.1:4222";

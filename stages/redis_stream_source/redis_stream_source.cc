@@ -16,7 +16,7 @@
 using namespace flowpipe;
 
 using RedisStreamSourceConfig =
-    flowpipe::stages::redis::stream::source::v1::RedisStreamSourceConfig;
+    flowpipe::v1::stages::redis::stream::source::v1::RedisStreamSourceConfig;
 
 namespace {
 struct StreamMessage {
@@ -212,27 +212,27 @@ class RedisStreamSource final : public ISourceStage, public ConfigurableStage {
   bool InitializeConnection() {
     ShutdownConnection();
 
-    flowpipe::stages::util::RedisConnectionConfig options;
+    flowpipe::v1::stages::util::RedisConnectionConfig options;
     options.host = config_.host();
     options.port = static_cast<int>(config_.port());
     options.username = config_.username();
     options.password = config_.password();
     options.database = static_cast<int>(config_.database());
 
-    context_ = flowpipe::stages::util::ConnectRedis(options, "redis_stream_source");
+    context_ = flowpipe::v1::stages::util::ConnectRedis(options, "redis_stream_source");
     if (!context_) {
       return false;
     }
 
     if (config_.block_timeout_ms() > 0) {
-      flowpipe::stages::util::ApplyRedisTimeout(context_, config_.block_timeout_ms());
+      flowpipe::v1::stages::util::ApplyRedisTimeout(context_, config_.block_timeout_ms());
     }
 
     return true;
   }
 
   void ShutdownConnection() {
-    flowpipe::stages::util::CloseRedis(context_);
+    flowpipe::v1::stages::util::CloseRedis(context_);
   }
 
   RedisStreamSourceConfig config_{};

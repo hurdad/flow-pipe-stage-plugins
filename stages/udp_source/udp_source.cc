@@ -20,7 +20,7 @@
 
 using namespace flowpipe;
 
-using UdpSourceConfig = flowpipe::stages::udp::source::v1::UdpSourceConfig;
+using UdpSourceConfig = flowpipe::v1::stages::udp::source::v1::UdpSourceConfig;
 
 namespace {
 constexpr size_t kMaxUdpPayloadSize = 65507;

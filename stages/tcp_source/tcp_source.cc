@@ -21,7 +21,7 @@
 
 using namespace flowpipe;
 
-using TcpSourceConfig = flowpipe::stages::tcp::source::v1::TcpSourceConfig;
+using TcpSourceConfig = flowpipe::v1::stages::tcp::source::v1::TcpSourceConfig;
 
 namespace {
 constexpr size_t kDefaultTcpPayloadSize = 65536;

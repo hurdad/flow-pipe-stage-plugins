@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.tcp.sink.v1;
+package flowpipe.v1.stages.tcp.sink.v1;
 
 // Configuration for TcpSink stage
 message TcpSinkConfig {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flowpipe.stages.kafka.sink.v1;
+package flowpipe.v1.stages.kafka.sink.v1;
 
 // Configuration for KafkaSink stage
 message KafkaSinkConfig {
