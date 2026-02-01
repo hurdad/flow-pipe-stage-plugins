@@ -21,9 +21,11 @@
 #include "arrow/arrow_common.pb.h"  // generated from arrow_common.proto
 #include "arrow/arrow_schema.pb.h"  // generated from arrow_schema.proto
 
+namespace flowpipe_arrow = flowpipe::v1::arrow;
+
 inline arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>>
-ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
-                  const arrow::common::FileSystemOptions& filesystem_options) {
+ResolveFileSystem(const std::string& path, flowpipe_arrow::common::FileSystem filesystem,
+                  const flowpipe_arrow::common::FileSystemOptions& filesystem_options) {
   std::string resolved_path = path;
 
   auto to_std_map = [](const auto& proto_map) {
@@ -57,24 +59,24 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
   };
 
   switch (filesystem) {
-    case arrow::common::FILE_SYSTEM_LOCAL: {
+    case flowpipe_arrow::common::FILE_SYSTEM_LOCAL: {
       return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), resolved_path);
     }
 
-    case arrow::common::FILE_SYSTEM_S3:
-    case arrow::common::FILE_SYSTEM_GCS:
-    case arrow::common::FILE_SYSTEM_HDFS: {
+    case flowpipe_arrow::common::FILE_SYSTEM_S3:
+    case flowpipe_arrow::common::FILE_SYSTEM_GCS:
+    case flowpipe_arrow::common::FILE_SYSTEM_HDFS: {
       break;
     }
 
-    case arrow::common::FILE_SYSTEM_AUTO:
+    case flowpipe_arrow::common::FILE_SYSTEM_AUTO:
     default: {
       break;
     }
   }
 
   switch (filesystem_options.options_case()) {
-    case arrow::common::FileSystemOptions::kS3: {
+    case flowpipe_arrow::common::FileSystemOptions::kS3: {
       const auto& proto_options = filesystem_options.s3();
       arrow::fs::S3Options options;
       options.smart_defaults = proto_options.smart_defaults();
@@ -112,7 +114,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::S3FileSystem::Make(options));
       return std::make_pair(std::move(fs), resolved_path);
     }
-    case arrow::common::FileSystemOptions::kGcs: {
+    case flowpipe_arrow::common::FileSystemOptions::kGcs: {
       const auto& proto_options = filesystem_options.gcs();
       const auto& proto_credentials = proto_options.credentials();
       const auto to_time_point = [](const auto& timestamp) {
@@ -154,7 +156,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::GcsFileSystem::Make(options));
       return std::make_pair(std::move(fs), resolved_path);
     }
-    case arrow::common::FileSystemOptions::kAzure: {
+    case flowpipe_arrow::common::FileSystemOptions::kAzure: {
       const auto& proto_options = filesystem_options.azure();
       arrow::fs::AzureOptions options;
       options.account_name = proto_options.account_name();
@@ -166,39 +168,39 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       options.background_writes = proto_options.background_writes();
       const auto& proto_credentials = proto_options.credentials();
       switch (proto_credentials.kind()) {
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_DEFAULT:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_DEFAULT:
           ARROW_RETURN_NOT_OK(options.ConfigureDefaultCredential());
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_ANONYMOUS:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_ANONYMOUS:
           ARROW_RETURN_NOT_OK(options.ConfigureAnonymousCredential());
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_STORAGE_SHARED_KEY:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_STORAGE_SHARED_KEY:
           ARROW_RETURN_NOT_OK(
               options.ConfigureAccountKeyCredential(proto_credentials.storage_shared_key()));
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_SAS_TOKEN:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_SAS_TOKEN:
           ARROW_RETURN_NOT_OK(options.ConfigureSASCredential(proto_credentials.sas_token()));
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLIENT_SECRET:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLIENT_SECRET:
           ARROW_RETURN_NOT_OK(options.ConfigureClientSecretCredential(
               proto_credentials.tenant_id(), proto_credentials.client_id(),
               proto_credentials.client_secret()));
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_MANAGED_IDENTITY:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_MANAGED_IDENTITY:
           ARROW_RETURN_NOT_OK(
               options.ConfigureManagedIdentityCredential(proto_credentials.client_id()));
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLI:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_CLI:
           ARROW_RETURN_NOT_OK(options.ConfigureCLICredential());
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_WORKLOAD_IDENTITY:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_WORKLOAD_IDENTITY:
           ARROW_RETURN_NOT_OK(options.ConfigureWorkloadIdentityCredential());
           break;
-        case arrow::fs::azure::AZURE_CREDENTIAL_KIND_ENVIRONMENT:
+        case flowpipe_arrow::fs::azure::AZURE_CREDENTIAL_KIND_ENVIRONMENT:
           ARROW_RETURN_NOT_OK(options.ConfigureEnvironmentCredential());
           break;
-        case arrow::fs::azure::AzureCredentialKind_INT_MIN_SENTINEL_DO_NOT_USE_:
-        case arrow::fs::azure::AzureCredentialKind_INT_MAX_SENTINEL_DO_NOT_USE_:
+        case flowpipe_arrow::fs::azure::AzureCredentialKind_INT_MIN_SENTINEL_DO_NOT_USE_:
+        case flowpipe_arrow::fs::azure::AzureCredentialKind_INT_MAX_SENTINEL_DO_NOT_USE_:
         default:
           return arrow::Status::Invalid("Unsupported Azure credential kind: ",
                                         proto_credentials.kind());
@@ -208,7 +210,7 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::AzureFileSystem::Make(options));
       return std::make_pair(std::move(fs), resolved_path);
     }
-    case arrow::common::FileSystemOptions::kHdfs: {
+    case flowpipe_arrow::common::FileSystemOptions::kHdfs: {
       const auto& proto_options = filesystem_options.hdfs();
       arrow::fs::HdfsOptions options;
       options.connection_config.host = proto_options.connection_config().host();
@@ -225,21 +227,21 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::HadoopFileSystem::Make(options));
       return std::make_pair(std::move(fs), resolved_path);
     }
-    case arrow::common::FileSystemOptions::OPTIONS_NOT_SET:
+    case flowpipe_arrow::common::FileSystemOptions::OPTIONS_NOT_SET:
       break;
   }
 
   switch (filesystem) {
-    case arrow::common::FILE_SYSTEM_LOCAL: {
+    case flowpipe_arrow::common::FILE_SYSTEM_LOCAL: {
       return std::make_pair(std::make_shared<arrow::fs::LocalFileSystem>(), resolved_path);
     }
-    case arrow::common::FILE_SYSTEM_S3:
-    case arrow::common::FILE_SYSTEM_GCS:
-    case arrow::common::FILE_SYSTEM_HDFS: {
+    case flowpipe_arrow::common::FILE_SYSTEM_S3:
+    case flowpipe_arrow::common::FILE_SYSTEM_GCS:
+    case flowpipe_arrow::common::FILE_SYSTEM_HDFS: {
       ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUri(resolved_path, &resolved_path));
       return std::make_pair(std::move(fs), resolved_path);
     }
-    case arrow::common::FILE_SYSTEM_AUTO:
+    case flowpipe_arrow::common::FILE_SYSTEM_AUTO:
     default: {
       ARROW_ASSIGN_OR_RAISE(auto fs,
                             arrow::fs::FileSystemFromUriOrPath(resolved_path, &resolved_path));
@@ -249,145 +251,145 @@ ResolveFileSystem(const std::string& path, arrow::common::FileSystem filesystem,
 }
 
 inline arrow::Result<std::pair<std::shared_ptr<arrow::fs::FileSystem>, std::string>>
-ResolveFileSystem(const std::string& path, const arrow::common::Common& common) {
+ResolveFileSystem(const std::string& path, const flowpipe_arrow::common::Common& common) {
   return ResolveFileSystem(path, common.filesystem(), common.filesystem_options());
 }
 
 inline arrow::Result<arrow::Compression::type> ResolveCompression(
-    const std::string& path, arrow::common::Compression compression) {
+    const std::string& path, flowpipe_arrow::common::Compression compression) {
   switch (compression) {
-    case arrow::common::COMPRESSION_UNCOMPRESSED:
+    case flowpipe_arrow::common::COMPRESSION_UNCOMPRESSED:
       return arrow::Compression::UNCOMPRESSED;
 
-    case arrow::common::COMPRESSION_SNAPPY:
+    case flowpipe_arrow::common::COMPRESSION_SNAPPY:
       return arrow::Compression::SNAPPY;
 
-    case arrow::common::COMPRESSION_GZIP:
+    case flowpipe_arrow::common::COMPRESSION_GZIP:
       return arrow::Compression::GZIP;
 
-    case arrow::common::COMPRESSION_BROTLI:
+    case flowpipe_arrow::common::COMPRESSION_BROTLI:
       return arrow::Compression::BROTLI;
 
-    case arrow::common::COMPRESSION_ZSTD:
+    case flowpipe_arrow::common::COMPRESSION_ZSTD:
       return arrow::Compression::ZSTD;
 
-    case arrow::common::COMPRESSION_LZ4:
+    case flowpipe_arrow::common::COMPRESSION_LZ4:
       return arrow::Compression::LZ4;
 
-    case arrow::common::COMPRESSION_LZ4_FRAME:
+    case flowpipe_arrow::common::COMPRESSION_LZ4_FRAME:
       return arrow::Compression::LZ4_FRAME;
 
-    case arrow::common::COMPRESSION_LZO:
+    case flowpipe_arrow::common::COMPRESSION_LZO:
       return arrow::Compression::LZO;
 
-    case arrow::common::COMPRESSION_BZ2:
+    case flowpipe_arrow::common::COMPRESSION_BZ2:
       return arrow::Compression::BZ2;
 
-    case arrow::common::COMPRESSION_AUTO:
+    case flowpipe_arrow::common::COMPRESSION_AUTO:
     default:
       return arrow::util::Codec::GetCompressionType(path);
   }
 }
 
 inline arrow::Result<arrow::TimeUnit::type> ConvertTimeUnit(
-    arrow::schema::ColumnType::TimeUnit unit) {
+    flowpipe_arrow::schema::ColumnType::TimeUnit unit) {
   switch (unit) {
-    case arrow::schema::ColumnType::TIME_UNIT_SECOND:
+    case flowpipe_arrow::schema::ColumnType::TIME_UNIT_SECOND:
       return arrow::TimeUnit::SECOND;
-    case arrow::schema::ColumnType::TIME_UNIT_MILLI:
+    case flowpipe_arrow::schema::ColumnType::TIME_UNIT_MILLI:
       return arrow::TimeUnit::MILLI;
-    case arrow::schema::ColumnType::TIME_UNIT_MICRO:
+    case flowpipe_arrow::schema::ColumnType::TIME_UNIT_MICRO:
       return arrow::TimeUnit::MICRO;
-    case arrow::schema::ColumnType::TIME_UNIT_NANO:
+    case flowpipe_arrow::schema::ColumnType::TIME_UNIT_NANO:
       return arrow::TimeUnit::NANO;
-    case arrow::schema::ColumnType::TIME_UNIT_UNSPECIFIED:
+    case flowpipe_arrow::schema::ColumnType::TIME_UNIT_UNSPECIFIED:
     default:
       return arrow::Status::Invalid("Time unit must be specified");
   }
 }
 
 inline arrow::Result<std::shared_ptr<arrow::DataType>> ConvertColumnType(
-    const arrow::schema::ColumnType& column_type) {
+    const flowpipe_arrow::schema::ColumnType& column_type) {
   switch (column_type.type()) {
-    case arrow::schema::ColumnType::DATA_TYPE_NULL:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_NULL:
       return arrow::null();
-    case arrow::schema::ColumnType::DATA_TYPE_BOOL:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_BOOL:
       return arrow::boolean();
-    case arrow::schema::ColumnType::DATA_TYPE_INT8:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT8:
       return arrow::int8();
-    case arrow::schema::ColumnType::DATA_TYPE_INT16:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT16:
       return arrow::int16();
-    case arrow::schema::ColumnType::DATA_TYPE_INT32:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT32:
       return arrow::int32();
-    case arrow::schema::ColumnType::DATA_TYPE_INT64:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT64:
       return arrow::int64();
-    case arrow::schema::ColumnType::DATA_TYPE_UINT8:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT8:
       return arrow::uint8();
-    case arrow::schema::ColumnType::DATA_TYPE_UINT16:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT16:
       return arrow::uint16();
-    case arrow::schema::ColumnType::DATA_TYPE_UINT32:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT32:
       return arrow::uint32();
-    case arrow::schema::ColumnType::DATA_TYPE_UINT64:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT64:
       return arrow::uint64();
-    case arrow::schema::ColumnType::DATA_TYPE_FLOAT16:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT16:
       return arrow::float16();
-    case arrow::schema::ColumnType::DATA_TYPE_FLOAT32:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT32:
       return arrow::float32();
-    case arrow::schema::ColumnType::DATA_TYPE_FLOAT64:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT64:
       return arrow::float64();
-    case arrow::schema::ColumnType::DATA_TYPE_STRING:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_STRING:
       return arrow::utf8();
-    case arrow::schema::ColumnType::DATA_TYPE_LARGE_STRING:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_LARGE_STRING:
       return arrow::large_utf8();
-    case arrow::schema::ColumnType::DATA_TYPE_BINARY:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_BINARY:
       return arrow::binary();
-    case arrow::schema::ColumnType::DATA_TYPE_LARGE_BINARY:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_LARGE_BINARY:
       return arrow::large_binary();
-    case arrow::schema::ColumnType::DATA_TYPE_DATE32:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_DATE32:
       return arrow::date32();
-    case arrow::schema::ColumnType::DATA_TYPE_DATE64:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_DATE64:
       return arrow::date64();
-    case arrow::schema::ColumnType::DATA_TYPE_TIMESTAMP: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIMESTAMP: {
       ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
       return arrow::timestamp(time_unit);
     }
-    case arrow::schema::ColumnType::DATA_TYPE_TIME32: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIME32: {
       ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
       if (time_unit != arrow::TimeUnit::SECOND && time_unit != arrow::TimeUnit::MILLI) {
         return arrow::Status::Invalid("time32 supports only seconds or milliseconds");
       }
       return arrow::time32(time_unit);
     }
-    case arrow::schema::ColumnType::DATA_TYPE_TIME64: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIME64: {
       ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
       if (time_unit != arrow::TimeUnit::MICRO && time_unit != arrow::TimeUnit::NANO) {
         return arrow::Status::Invalid("time64 supports only microseconds or nanoseconds");
       }
       return arrow::time64(time_unit);
     }
-    case arrow::schema::ColumnType::DATA_TYPE_DURATION: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_DURATION: {
       ARROW_ASSIGN_OR_RAISE(auto time_unit, ConvertTimeUnit(column_type.time_unit()));
       return arrow::duration(time_unit);
     }
-    case arrow::schema::ColumnType::DATA_TYPE_DECIMAL128: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_DECIMAL128: {
       if (!column_type.has_decimal_precision() || !column_type.has_decimal_scale()) {
         return arrow::Status::Invalid("decimal128 requires precision and scale");
       }
       return arrow::decimal128(column_type.decimal_precision(), column_type.decimal_scale());
     }
-    case arrow::schema::ColumnType::DATA_TYPE_DECIMAL256: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_DECIMAL256: {
       if (!column_type.has_decimal_precision() || !column_type.has_decimal_scale()) {
         return arrow::Status::Invalid("decimal256 requires precision and scale");
       }
       return arrow::decimal256(column_type.decimal_precision(), column_type.decimal_scale());
     }
-    case arrow::schema::ColumnType::DATA_TYPE_FIXED_SIZE_BINARY: {
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_FIXED_SIZE_BINARY: {
       if (!column_type.has_fixed_size_binary_length()) {
         return arrow::Status::Invalid("fixed_size_binary requires length");
       }
       return arrow::fixed_size_binary(column_type.fixed_size_binary_length());
     }
-    case arrow::schema::ColumnType::DATA_TYPE_UNSPECIFIED:
+    case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UNSPECIFIED:
     default:
       return arrow::Status::Invalid("Column type must be specified");
   }
