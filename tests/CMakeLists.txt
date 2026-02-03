@@ -17,7 +17,11 @@ else()
 endif()
 
 add_executable(arrow_stage_tests
-  arrow_stage_tests.cc
+  csv_arrow_sink_tests.cc
+  csv_arrow_source_tests.cc
+  json_arrow_source_tests.cc
+  parquet_arrow_sink_tests.cc
+  parquet_arrow_source_tests.cc
 )
 target_include_directories(arrow_stage_tests
   PRIVATE
