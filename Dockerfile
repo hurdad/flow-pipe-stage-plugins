@@ -23,12 +23,14 @@ RUN apt-get update \
     libcurlpp-dev \
     libnats-dev \
     libopencv-dev \
+    libgtest-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 COPY . .
 
 RUN cmake -S . -B build -G Ninja \
+    -DBUILD_TESTING=ON \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=${CMAKE_PREFIX_PATH} \
  && cmake --build build \
