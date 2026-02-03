@@ -31,6 +31,8 @@ target_include_directories(arrow_stage_tests
 target_link_libraries(arrow_stage_tests
   PRIVATE
   Arrow::arrow_shared
+  arrow_dataset
+  parquet
   flowpipe::flowpipe_runtime
   ${GTEST_MAIN_TARGET}
   stage_arrow_proto

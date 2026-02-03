@@ -24,7 +24,8 @@
 
 using namespace flowpipe;
 
-using ParquetArrowSinkConfig = flowpipe::v1::stages::parquet::arrow::sink::v1::ParquetArrowSinkConfig;
+using ParquetArrowSinkConfig =
+    flowpipe::v1::stages::parquet::arrow::sink::v1::ParquetArrowSinkConfig;
 
 namespace {
 parquet::Compression::type ResolveCompression(flowpipe_arrow::common::Compression compression) {
