@@ -67,3 +67,7 @@ add_subdirectory(stages/nats_sink)
 add_subdirectory(stages/nats_source)
 add_subdirectory(stages/nats_jetstream_sink)
 add_subdirectory(stages/nats_jetstream_source)
+
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
