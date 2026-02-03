@@ -29,10 +29,10 @@ TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
   auto input_result = arrow::io::ReadableFile::Open(path.string());
   ASSERT_TRUE(input_result.ok());
 
-  std::unique_ptr<parquet::arrow::FileReader> reader;
-  auto status =
-      parquet::arrow::OpenFile(*input_result, arrow::default_memory_pool(), &reader);
-  ASSERT_TRUE(status.ok());
+  auto reader_result =
+      parquet::arrow::OpenFile(*input_result, arrow::default_memory_pool());
+  ASSERT_TRUE(reader_result.ok());
+  auto reader = std::move(reader_result).ValueOrDie();
 
   std::shared_ptr<arrow::Table> table;
   ASSERT_TRUE(reader->ReadTable(&table).ok());
