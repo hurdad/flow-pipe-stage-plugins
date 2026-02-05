@@ -1,8 +1,4 @@
 #include <arrow/buffer.h>
-#include <arrow/dataset/dataset.h>
-#include <arrow/dataset/file_base.h>
-#include <arrow/dataset/file_parquet.h>
-#include <arrow/dataset/partition.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
@@ -30,36 +26,8 @@ using ParquetArrowSourceConfig =
     flowpipe::v1::stages::parquet::arrow::source::v1::ParquetArrowSourceConfig;
 
 namespace {
-bool IsHiveSegment(const std::filesystem::path& segment) {
-  auto segment_string = segment.string();
-  auto separator = segment_string.find('=');
-  return separator != std::string::npos && separator > 0 && separator + 1 < segment_string.size();
-}
-
-std::filesystem::path PartitionBaseDirForFile(const std::filesystem::path& file_path) {
-  auto parent = file_path.parent_path();
-  std::filesystem::path base;
-  bool found_hive_segment = false;
-  for (const auto& part : parent) {
-    if (IsHiveSegment(part)) {
-      found_hive_segment = true;
-      break;
-    }
-    base /= part;
-  }
-
-  if (!found_hive_segment) {
-    return parent;
-  }
-
-  if (base.empty()) {
-    if (parent.has_root_path()) {
-      return parent.root_path();
-    }
-    return ".";
-  }
-
-  return base;
+bool HasParquetExtension(const std::string& path) {
+  return std::filesystem::path(path).extension() == ".parquet";
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
@@ -103,25 +71,40 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
     return table;
   }
 
-  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
-  arrow::dataset::FileSystemFactoryOptions options;
-
-  std::shared_ptr<arrow::dataset::DatasetFactory> factory;
   if (info.type() == arrow::fs::FileType::Directory) {
     arrow::fs::FileSelector selector;
     selector.base_dir = info.path();
     selector.recursive = true;
-    options.partition_base_dir = info.path();
-    ARROW_ASSIGN_OR_RAISE(factory, arrow::dataset::FileSystemDatasetFactory::Make(
-                                       filesystem, selector, format, options));
-  } else {
-    return arrow::Status::Invalid("Unsupported parquet path: ", path);
+    ARROW_ASSIGN_OR_RAISE(auto entries, filesystem->GetFileInfo(selector));
+
+    std::vector<std::shared_ptr<arrow::Table>> tables;
+    for (const auto& entry : entries) {
+      if (entry.type() != arrow::fs::FileType::File) {
+        continue;
+      }
+      if (!HasParquetExtension(entry.path())) {
+        continue;
+      }
+      ARROW_ASSIGN_OR_RAISE(auto input, filesystem->OpenInputFile(entry.path()));
+      ARROW_ASSIGN_OR_RAISE(auto reader,
+                            parquet::arrow::OpenFile(input, arrow::default_memory_pool()));
+      std::shared_ptr<arrow::Table> table;
+      ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+      tables.push_back(table);
+    }
+
+    if (tables.empty()) {
+      return arrow::Status::Invalid("No parquet files found in directory: ", path);
+    }
+
+    if (tables.size() == 1) {
+      return tables.front();
+    }
+
+    return arrow::ConcatenateTables(tables);
   }
 
-  ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
-  ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
-  ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
-  return scanner->ToTable();
+  return arrow::Status::Invalid("Unsupported parquet path: ", path);
 }
 }  // namespace
 
