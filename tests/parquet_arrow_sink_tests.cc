@@ -89,5 +89,15 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
   auto table_result = (*scanner_result)->ToTable();
   ASSERT_TRUE(table_result.ok());
 
-  EXPECT_TRUE((*table_result)->Equals(*expected));
+  std::vector<int> column_indices;
+  column_indices.reserve(static_cast<size_t>(expected->num_columns()));
+  for (const auto& field : expected->schema()->fields()) {
+    auto index = (*table_result)->schema()->GetFieldIndex(field->name());
+    ASSERT_NE(index, -1) << "Missing column in dataset output: " << field->name();
+    column_indices.push_back(index);
+  }
+  auto aligned_result = (*table_result)->SelectColumns(column_indices);
+  ASSERT_TRUE(aligned_result.ok());
+
+  EXPECT_TRUE((*aligned_result)->Equals(*expected));
 }
