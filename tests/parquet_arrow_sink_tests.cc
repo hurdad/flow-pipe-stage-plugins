@@ -1,3 +1,4 @@
+#include <arrow/compute/api.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/dataset/file_parquet.h>
 #include <arrow/dataset/partition.h>
@@ -20,6 +21,17 @@ using flowpipe_stage_tests::BuildSampleTable;
 using flowpipe_stage_tests::EnsureArrowComputeInitialized;
 using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::SerializeTablePayload;
+
+namespace {
+arrow::Result<std::shared_ptr<arrow::Table>> SortTable(
+    const std::shared_ptr<arrow::Table>& table,
+    const std::vector<arrow::compute::SortKey>& keys) {
+  ARROW_ASSIGN_OR_RAISE(auto indices,
+                        arrow::compute::SortIndices(table, arrow::compute::SortOptions(keys)));
+  ARROW_ASSIGN_OR_RAISE(auto sorted, arrow::compute::Take(table, indices));
+  return sorted.table();
+}
+}  // namespace
 
 TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
   EnsureArrowComputeInitialized();
@@ -99,5 +111,17 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
   auto aligned_result = (*table_result)->SelectColumns(column_indices);
   ASSERT_TRUE(aligned_result.ok());
 
-  EXPECT_TRUE((*aligned_result)->Equals(*expected));
+  auto sorted_result =
+      SortTable(*aligned_result,
+                {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
+                 arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
+  ASSERT_TRUE(sorted_result.ok());
+
+  auto sorted_expected =
+      SortTable(expected,
+                {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
+                 arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
+  ASSERT_TRUE(sorted_expected.ok());
+
+  EXPECT_TRUE((*sorted_result)->Equals(*sorted_expected));
 }
