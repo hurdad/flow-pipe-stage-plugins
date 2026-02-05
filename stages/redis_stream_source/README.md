@@ -1,5 +1,6 @@
 # redis_stream_source
 
+See `redis_stream_source.proto` for full options.
 ## Configuration
 
 ```yaml

@@ -1,5 +1,6 @@
 # redis_stream_sink
 
+See `redis_stream_sink.proto` for full options.
 ## Configuration
 
 ```yaml

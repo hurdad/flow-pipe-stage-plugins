@@ -1,5 +1,6 @@
 # udp_sink
 
+See `udp_sink.proto` for full options.
 ## Configuration
 
 ```yaml

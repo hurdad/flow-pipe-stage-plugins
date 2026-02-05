@@ -1,5 +1,6 @@
 # nats_jetstream_source
 
+See `nats_jetstream_source.proto` for full options.
 ## Configuration
 
 ```yaml

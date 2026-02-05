@@ -1,5 +1,6 @@
 # file_sink
 
+See `file_sink.proto` for full options.
 ## Configuration
 
 ```yaml

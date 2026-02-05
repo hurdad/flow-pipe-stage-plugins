@@ -1,5 +1,6 @@
 # tcp_source
 
+See `tcp_source.proto` for full options.
 ## Configuration
 
 ```yaml

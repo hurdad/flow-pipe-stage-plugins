@@ -1,5 +1,6 @@
 # redis_pubsub_source
 
+See `redis_pubsub_source.proto` for full options.
 ## Configuration
 
 ```yaml

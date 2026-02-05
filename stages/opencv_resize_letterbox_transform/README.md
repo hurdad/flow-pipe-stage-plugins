@@ -1,5 +1,6 @@
 # opencv_resize_letterbox_transform
 
+See `opencv_resize_letterbox_transform.proto` for full options.
 ## Configuration
 
 ```yaml

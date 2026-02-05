@@ -1,5 +1,6 @@
 # nats_source
 
+See `nats_source.proto` for full options.
 ## Configuration
 
 ```yaml

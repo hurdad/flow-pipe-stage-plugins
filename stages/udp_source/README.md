@@ -1,5 +1,6 @@
 # udp_source
 
+See `udp_source.proto` for full options.
 ## Configuration
 
 ```yaml

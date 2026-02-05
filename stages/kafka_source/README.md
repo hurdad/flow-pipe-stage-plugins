@@ -1,5 +1,6 @@
 # kafka_source
 
+See `kafka_source.proto` for full options.
 ## Configuration
 
 ```yaml
