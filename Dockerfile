@@ -17,6 +17,7 @@ RUN apt-get update \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
     libarrow-dev \
+    libarrow-compute-dev \
     libarrow-dataset-dev \
     libparquet-dev \
     libhiredis-dev \
