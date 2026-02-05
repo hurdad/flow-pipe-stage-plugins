@@ -348,7 +348,6 @@ arrow::Status WriteHivePartitionedDataset(
       std::dynamic_pointer_cast<arrow::dataset::ParquetFileWriteOptions>(file_write_options);
   if (parquet_write_options) {
     parquet_write_options->writer_properties = properties;
-    parquet_write_options->row_group_size = ResolveRowGroupSize(config, table);
   }
 
   arrow::dataset::FileSystemDatasetWriteOptions write_options;
@@ -370,7 +369,9 @@ arrow::Status WriteHivePartitionedDataset(
   }
 
   auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(table);
-  return arrow::dataset::WriteDataset(dataset, write_options);
+  ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
+  ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
+  return arrow::dataset::FileSystemDataset::Write(write_options, scanner);
 }
 }  // namespace
 
@@ -447,6 +448,9 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       ApplyWriterProperties(config_, &builder);
     } else {
       builder.compression(ResolveCompression(config_.common().compression()));
+    }
+    if (config_.has_row_group_size() && config_.row_group_size() > 0) {
+      builder.max_row_group_length(config_.row_group_size());
     }
     auto properties = builder.build();
 
