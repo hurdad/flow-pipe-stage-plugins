@@ -1,3 +1,4 @@
+#include <arrow/compute/api.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/dataset/file_parquet.h>
 #include <arrow/dataset/partition.h>
@@ -20,6 +21,14 @@ using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::ReadTableFromPayload;
 
 namespace {
+std::shared_ptr<arrow::Table> SortTable(const std::shared_ptr<arrow::Table>& table) {
+  arrow::compute::SortOptions options(
+      {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
+       arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
+  auto indices = arrow::compute::SortIndices(table, options).ValueOrDie();
+  return arrow::compute::Take(table, indices).ValueOrDie().table();
+}
+
 void WriteHivePartitionedDataset(const std::filesystem::path& path,
                                  const std::shared_ptr<arrow::Table>& table) {
   std::filesystem::create_directories(path);
@@ -90,5 +99,5 @@ TEST(ParquetArrowSourceTest, ReadsHivePartitionedParquetDataset) {
   ASSERT_TRUE(stage.produce(ctx, payload));
 
   auto table = ReadTableFromPayload(payload);
-  EXPECT_TRUE(table->Equals(*expected));
+  EXPECT_TRUE(SortTable(table)->Equals(*SortTable(expected)));
 }
