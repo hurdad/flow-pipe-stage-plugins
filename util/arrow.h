@@ -286,8 +286,13 @@ inline arrow::Result<arrow::Compression::type> ResolveCompression(
       return arrow::Compression::BZ2;
 
     case flowpipe_arrow::common::COMPRESSION_AUTO:
-    default:
-      return arrow::util::Codec::GetCompressionType(path);
+    default: {
+      auto compression_result = arrow::util::Codec::GetCompressionType(path);
+      if (compression_result.ok()) {
+        return *compression_result;
+      }
+      return arrow::Compression::UNCOMPRESSED;
+    }
   }
 }
 
