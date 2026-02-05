@@ -1,4 +1,10 @@
+#include <arrow/dataset/dataset.h>
+#include <arrow/dataset/file_parquet.h>
+#include <arrow/dataset/partition.h>
+#include <arrow/filesystem/api.h>
 #include <parquet/arrow/reader.h>
+
+#include <filesystem>
 
 #include "arrow_stage_test_support.h"
 
@@ -10,6 +16,7 @@
 
 using flowpipe_stage_tests::BuildPathConfig;
 using flowpipe_stage_tests::BuildSampleTable;
+using flowpipe_stage_tests::AddParquetPartitionColumns;
 using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::SerializeTablePayload;
 
@@ -38,4 +45,47 @@ TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
   ASSERT_TRUE(reader->ReadTable(&table).ok());
 
   EXPECT_TRUE(table->Equals(*expected));
+}
+
+TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
+  auto path = MakeTempPath("output_dataset");
+  auto expected = BuildSampleTable();
+  std::filesystem::create_directories(path);
+
+  ParquetArrowSink stage;
+  auto config = BuildPathConfig(path);
+  AddParquetPartitionColumns(&config, {"id"});
+
+  ASSERT_TRUE(stage.configure(config));
+
+  flowpipe::StageContext ctx;
+  auto payload = SerializeTablePayload(expected);
+  stage.consume(ctx, payload);
+
+  auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
+  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+  arrow::dataset::FileSystemFactoryOptions options;
+  options.partitioning = arrow::dataset::HivePartitioning::MakeFactory();
+  options.partition_base_dir = path.string();
+
+  arrow::fs::FileSelector selector;
+  selector.base_dir = path.string();
+  selector.recursive = true;
+
+  auto factory_result = arrow::dataset::FileSystemDatasetFactory::Make(
+      filesystem, selector, format, options);
+  ASSERT_TRUE(factory_result.ok());
+
+  auto dataset_result = (*factory_result)->Finish();
+  ASSERT_TRUE(dataset_result.ok());
+
+  auto scanner_builder_result = (*dataset_result)->NewScan();
+  ASSERT_TRUE(scanner_builder_result.ok());
+  auto scanner_result = (*scanner_builder_result)->Finish();
+  ASSERT_TRUE(scanner_result.ok());
+
+  auto table_result = (*scanner_result)->ToTable();
+  ASSERT_TRUE(table_result.ok());
+
+  EXPECT_TRUE((*table_result)->Equals(*expected));
 }

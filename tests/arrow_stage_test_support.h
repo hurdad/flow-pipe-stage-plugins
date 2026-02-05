@@ -9,6 +9,8 @@
 #include <gtest/gtest.h>
 #include <google/protobuf/struct.pb.h>
 
+#include "arrow_common.pb.h"
+
 #include <chrono>
 #include <cstdint>
 #include <cstring>
@@ -33,6 +35,30 @@ inline google::protobuf::Struct BuildPathConfig(const std::filesystem::path& pat
   google::protobuf::Struct config;
   (*config.mutable_fields())["path"].set_string_value(path.string());
   return config;
+}
+
+inline void AddCommonCompression(google::protobuf::Struct* config,
+                                 flowpipe::v1::arrow::common::Compression compression) {
+  auto* common_value = (*config->mutable_fields())["common"].mutable_struct_value();
+  (*common_value->mutable_fields())["compression"].set_string_value(
+      flowpipe::v1::arrow::common::Compression_Name(compression));
+}
+
+inline google::protobuf::Struct BuildPathConfigWithCompression(
+    const std::filesystem::path& path,
+    flowpipe::v1::arrow::common::Compression compression) {
+  auto config = BuildPathConfig(path);
+  AddCommonCompression(&config, compression);
+  return config;
+}
+
+inline void AddParquetPartitionColumns(google::protobuf::Struct* config,
+                                       const std::vector<std::string>& columns) {
+  auto* write_opts = (*config->mutable_fields())["write_opts"].mutable_struct_value();
+  auto* list_value = (*write_opts->mutable_fields())["partition_columns"].mutable_list_value();
+  for (const auto& column : columns) {
+    list_value->add_values()->set_string_value(column);
+  }
 }
 
 inline std::shared_ptr<arrow::Table> BuildSampleTable() {
