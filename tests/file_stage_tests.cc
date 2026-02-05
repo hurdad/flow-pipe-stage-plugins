@@ -33,8 +33,7 @@ google::protobuf::Struct BuildFileSourceConfig(
   google::protobuf::Struct config;
   (*config.mutable_fields()){"path"}.set_string_value(path.string());
   (*config.mutable_fields()){"compression"}.set_string_value(
-      flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType_Name(
-          compression));
+      flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType_Name(compression));
   return config;
 }
 
