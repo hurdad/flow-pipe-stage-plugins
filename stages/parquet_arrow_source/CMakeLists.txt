@@ -65,8 +65,6 @@ target_include_directories(stage_parquet_arrow_source
 # ------------------------------------------------------------
 target_link_libraries(stage_parquet_arrow_source
         PRIVATE
-        Arrow::arrow_dataset
-        Arrow::arrow_compute
         Arrow::arrow_shared
         flowpipe::flowpipe_runtime
         stage_parquet_arrow_source_proto
