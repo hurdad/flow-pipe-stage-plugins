@@ -26,11 +26,12 @@ void WriteHivePartitionedDataset(const std::filesystem::path& path,
   auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
   auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
 
-  auto partitioning_result = arrow::dataset::HivePartitioning::Make(
-      arrow::schema({arrow::field("id", arrow::int64())}));
+  auto factory = arrow::dataset::HivePartitioning::MakeFactory();
+  auto partitioning_result =
+      factory->Finish(arrow::schema({arrow::field("id", arrow::int64())}));
   ASSERT_TRUE(partitioning_result.ok());
 
-  auto write_options = arrow::dataset::FileSystemDatasetWriteOptions::Defaults();
+  arrow::dataset::FileSystemDatasetWriteOptions write_options;
   write_options.file_write_options = format->DefaultWriteOptions();
   write_options.filesystem = filesystem;
   write_options.base_dir = path.string();
