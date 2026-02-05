@@ -1,17 +1,15 @@
 #include <arrow/buffer.h>
-#include <arrow/dataset/dataset.h>
-#include <arrow/dataset/file_base.h>
-#include <arrow/dataset/file_parquet.h>
-#include <arrow/dataset/partition.h>
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
+#include <google/protobuf/repeated_field.h>
 #include <google/protobuf/struct.pb.h>
 #include <parquet/arrow/writer.h>
 #include <parquet/properties.h>
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "flowpipe/configurable_stage.h"
@@ -295,67 +293,109 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadTableFromPayload(const Payload&
   return arrow::Table::FromRecordBatches(stream_reader->schema(), batches);
 }
 
-arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioning(
-    const std::shared_ptr<arrow::Schema>& schema,
-    const ParquetArrowSinkConfig::FileSystemDatasetWriteOptions& write_opts) {
+std::string JoinPath(std::string base, const std::string& child) {
+  if (base.empty()) {
+    return child;
+  }
+  if (base.back() != '/') {
+    base.push_back('/');
+  }
+  return base + child;
+}
+
+int64_t ResolveRowGroupSize(const ParquetArrowSinkConfig& config,
+                            const std::shared_ptr<arrow::Table>& table) {
+  int64_t row_group_size = static_cast<int64_t>(table->num_rows());
+  if (config.has_row_group_size() && config.row_group_size() > 0) {
+    row_group_size = config.row_group_size();
+  } else if (config.has_writer_properties() &&
+             config.writer_properties().has_max_row_group_length() &&
+             config.writer_properties().max_row_group_length() > 0) {
+    row_group_size = config.writer_properties().max_row_group_length();
+  }
+  return row_group_size;
+}
+
+arrow::Result<std::shared_ptr<arrow::Table>> BuildPartitionTable(
+    const std::shared_ptr<arrow::Table>& table, const std::vector<int64_t>& rows) {
+  std::vector<std::shared_ptr<arrow::Table>> slices;
+  slices.reserve(rows.size());
+  for (auto row : rows) {
+    slices.push_back(table->Slice(row, 1));
+  }
+  return arrow::ConcatenateTables(slices);
+}
+
+arrow::Result<std::unordered_map<std::string, std::vector<int64_t>>> BuildPartitionRowMap(
+    const std::shared_ptr<arrow::Table>& table,
+    const google::protobuf::RepeatedPtrField<std::string>& partition_columns) {
+  std::unordered_map<std::string, std::vector<int64_t>> partition_rows;
+  const std::string kHiveDefaultPartition = "__HIVE_DEFAULT_PARTITION__";
+  int64_t num_rows = table->num_rows();
+  for (int64_t row = 0; row < num_rows; ++row) {
+    std::vector<std::string> segments;
+    segments.reserve(static_cast<size_t>(partition_columns.size()));
+    for (const auto& name : partition_columns) {
+      auto column = table->GetColumnByName(name);
+      if (!column) {
+        return arrow::Status::Invalid("parquet_arrow_sink missing partition column: ", name);
+      }
+      ARROW_ASSIGN_OR_RAISE(auto scalar, column->GetScalar(row));
+      std::string value =
+          scalar->is_valid ? scalar->ToString() : kHiveDefaultPartition;
+      segments.push_back(name + "=" + value);
+    }
+
+    std::string key;
+    for (size_t index = 0; index < segments.size(); ++index) {
+      key = JoinPath(key, segments[index]);
+    }
+    partition_rows[key].push_back(row);
+  }
+
+  return partition_rows;
+}
+
+arrow::Status WriteHivePartitionedDataset(
+    const ParquetArrowSinkConfig& config, const std::shared_ptr<arrow::fs::FileSystem>& filesystem,
+    const std::string& base_dir, const std::shared_ptr<arrow::Table>& table,
+    const std::shared_ptr<parquet::WriterProperties>& properties) {
+  const auto& write_opts = config.write_opts();
   if (write_opts.partition_columns().empty()) {
     return arrow::Status::Invalid(
         "parquet_arrow_sink write_opts.partition_columns is required for hive partitioning");
   }
+  ARROW_ASSIGN_OR_RAISE(auto partition_rows,
+                        BuildPartitionRowMap(table, write_opts.partition_columns()));
 
-  std::vector<std::shared_ptr<arrow::Field>> partition_fields;
-  partition_fields.reserve(static_cast<size_t>(write_opts.partition_columns().size()));
-  for (const auto& name : write_opts.partition_columns()) {
-    auto field = schema->GetFieldByName(name);
-    if (!field) {
-      return arrow::Status::Invalid("parquet_arrow_sink missing partition column: ", name);
+  int partition_index = 0;
+  for (const auto& [partition_path, rows] : partition_rows) {
+    ARROW_ASSIGN_OR_RAISE(auto partition_table, BuildPartitionTable(table, rows));
+
+    std::string dir_path = JoinPath(base_dir, partition_path);
+    ARROW_RETURN_NOT_OK(filesystem->CreateDir(dir_path, true));
+
+    std::string filename = "part-" + std::to_string(partition_index) + ".parquet";
+    if (write_opts.has_basename_template() && !write_opts.basename_template().empty()) {
+      filename = write_opts.basename_template();
+      auto replace_pos = filename.find("{i}");
+      if (replace_pos != std::string::npos) {
+        filename.replace(replace_pos, 3, std::to_string(partition_index));
+      }
     }
-    partition_fields.push_back(field);
-  }
-  auto partition_schema = arrow::schema(std::move(partition_fields));
-  auto factory = arrow::dataset::HivePartitioning::MakeFactory();
-  return factory->Finish(partition_schema);
-}
+    std::string file_path = JoinPath(dir_path, filename);
 
-arrow::Result<arrow::dataset::FileSystemDatasetWriteOptions> BuildDatasetWriteOptions(
-    const ParquetArrowSinkConfig& config, const std::shared_ptr<arrow::fs::FileSystem>& filesystem,
-    const std::string& base_dir, const std::shared_ptr<arrow::Schema>& schema,
-    const std::shared_ptr<parquet::WriterProperties>& properties) {
-  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
-  auto file_write_options = format->DefaultWriteOptions();
-  auto parquet_write_options =
-      std::dynamic_pointer_cast<arrow::dataset::ParquetFileWriteOptions>(file_write_options);
-  if (parquet_write_options && properties) {
-    parquet_write_options->writer_properties = properties;
+    ARROW_ASSIGN_OR_RAISE(auto output, filesystem->OpenOutputStream(file_path));
+    auto status = parquet::arrow::WriteTable(
+        *partition_table, arrow::default_memory_pool(), output,
+        ResolveRowGroupSize(config, partition_table), properties);
+    if (!status.ok()) {
+      return status;
+    }
+    ARROW_RETURN_NOT_OK(output->Close());
+    ++partition_index;
   }
-
-  arrow::dataset::FileSystemDatasetWriteOptions options;
-  options.file_write_options = std::move(file_write_options);
-  options.filesystem = filesystem;
-  options.base_dir = base_dir;
-
-  const auto& write_opts = config.write_opts();
-  if (write_opts.has_basename_template()) {
-    options.basename_template = write_opts.basename_template();
-  }
-  if (write_opts.has_max_rows_per_file()) {
-    options.max_rows_per_file = write_opts.max_rows_per_file();
-  }
-  if (write_opts.has_max_rows_per_group()) {
-    options.max_rows_per_group = write_opts.max_rows_per_group();
-  } else if (config.has_row_group_size() && config.row_group_size() > 0) {
-    options.max_rows_per_group = config.row_group_size();
-  } else if (config.has_writer_properties() &&
-             config.writer_properties().has_max_row_group_length() &&
-             config.writer_properties().max_row_group_length() > 0) {
-    options.max_rows_per_group = config.writer_properties().max_row_group_length();
-  }
-  if (write_opts.has_max_partitions()) {
-    options.max_partitions = write_opts.max_partitions();
-  }
-
-  ARROW_ASSIGN_OR_RAISE(options.partitioning, BuildHivePartitioning(schema, write_opts));
-  return options;
+  return arrow::Status::OK();
 }
 }  // namespace
 
@@ -436,29 +476,8 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
     auto properties = builder.build();
 
     if (config_.has_write_opts()) {
-      auto write_options_result = BuildDatasetWriteOptions(
-          config_, fs_and_path.first, fs_and_path.second, (*table_result)->schema(), properties);
-      if (!write_options_result.ok()) {
-        FP_LOG_ERROR("parquet_arrow_sink failed to build dataset write options: " +
-                     write_options_result.status().ToString());
-        return;
-      }
-
-      auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(*table_result);
-      auto scanner_builder_result = dataset->NewScan();
-      if (!scanner_builder_result.ok()) {
-        FP_LOG_ERROR("parquet_arrow_sink failed to create scan builder: " +
-                     scanner_builder_result.status().ToString());
-        return;
-      }
-      auto scanner_result = (*scanner_builder_result)->Finish();
-      if (!scanner_result.ok()) {
-        FP_LOG_ERROR("parquet_arrow_sink failed to finish scan: " +
-                     scanner_result.status().ToString());
-        return;
-      }
-      auto scanner = *scanner_result;
-      auto status = arrow::dataset::FileSystemDataset::Write(*write_options_result, scanner);
+      auto status = WriteHivePartitionedDataset(config_, fs_and_path.first, fs_and_path.second,
+                                                *table_result, properties);
       if (!status.ok()) {
         FP_LOG_ERROR("parquet_arrow_sink failed to write parquet dataset: " + status.ToString());
         return;
@@ -474,17 +493,10 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    int64_t row_group_size = static_cast<int64_t>((*table_result)->num_rows());
-    if (config_.has_row_group_size() && config_.row_group_size() > 0) {
-      row_group_size = config_.row_group_size();
-    } else if (config_.has_writer_properties() &&
-               config_.writer_properties().has_max_row_group_length() &&
-               config_.writer_properties().max_row_group_length() > 0) {
-      row_group_size = config_.writer_properties().max_row_group_length();
-    }
-
     auto status = parquet::arrow::WriteTable(**table_result, arrow::default_memory_pool(),
-                                             *output_result, row_group_size, properties);
+                                             *output_result,
+                                             ResolveRowGroupSize(config_, *table_result),
+                                             properties);
     if (!status.ok()) {
       FP_LOG_ERROR("parquet_arrow_sink failed to write parquet: " + status.ToString());
       return;
