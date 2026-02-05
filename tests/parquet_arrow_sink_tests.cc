@@ -24,8 +24,7 @@ using flowpipe_stage_tests::SerializeTablePayload;
 
 namespace {
 arrow::Result<std::shared_ptr<arrow::Table>> SortTable(
-    const std::shared_ptr<arrow::Table>& table,
-    const std::vector<arrow::compute::SortKey>& keys) {
+    const std::shared_ptr<arrow::Table>& table, const std::vector<arrow::compute::SortKey>& keys) {
   ARROW_ASSIGN_OR_RAISE(auto indices,
                         arrow::compute::SortIndices(table, arrow::compute::SortOptions(keys)));
   ARROW_ASSIGN_OR_RAISE(auto sorted, arrow::compute::Take(table, indices));
@@ -33,8 +32,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> SortTable(
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> CoerceTableToSchema(
-    const std::shared_ptr<arrow::Table>& table,
-    const std::shared_ptr<arrow::Schema>& schema) {
+    const std::shared_ptr<arrow::Table>& table, const std::shared_ptr<arrow::Schema>& schema) {
   std::vector<std::shared_ptr<arrow::ChunkedArray>> columns;
   columns.reserve(static_cast<size_t>(schema->num_fields()));
 
@@ -45,8 +43,9 @@ arrow::Result<std::shared_ptr<arrow::Table>> CoerceTableToSchema(
     }
     auto column = table->column(index);
     if (!column->type()->Equals(field->type())) {
-      ARROW_ASSIGN_OR_RAISE(auto casted,
-                            arrow::compute::Cast(column, arrow::compute::CastOptions::Safe()));
+      arrow::compute::CastOptions cast_options;
+      cast_options.to_type = field->type();
+      ARROW_ASSIGN_OR_RAISE(auto casted, arrow::compute::Cast(column, cast_options));
       column = casted.chunked_array();
     }
     columns.push_back(column);
@@ -127,16 +126,14 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
   auto aligned_result = CoerceTableToSchema(*table_result, expected->schema());
   ASSERT_TRUE(aligned_result.ok()) << aligned_result.status().ToString();
 
-  auto sorted_result =
-      SortTable(*aligned_result,
-                {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
-                 arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
+  auto sorted_result = SortTable(
+      *aligned_result, {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
+                        arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
   ASSERT_TRUE(sorted_result.ok());
 
   auto sorted_expected =
-      SortTable(expected,
-                {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
-                 arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
+      SortTable(expected, {arrow::compute::SortKey("id", arrow::compute::SortOrder::Ascending),
+                           arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
   ASSERT_TRUE(sorted_expected.ok());
 
   EXPECT_TRUE((*sorted_result)->Equals(**sorted_expected));

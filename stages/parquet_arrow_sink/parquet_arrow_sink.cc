@@ -6,9 +6,9 @@
 #include <arrow/filesystem/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
+#include <arrow/scalar.h>
 #include <arrow/table.h>
 #include <arrow/util/config.h>
-#include <arrow/scalar.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/struct.pb.h>
 #include <parquet/arrow/writer.h>
