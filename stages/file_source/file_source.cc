@@ -17,7 +17,7 @@ using namespace flowpipe;
 
 using FileSourceConfig = flowpipe::v1::stages::file::source::v1::FileSourceConfig;
 
-namespace {
+namespace file_source_internal {
 using CompressionType = FileSourceConfig::CompressionType;
 
 bool ResolveCompression(CompressionType compression, const std::string& path,
@@ -104,7 +104,7 @@ bool ReadFileGzip(const std::string& path, std::vector<char>& out, std::string& 
 
   return true;
 }
-}  // namespace
+}  // namespace file_source_internal
 
 // ============================================================
 // FileSource
@@ -139,8 +139,8 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
       return false;
     }
 
-    CompressionType compression;
-    if (!ResolveCompression(cfg.compression(), cfg.path(), compression)) {
+    file_source_internal::CompressionType compression;
+    if (!file_source_internal::ResolveCompression(cfg.compression(), cfg.path(), compression)) {
       FP_LOG_ERROR("file_source unsupported compression enum value");
       return false;
     }
@@ -169,7 +169,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
     std::vector<char> data;
     switch (compression_) {
       case FileSourceConfig::COMPRESSION_NONE: {
-        if (!ReadFileRaw(config_.path(), data)) {
+        if (!file_source_internal::ReadFileRaw(config_.path(), data)) {
           FP_LOG_ERROR("file_source failed to read file: " + config_.path());
           return false;
         }
@@ -177,7 +177,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
       }
       case FileSourceConfig::COMPRESSION_GZIP: {
         std::string error;
-        if (!ReadFileGzip(config_.path(), data, error)) {
+        if (!file_source_internal::ReadFileGzip(config_.path(), data, error)) {
           FP_LOG_ERROR("file_source gzip error: " + error);
           return false;
         }
@@ -209,7 +209,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
 
  private:
   FileSourceConfig config_{};
-  CompressionType compression_{FileSourceConfig::COMPRESSION_NONE};
+  file_source_internal::CompressionType compression_{FileSourceConfig::COMPRESSION_NONE};
   bool produced_{false};
 };
 

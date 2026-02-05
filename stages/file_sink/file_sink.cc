@@ -15,7 +15,7 @@ using namespace flowpipe;
 
 using FileSinkConfig = flowpipe::v1::stages::file::sink::v1::FileSinkConfig;
 
-namespace {
+namespace file_sink_internal {
 using CompressionType = FileSinkConfig::CompressionType;
 
 bool ResolveCompression(CompressionType compression, CompressionType& out_type) {
@@ -39,7 +39,7 @@ std::string BuildGzipMode(bool append, int compression_level) {
   }
   return mode;
 }
-}  // namespace
+}  // namespace file_sink_internal
 
 // ============================================================
 // FileSink
@@ -74,8 +74,8 @@ class FileSink final : public ISinkStage, public ConfigurableStage {
       return false;
     }
 
-    CompressionType compression;
-    if (!ResolveCompression(cfg.compression(), compression)) {
+    file_sink_internal::CompressionType compression;
+    if (!file_sink_internal::ResolveCompression(cfg.compression(), compression)) {
       FP_LOG_ERROR("file_sink unsupported compression enum value");
       return false;
     }
@@ -120,7 +120,8 @@ class FileSink final : public ISinkStage, public ConfigurableStage {
         break;
       }
       case FileSinkConfig::COMPRESSION_GZIP: {
-        std::string mode = BuildGzipMode(config_.append(), config_.compression_level());
+        std::string mode =
+            file_sink_internal::BuildGzipMode(config_.append(), config_.compression_level());
         gzFile file = gzopen(config_.path().c_str(), mode.c_str());
         if (!file) {
           FP_LOG_ERROR("file_sink failed to open gzip file: " + config_.path());
@@ -154,7 +155,7 @@ class FileSink final : public ISinkStage, public ConfigurableStage {
 
  private:
   FileSinkConfig config_{};
-  CompressionType compression_{FileSinkConfig::COMPRESSION_NONE};
+  file_sink_internal::CompressionType compression_{FileSinkConfig::COMPRESSION_NONE};
 };
 
 // ============================================================
