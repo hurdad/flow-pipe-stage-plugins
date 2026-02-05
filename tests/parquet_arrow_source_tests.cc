@@ -6,6 +6,7 @@
 #include <parquet/arrow/writer.h>
 
 #include <filesystem>
+#include <unordered_map>
 
 #include "arrow_stage_test_support.h"
 
@@ -32,28 +33,48 @@ std::shared_ptr<arrow::Table> SortTable(const std::shared_ptr<arrow::Table>& tab
 void WriteHivePartitionedDataset(const std::filesystem::path& path,
                                  const std::shared_ptr<arrow::Table>& table) {
   std::filesystem::create_directories(path);
-  auto filesystem = std::make_shared<arrow::fs::LocalFileSystem>();
-  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+  auto combined_result = table->CombineChunks(arrow::default_memory_pool());
+  ASSERT_TRUE(combined_result.ok());
+  auto combined = *combined_result;
 
-  auto factory = arrow::dataset::HivePartitioning::MakeFactory();
-  auto partitioning_result =
-      factory->Finish(arrow::schema({arrow::field("id", arrow::int64())}));
-  ASSERT_TRUE(partitioning_result.ok());
+  auto id_column = combined->GetColumnByName("id");
+  ASSERT_NE(id_column, nullptr);
+  ASSERT_EQ(id_column->num_chunks(), 1);
+  auto id_array = std::static_pointer_cast<arrow::Int64Array>(id_column->chunk(0));
 
-  arrow::dataset::FileSystemDatasetWriteOptions write_options;
-  write_options.file_write_options = format->DefaultWriteOptions();
-  write_options.filesystem = filesystem;
-  write_options.base_dir = path.string();
-  write_options.partitioning = *partitioning_result;
+  std::unordered_map<int64_t, std::vector<int64_t>> partitions;
+  for (int64_t row = 0; row < combined->num_rows(); ++row) {
+    if (!id_array->IsValid(row)) {
+      continue;
+    }
+    partitions[id_array->Value(row)].push_back(row);
+  }
 
-  auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(table);
-  auto scanner_builder_result = dataset->NewScan();
-  ASSERT_TRUE(scanner_builder_result.ok());
-  auto scanner_result = (*scanner_builder_result)->Finish();
-  ASSERT_TRUE(scanner_result.ok());
+  int partition_index = 0;
+  for (const auto& [id_value, rows] : partitions) {
+    arrow::Int64Builder indices_builder;
+    ASSERT_TRUE(indices_builder.AppendValues(rows).ok());
+    std::shared_ptr<arrow::Array> indices;
+    ASSERT_TRUE(indices_builder.Finish(&indices).ok());
 
-  auto status = arrow::dataset::FileSystemDataset::Write(write_options, *scanner_result);
-  ASSERT_TRUE(status.ok());
+    auto take_result = arrow::compute::Take(combined, indices);
+    ASSERT_TRUE(take_result.ok());
+    auto partition_table = (*take_result).table();
+
+    auto partition_path = path / ("id=" + std::to_string(id_value));
+    std::filesystem::create_directories(partition_path);
+    auto file_path = partition_path / ("part-" + std::to_string(partition_index) + ".parquet");
+
+    auto output_result = arrow::io::FileOutputStream::Open(file_path.string());
+    ASSERT_TRUE(output_result.ok());
+    auto output_stream = *output_result;
+
+    auto status = parquet::arrow::WriteTable(*partition_table, arrow::default_memory_pool(),
+                                             output_stream, partition_table->num_rows());
+    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(output_stream->Close().ok());
+    ++partition_index;
+  }
 }
 }  // namespace
 
