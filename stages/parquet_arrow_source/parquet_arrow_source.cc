@@ -96,8 +96,8 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
 
   if (info.type() == arrow::fs::FileType::File) {
     ARROW_ASSIGN_OR_RAISE(auto input, filesystem->OpenInputFile(info.path()));
-    std::unique_ptr<parquet::arrow::FileReader> reader;
-    ARROW_RETURN_NOT_OK(parquet::arrow::OpenFile(input, arrow::default_memory_pool(), &reader));
+    ARROW_ASSIGN_OR_RAISE(auto reader,
+                          parquet::arrow::OpenFile(input, arrow::default_memory_pool()));
     std::shared_ptr<arrow::Table> table;
     ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
     return table;
