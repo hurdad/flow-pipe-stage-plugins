@@ -112,8 +112,6 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
     selector.base_dir = info.path();
     selector.recursive = true;
     options.partition_base_dir = info.path();
-    ARROW_ASSIGN_OR_RAISE(auto data_schema, format->Inspect(filesystem, selector));
-    options.partitioning = arrow::dataset::HivePartitioning::MakeFactory(data_schema);
     ARROW_ASSIGN_OR_RAISE(factory, arrow::dataset::FileSystemDatasetFactory::Make(
                                        filesystem, selector, format, options));
   } else {
