@@ -8,6 +8,7 @@
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
 #include <google/protobuf/struct.pb.h>
+#include <parquet/arrow/reader.h>
 
 #include <cstring>
 #include <filesystem>
@@ -93,18 +94,21 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadParquetTable(
     const std::shared_ptr<arrow::fs::FileSystem>& filesystem, const std::string& path) {
   ARROW_ASSIGN_OR_RAISE(auto info, filesystem->GetFileInfo(path));
 
+  if (info.type() == arrow::fs::FileType::File) {
+    ARROW_ASSIGN_OR_RAISE(auto input, filesystem->OpenInputFile(info.path()));
+    std::unique_ptr<parquet::arrow::FileReader> reader;
+    ARROW_RETURN_NOT_OK(parquet::arrow::OpenFile(input, arrow::default_memory_pool(), &reader));
+    std::shared_ptr<arrow::Table> table;
+    ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+    return table;
+  }
+
   auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
   arrow::dataset::FileSystemFactoryOptions options;
   options.partitioning = arrow::dataset::HivePartitioning::MakeFactory();
 
   std::shared_ptr<arrow::dataset::DatasetFactory> factory;
-  if (info.type() == arrow::fs::FileType::File) {
-    std::vector<arrow::fs::FileInfo> files{info};
-    options.partition_base_dir =
-        PartitionBaseDirForFile(std::filesystem::path(info.path())).string();
-    ARROW_ASSIGN_OR_RAISE(factory, arrow::dataset::FileSystemDatasetFactory::Make(filesystem, files,
-                                                                                  format, options));
-  } else if (info.type() == arrow::fs::FileType::Directory) {
+  if (info.type() == arrow::fs::FileType::Directory) {
     arrow::fs::FileSelector selector;
     selector.base_dir = info.path();
     selector.recursive = true;
