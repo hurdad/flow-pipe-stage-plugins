@@ -18,6 +18,7 @@
 
 using flowpipe_stage_tests::BuildPathConfig;
 using flowpipe_stage_tests::BuildSampleTable;
+using flowpipe_stage_tests::EnsureArrowComputeInitialized;
 using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::ReadTableFromPayload;
 
@@ -79,6 +80,7 @@ void WriteHivePartitionedDataset(const std::filesystem::path& path,
 }  // namespace
 
 TEST(ParquetArrowSourceTest, ReadsParquetToArrowTable) {
+  EnsureArrowComputeInitialized();
   auto path = MakeTempPath("input.parquet");
   auto expected = BuildSampleTable();
 
@@ -105,6 +107,7 @@ TEST(ParquetArrowSourceTest, ReadsParquetToArrowTable) {
 }
 
 TEST(ParquetArrowSourceTest, ReadsHivePartitionedParquetDataset) {
+  EnsureArrowComputeInitialized();
   auto path = MakeTempPath("input_dataset");
   auto expected = BuildSampleTable();
 

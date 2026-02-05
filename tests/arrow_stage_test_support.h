@@ -3,6 +3,7 @@
 #include <arrow/array/builder_binary.h>
 #include <arrow/array/builder_primitive.h>
 #include <arrow/buffer.h>
+#include <arrow/compute/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
@@ -14,6 +15,7 @@
 #include <cstring>
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -57,6 +59,14 @@ inline void AddParquetPartitionColumns(google::protobuf::Struct* config,
   for (const auto& column : columns) {
     list_value->add_values()->set_string_value(column);
   }
+}
+
+inline void EnsureArrowComputeInitialized() {
+  static std::once_flag initialized;
+  std::call_once(initialized, []() {
+    auto status = arrow::compute::Initialize();
+    EXPECT_TRUE(status.ok());
+  });
 }
 
 inline std::shared_ptr<arrow::Table> BuildSampleTable() {

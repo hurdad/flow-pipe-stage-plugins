@@ -17,10 +17,12 @@
 using flowpipe_stage_tests::AddParquetPartitionColumns;
 using flowpipe_stage_tests::BuildPathConfig;
 using flowpipe_stage_tests::BuildSampleTable;
+using flowpipe_stage_tests::EnsureArrowComputeInitialized;
 using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::SerializeTablePayload;
 
 TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
+  EnsureArrowComputeInitialized();
   auto path = MakeTempPath("output.parquet");
   auto expected = BuildSampleTable();
 
@@ -47,6 +49,7 @@ TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
 }
 
 TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
+  EnsureArrowComputeInitialized();
   auto path = MakeTempPath("output_dataset");
   auto expected = BuildSampleTable();
   std::filesystem::create_directories(path);
