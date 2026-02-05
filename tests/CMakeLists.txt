@@ -19,6 +19,7 @@ endif ()
 add_executable(arrow_stage_tests
         csv_arrow_sink_tests.cc
         csv_arrow_source_tests.cc
+        file_stage_tests.cc
         json_arrow_source_tests.cc
         parquet_arrow_sink_tests.cc
         parquet_arrow_source_tests.cc
@@ -42,6 +43,8 @@ target_link_libraries(arrow_stage_tests
         stage_json_arrow_source_proto
         stage_parquet_arrow_source_proto
         stage_parquet_arrow_sink_proto
+        stage_file_source_proto
+        stage_file_sink_proto
 )
 target_compile_features(arrow_stage_tests
         PRIVATE
