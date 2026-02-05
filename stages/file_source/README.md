@@ -1,5 +1,6 @@
 # file_source
 
+See `file_source.proto` for full options.
 ## Configuration
 
 ```yaml

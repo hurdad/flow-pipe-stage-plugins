@@ -1,5 +1,6 @@
 # opencv_dnn_inference_transform
 
+See `opencv_dnn_inference_transform.proto` for full options.
 ## Configuration
 
 ```yaml

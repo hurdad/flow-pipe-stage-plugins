@@ -1,5 +1,6 @@
 # nats_jetstream_sink
 
+See `nats_jetstream_sink.proto` for full options.
 ## Configuration
 
 ```yaml

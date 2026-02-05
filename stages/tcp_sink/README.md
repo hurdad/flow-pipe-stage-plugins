@@ -1,5 +1,6 @@
 # tcp_sink
 
+See `tcp_sink.proto` for full options.
 ## Configuration
 
 ```yaml

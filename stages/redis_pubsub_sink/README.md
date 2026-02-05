@@ -1,5 +1,6 @@
 # redis_pubsub_sink
 
+See `redis_pubsub_sink.proto` for full options.
 ## Configuration
 
 ```yaml

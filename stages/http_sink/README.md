@@ -1,5 +1,6 @@
 # http_sink
 
+See `http_sink.proto` for full options.
 ## Configuration
 
 ```yaml

@@ -1,5 +1,6 @@
 # kafka_sink
 
+See `kafka_sink.proto` for full options.
 ## Configuration
 
 ```yaml

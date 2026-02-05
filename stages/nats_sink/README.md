@@ -1,5 +1,6 @@
 # nats_sink
 
+See `nats_sink.proto` for full options.
 ## Configuration
 
 ```yaml
