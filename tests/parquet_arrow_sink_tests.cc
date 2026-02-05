@@ -14,9 +14,9 @@
 #undef flowpipe_create_stage
 #undef flowpipe_destroy_stage
 
+using flowpipe_stage_tests::AddParquetPartitionColumns;
 using flowpipe_stage_tests::BuildPathConfig;
 using flowpipe_stage_tests::BuildSampleTable;
-using flowpipe_stage_tests::AddParquetPartitionColumns;
 using flowpipe_stage_tests::MakeTempPath;
 using flowpipe_stage_tests::SerializeTablePayload;
 
@@ -36,8 +36,7 @@ TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
   auto input_result = arrow::io::ReadableFile::Open(path.string());
   ASSERT_TRUE(input_result.ok());
 
-  auto reader_result =
-      parquet::arrow::OpenFile(*input_result, arrow::default_memory_pool());
+  auto reader_result = parquet::arrow::OpenFile(*input_result, arrow::default_memory_pool());
   ASSERT_TRUE(reader_result.ok());
   auto reader = std::move(reader_result).ValueOrDie();
 
@@ -72,8 +71,8 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
   selector.base_dir = path.string();
   selector.recursive = true;
 
-  auto factory_result = arrow::dataset::FileSystemDatasetFactory::Make(
-      filesystem, selector, format, options);
+  auto factory_result =
+      arrow::dataset::FileSystemDatasetFactory::Make(filesystem, selector, format, options);
   ASSERT_TRUE(factory_result.ok());
 
   auto dataset_result = (*factory_result)->Finish();

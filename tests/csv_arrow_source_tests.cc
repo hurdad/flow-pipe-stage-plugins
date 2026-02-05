@@ -1,11 +1,12 @@
 #include <arrow/io/compressed.h>
 #include <arrow/util/compression.h>
+
 #include <fstream>
 #include <string>
 #include <vector>
 
-#include "arrow_stage_test_support.h"
 #include "arrow_common.pb.h"
+#include "arrow_stage_test_support.h"
 
 #define flowpipe_create_stage flowpipe_create_stage_csv_arrow_source
 #define flowpipe_destroy_stage flowpipe_destroy_stage_csv_arrow_source
@@ -47,9 +48,8 @@ void WriteCompressedFile(const std::filesystem::path& path, arrow::Compression::
   ASSERT_TRUE(compressed_result.ok());
   auto compressed_stream = *compressed_result;
 
-  ASSERT_TRUE(compressed_stream->Write(contents.data(),
-                                       static_cast<int64_t>(contents.size()))
-                  .ok());
+  ASSERT_TRUE(
+      compressed_stream->Write(contents.data(), static_cast<int64_t>(contents.size())).ok());
   ASSERT_TRUE(compressed_stream->Close().ok());
   ASSERT_TRUE(output_stream->Close().ok());
 }

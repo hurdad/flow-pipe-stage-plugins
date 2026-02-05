@@ -1,11 +1,12 @@
 #include <arrow/csv/api.h>
 #include <arrow/io/compressed.h>
 #include <arrow/util/compression.h>
+
 #include <string>
 #include <vector>
 
-#include "arrow_stage_test_support.h"
 #include "arrow_common.pb.h"
+#include "arrow_stage_test_support.h"
 
 #define flowpipe_create_stage flowpipe_create_stage_csv_arrow_sink
 #define flowpipe_destroy_stage flowpipe_destroy_stage_csv_arrow_sink

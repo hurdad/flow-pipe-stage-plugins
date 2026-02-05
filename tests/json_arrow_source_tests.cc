@@ -1,11 +1,12 @@
 #include <arrow/io/compressed.h>
 #include <arrow/util/compression.h>
+
 #include <fstream>
 #include <string>
 #include <vector>
 
-#include "arrow_stage_test_support.h"
 #include "arrow_common.pb.h"
+#include "arrow_stage_test_support.h"
 
 #define flowpipe_create_stage flowpipe_create_stage_json_arrow_source
 #define flowpipe_destroy_stage flowpipe_destroy_stage_json_arrow_source
@@ -47,9 +48,8 @@ void WriteCompressedFile(const std::filesystem::path& path, arrow::Compression::
   ASSERT_TRUE(compressed_result.ok());
   auto compressed_stream = *compressed_result;
 
-  ASSERT_TRUE(compressed_stream->Write(contents.data(),
-                                       static_cast<int64_t>(contents.size()))
-                  .ok());
+  ASSERT_TRUE(
+      compressed_stream->Write(contents.data(), static_cast<int64_t>(contents.size())).ok());
   ASSERT_TRUE(compressed_stream->Close().ok());
   ASSERT_TRUE(output_stream->Close().ok());
 }
@@ -58,10 +58,8 @@ void WriteCompressedFile(const std::filesystem::path& path, arrow::Compression::
 TEST(JsonArrowSourceTest, ReadsJsonToArrowTable) {
   auto path = MakeTempPath("input.json");
   std::ofstream output(path);
-  output << R"({"id":1,"name":"alpha"})"
-         << "\n"
-         << R"({"id":2,"name":"beta"})"
-         << "\n";
+  output << R"({"id":1,"name":"alpha"})" << "\n"
+         << R"({"id":2,"name":"beta"})" << "\n";
   output.close();
 
   JsonArrowSource stage;

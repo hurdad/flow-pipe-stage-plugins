@@ -86,8 +86,8 @@ TEST(ParquetArrowSourceTest, ReadsParquetToArrowTable) {
   ASSERT_TRUE(output_result.ok());
   auto output_stream = *output_result;
 
-  auto status = parquet::arrow::WriteTable(*expected, arrow::default_memory_pool(),
-                                           output_stream, expected->num_rows());
+  auto status = parquet::arrow::WriteTable(*expected, arrow::default_memory_pool(), output_stream,
+                                           expected->num_rows());
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(output_stream->Close().ok());
 

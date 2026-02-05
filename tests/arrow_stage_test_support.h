@@ -6,10 +6,8 @@
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
-#include <gtest/gtest.h>
 #include <google/protobuf/struct.pb.h>
-
-#include "arrow_common.pb.h"
+#include <gtest/gtest.h>
 
 #include <chrono>
 #include <cstdint>
@@ -19,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "arrow_common.pb.h"
 #include "flowpipe/stage.h"
 
 namespace flowpipe_stage_tests {
@@ -45,8 +44,7 @@ inline void AddCommonCompression(google::protobuf::Struct* config,
 }
 
 inline google::protobuf::Struct BuildPathConfigWithCompression(
-    const std::filesystem::path& path,
-    flowpipe::v1::arrow::common::Compression compression) {
+    const std::filesystem::path& path, flowpipe::v1::arrow::common::Compression compression) {
   auto config = BuildPathConfig(path);
   AddCommonCompression(&config, compression);
   return config;
@@ -75,8 +73,8 @@ inline std::shared_ptr<arrow::Table> BuildSampleTable() {
   EXPECT_TRUE(id_builder.Finish(&id_array).ok());
   EXPECT_TRUE(name_builder.Finish(&name_array).ok());
 
-  auto schema = arrow::schema({arrow::field("id", arrow::int64()),
-                               arrow::field("name", arrow::utf8())});
+  auto schema =
+      arrow::schema({arrow::field("id", arrow::int64()), arrow::field("name", arrow::utf8())});
   return arrow::Table::Make(schema, {id_array, name_array});
 }
 

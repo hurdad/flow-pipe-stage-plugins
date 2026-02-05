@@ -370,8 +370,7 @@ arrow::Result<std::unordered_map<std::string, std::vector<int64_t>>> BuildPartit
         return arrow::Status::Invalid("parquet_arrow_sink missing partition column: ", name);
       }
       ARROW_ASSIGN_OR_RAISE(auto scalar, column->GetScalar(row));
-      std::string value =
-          scalar->is_valid ? scalar->ToString() : kHiveDefaultPartition;
+      std::string value = scalar->is_valid ? scalar->ToString() : kHiveDefaultPartition;
       segments.push_back(name + "=" + value);
     }
 
@@ -401,8 +400,7 @@ arrow::Status WriteHivePartitionedDataset(
   for (const auto& [partition_path, rows] : partition_rows) {
     ARROW_ASSIGN_OR_RAISE(auto partition_table, BuildPartitionTable(table, rows));
     ARROW_ASSIGN_OR_RAISE(auto data_table,
-                          DropPartitionColumns(partition_table,
-                                               write_opts.partition_columns()));
+                          DropPartitionColumns(partition_table, write_opts.partition_columns()));
 
     std::string dir_path = JoinPath(base_dir, partition_path);
     ARROW_RETURN_NOT_OK(filesystem->CreateDir(dir_path, true));
@@ -418,9 +416,8 @@ arrow::Status WriteHivePartitionedDataset(
     std::string file_path = JoinPath(dir_path, filename);
 
     ARROW_ASSIGN_OR_RAISE(auto output, filesystem->OpenOutputStream(file_path));
-    auto status = parquet::arrow::WriteTable(
-        *data_table, arrow::default_memory_pool(), output,
-        ResolveRowGroupSize(config, data_table), properties);
+    auto status = parquet::arrow::WriteTable(*data_table, arrow::default_memory_pool(), output,
+                                             ResolveRowGroupSize(config, data_table), properties);
     if (!status.ok()) {
       return status;
     }
@@ -525,10 +522,9 @@ class ParquetArrowSink final : public ISinkStage, public ConfigurableStage {
       return;
     }
 
-    auto status = parquet::arrow::WriteTable(**table_result, arrow::default_memory_pool(),
-                                             *output_result,
-                                             ResolveRowGroupSize(config_, *table_result),
-                                             properties);
+    auto status =
+        parquet::arrow::WriteTable(**table_result, arrow::default_memory_pool(), *output_result,
+                                   ResolveRowGroupSize(config_, *table_result), properties);
     if (!status.ok()) {
       FP_LOG_ERROR("parquet_arrow_sink failed to write parquet: " + status.ToString());
       return;
