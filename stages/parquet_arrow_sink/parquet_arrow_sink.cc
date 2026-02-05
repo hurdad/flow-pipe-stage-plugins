@@ -10,6 +10,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "flowpipe/configurable_stage.h"
@@ -326,6 +327,34 @@ arrow::Result<std::shared_ptr<arrow::Table>> BuildPartitionTable(
   return arrow::ConcatenateTables(slices);
 }
 
+arrow::Result<std::shared_ptr<arrow::Table>> DropPartitionColumns(
+    const std::shared_ptr<arrow::Table>& table,
+    const google::protobuf::RepeatedPtrField<std::string>& partition_columns) {
+  if (partition_columns.empty()) {
+    return table;
+  }
+
+  std::unordered_set<std::string> partition_names;
+  partition_names.reserve(static_cast<size_t>(partition_columns.size()));
+  for (const auto& name : partition_columns) {
+    partition_names.insert(name);
+  }
+
+  std::vector<int> column_indices;
+  column_indices.reserve(static_cast<size_t>(table->num_columns()));
+  for (int index = 0; index < table->num_columns(); ++index) {
+    if (partition_names.count(table->schema()->field(index)->name()) == 0) {
+      column_indices.push_back(index);
+    }
+  }
+
+  if (column_indices.size() == static_cast<size_t>(table->num_columns())) {
+    return table;
+  }
+
+  return table->SelectColumns(column_indices);
+}
+
 arrow::Result<std::unordered_map<std::string, std::vector<int64_t>>> BuildPartitionRowMap(
     const std::shared_ptr<arrow::Table>& table,
     const google::protobuf::RepeatedPtrField<std::string>& partition_columns) {
@@ -371,6 +400,9 @@ arrow::Status WriteHivePartitionedDataset(
   int partition_index = 0;
   for (const auto& [partition_path, rows] : partition_rows) {
     ARROW_ASSIGN_OR_RAISE(auto partition_table, BuildPartitionTable(table, rows));
+    ARROW_ASSIGN_OR_RAISE(auto data_table,
+                          DropPartitionColumns(partition_table,
+                                               write_opts.partition_columns()));
 
     std::string dir_path = JoinPath(base_dir, partition_path);
     ARROW_RETURN_NOT_OK(filesystem->CreateDir(dir_path, true));
@@ -387,8 +419,8 @@ arrow::Status WriteHivePartitionedDataset(
 
     ARROW_ASSIGN_OR_RAISE(auto output, filesystem->OpenOutputStream(file_path));
     auto status = parquet::arrow::WriteTable(
-        *partition_table, arrow::default_memory_pool(), output,
-        ResolveRowGroupSize(config, partition_table), properties);
+        *data_table, arrow::default_memory_pool(), output,
+        ResolveRowGroupSize(config, data_table), properties);
     if (!status.ok()) {
       return status;
     }
