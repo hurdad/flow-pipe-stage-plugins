@@ -357,6 +357,8 @@ arrow::Status WriteHivePartitionedDataset(
   write_options.file_write_options = file_write_options;
   if (write_opts.has_basename_template() && !write_opts.basename_template().empty()) {
     write_options.basename_template = write_opts.basename_template();
+  } else {
+    write_options.basename_template = "part-{i}.parquet";
   }
   if (write_opts.has_max_rows_per_file() && write_opts.max_rows_per_file() > 0) {
     write_options.max_rows_per_file = write_opts.max_rows_per_file();
