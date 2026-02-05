@@ -31,6 +31,29 @@ arrow::Result<std::shared_ptr<arrow::Table>> SortTable(
   ARROW_ASSIGN_OR_RAISE(auto sorted, arrow::compute::Take(table, indices));
   return sorted.table();
 }
+
+arrow::Result<std::shared_ptr<arrow::Table>> CoerceTableToSchema(
+    const std::shared_ptr<arrow::Table>& table,
+    const std::shared_ptr<arrow::Schema>& schema) {
+  std::vector<std::shared_ptr<arrow::ChunkedArray>> columns;
+  columns.reserve(static_cast<size_t>(schema->num_fields()));
+
+  for (const auto& field : schema->fields()) {
+    const auto index = table->schema()->GetFieldIndex(field->name());
+    if (index == -1) {
+      return arrow::Status::Invalid("Missing column in dataset output: ", field->name());
+    }
+    auto column = table->column(index);
+    if (!column->type()->Equals(field->type())) {
+      ARROW_ASSIGN_OR_RAISE(auto casted,
+                            arrow::compute::Cast(column, arrow::compute::CastOptions::Safe()));
+      column = casted.chunked_array();
+    }
+    columns.push_back(column);
+  }
+
+  return arrow::Table::Make(schema, columns);
+}
 }  // namespace
 
 TEST(ParquetArrowSinkTest, WritesArrowTableToParquet) {
@@ -101,15 +124,8 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
   auto table_result = (*scanner_result)->ToTable();
   ASSERT_TRUE(table_result.ok());
 
-  std::vector<int> column_indices;
-  column_indices.reserve(static_cast<size_t>(expected->num_columns()));
-  for (const auto& field : expected->schema()->fields()) {
-    auto index = (*table_result)->schema()->GetFieldIndex(field->name());
-    ASSERT_NE(index, -1) << "Missing column in dataset output: " << field->name();
-    column_indices.push_back(index);
-  }
-  auto aligned_result = (*table_result)->SelectColumns(column_indices);
-  ASSERT_TRUE(aligned_result.ok());
+  auto aligned_result = CoerceTableToSchema(*table_result, expected->schema());
+  ASSERT_TRUE(aligned_result.ok()) << aligned_result.status().ToString();
 
   auto sorted_result =
       SortTable(*aligned_result,
@@ -123,5 +139,5 @@ TEST(ParquetArrowSinkTest, WritesHivePartitionedParquetDataset) {
                  arrow::compute::SortKey("name", arrow::compute::SortOrder::Ascending)});
   ASSERT_TRUE(sorted_expected.ok());
 
-  EXPECT_TRUE((*sorted_result)->Equals(*sorted_expected));
+  EXPECT_TRUE((*sorted_result)->Equals(**sorted_expected));
 }
