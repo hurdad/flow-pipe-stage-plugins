@@ -31,8 +31,8 @@ google::protobuf::Struct BuildFileSourceConfig(
     const std::filesystem::path& path,
     flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType compression) {
   google::protobuf::Struct config;
-  (*config.mutable_fields()){"path"}.set_string_value(path.string());
-  (*config.mutable_fields()){"compression"}.set_string_value(
+  (*config.mutable_fields())["path"].set_string_value(path.string());
+  (*config.mutable_fields())["compression"].set_string_value(
       flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType_Name(
           compression));
   return config;
@@ -43,11 +43,11 @@ google::protobuf::Struct BuildFileSinkConfig(
     flowpipe::v1::stages::file::sink::v1::FileSinkConfig::CompressionType compression,
     int compression_level = 0) {
   google::protobuf::Struct config;
-  (*config.mutable_fields()){"path"}.set_string_value(path.string());
-  (*config.mutable_fields()){"append"}.set_bool_value(append);
-  (*config.mutable_fields()){"compression"}.set_string_value(
+  (*config.mutable_fields())["path"].set_string_value(path.string());
+  (*config.mutable_fields())["append"].set_bool_value(append);
+  (*config.mutable_fields())["compression"].set_string_value(
       flowpipe::v1::stages::file::sink::v1::FileSinkConfig::CompressionType_Name(compression));
-  (*config.mutable_fields()){"compression_level"}.set_number_value(compression_level);
+  (*config.mutable_fields())["compression_level"].set_number_value(compression_level);
   return config;
 }
 
