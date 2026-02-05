@@ -7,6 +7,7 @@
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <arrow/table.h>
+#include <arrow/util/config.h>
 #include <arrow/scalar.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/struct.pb.h>
@@ -329,7 +330,8 @@ arrow::Result<std::shared_ptr<arrow::dataset::Partitioning>> BuildHivePartitioni
   }
 
   auto partition_schema = arrow::schema(fields);
-  return arrow::dataset::HivePartitioning::Make(partition_schema);
+  auto factory = arrow::dataset::HivePartitioning::MakeFactory();
+  return factory->Finish(partition_schema);
 }
 
 arrow::Status WriteHivePartitionedDataset(
@@ -340,15 +342,20 @@ arrow::Status WriteHivePartitionedDataset(
   ARROW_ASSIGN_OR_RAISE(auto partitioning,
                         BuildHivePartitioning(table->schema(), write_opts.partition_columns()));
 
-  auto parquet_write_options = parquet::arrow::FileWriteOptions::Defaults();
-  parquet_write_options->writer_properties = properties;
-  parquet_write_options->row_group_size = ResolveRowGroupSize(config, table);
+  auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+  auto file_write_options = format->DefaultWriteOptions();
+  auto parquet_write_options =
+      std::dynamic_pointer_cast<arrow::dataset::ParquetFileWriteOptions>(file_write_options);
+  if (parquet_write_options) {
+    parquet_write_options->writer_properties = properties;
+    parquet_write_options->row_group_size = ResolveRowGroupSize(config, table);
+  }
 
   arrow::dataset::FileSystemDatasetWriteOptions write_options;
   write_options.filesystem = filesystem;
   write_options.base_dir = base_dir;
   write_options.partitioning = partitioning;
-  write_options.file_write_options = parquet_write_options;
+  write_options.file_write_options = file_write_options;
   if (write_opts.has_basename_template() && !write_opts.basename_template().empty()) {
     write_options.basename_template = write_opts.basename_template();
   }
