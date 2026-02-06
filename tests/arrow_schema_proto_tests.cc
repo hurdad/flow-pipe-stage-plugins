@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include <arrow/type.h>
+#include <gtest/gtest.h>
 
 #include "arrow/arrow_schema.pb.h"
 #include "util/arrow.h"
@@ -88,10 +87,8 @@ TEST(ArrowSchemaProtoTest, ProtoToArrowToProtoRoundTrip) {
        arrow::time64(arrow::TimeUnit::NANO)},
       {MakeTimeColumnType(ColumnType::DATA_TYPE_DURATION, ColumnType::TIME_UNIT_MICRO),
        arrow::duration(arrow::TimeUnit::MICRO)},
-      {MakeDecimalColumnType(ColumnType::DATA_TYPE_DECIMAL128, 12, 4),
-       arrow::decimal128(12, 4)},
-      {MakeDecimalColumnType(ColumnType::DATA_TYPE_DECIMAL256, 28, 6),
-       arrow::decimal256(28, 6)},
+      {MakeDecimalColumnType(ColumnType::DATA_TYPE_DECIMAL128, 12, 4), arrow::decimal128(12, 4)},
+      {MakeDecimalColumnType(ColumnType::DATA_TYPE_DECIMAL256, 28, 6), arrow::decimal256(28, 6)},
       {MakeFixedSizeBinaryColumnType(16), arrow::fixed_size_binary(16)},
   };
 
