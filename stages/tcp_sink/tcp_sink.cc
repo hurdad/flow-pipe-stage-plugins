@@ -58,8 +58,7 @@ bool ConnectUnixSocket(const std::string& path, int& out_fd) {
   }
   addr.sun_family = AF_UNIX;
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
-  const auto addr_len =
-      static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + path.size() + 1);
+  const auto addr_len = static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + path.size() + 1);
 
   if (connect(fd, reinterpret_cast<const sockaddr*>(&addr), addr_len) != 0) {
     CloseSocket(fd);

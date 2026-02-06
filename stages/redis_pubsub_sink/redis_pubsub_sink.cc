@@ -81,8 +81,7 @@ class RedisPubSubSink final : public ISinkStage, public ConfigurableStage {
     redisReply* reply = static_cast<redisReply*>(redisCommand(
         context_, "PUBLISH %s %b", config_.channel().c_str(), payload.data(), payload.size));
 
-    const bool ok =
-        flowpipe::v1::stages::util::ValidateRedisReply(reply, name(), "PUBLISH");
+    const bool ok = flowpipe::v1::stages::util::ValidateRedisReply(reply, name(), "PUBLISH");
     freeReplyObject(reply);
     if (!ok) {
       return;

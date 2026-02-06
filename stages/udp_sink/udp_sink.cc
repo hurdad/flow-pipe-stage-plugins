@@ -53,8 +53,7 @@ bool BuildUnixDestination(const std::string& path, sockaddr_storage& destination
   }
   addr.sun_family = AF_UNIX;
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
-  destination_len =
-      static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + path.size() + 1);
+  destination_len = static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + path.size() + 1);
   std::memcpy(&destination, &addr, sizeof(addr));
   return true;
 }
