@@ -57,8 +57,7 @@ bool ReadFileRaw(const std::string& path, size_t max_bytes, std::vector<char>& o
     return false;
   }
   if (max_bytes > 0 && static_cast<size_t>(size) > max_bytes) {
-    error = "file size exceeds max_bytes limit";
-    return false;
+    size = static_cast<std::streamsize>(max_bytes);
   }
   input.seekg(0, std::ios::beg);
 
@@ -88,7 +87,18 @@ bool ReadFileGzip(const std::string& path, size_t max_bytes, std::vector<char>& 
   out.clear();
 
   while (true) {
-    int read = gzread(file, buffer.data(), static_cast<unsigned int>(buffer.size()));
+    size_t read_limit = buffer.size();
+    if (max_bytes > 0) {
+      size_t remaining = max_bytes - out.size();
+      if (remaining == 0) {
+        break;
+      }
+      if (remaining < read_limit) {
+        read_limit = remaining;
+      }
+    }
+
+    int read = gzread(file, buffer.data(), static_cast<unsigned int>(read_limit));
     if (read > 0) {
       if (max_bytes > 0 && out.size() + static_cast<size_t>(read) > max_bytes) {
         error = "gzip data exceeds max_bytes limit";
