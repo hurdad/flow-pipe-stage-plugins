@@ -35,6 +35,7 @@ target_link_libraries(arrow_stage_tests
         arrow_dataset
         arrow_compute
         parquet
+        ZLIB::ZLIB
         flowpipe::flowpipe_runtime
         ${GTEST_MAIN_TARGET}
         stage_arrow_proto
