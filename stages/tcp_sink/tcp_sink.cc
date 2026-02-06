@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -50,11 +51,17 @@ bool ConnectUnixSocket(const std::string& path, int& out_fd) {
   }
 
   sockaddr_un addr{};
+  if (path.size() >= sizeof(addr.sun_path)) {
+    FP_LOG_ERROR("tcp_sink unix socket path too long");
+    CloseSocket(fd);
+    return false;
+  }
   addr.sun_family = AF_UNIX;
   std::snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path.c_str());
+  const auto addr_len =
+      static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + path.size() + 1);
 
-  if (connect(fd, reinterpret_cast<const sockaddr*>(&addr), static_cast<socklen_t>(sizeof(addr))) !=
-      0) {
+  if (connect(fd, reinterpret_cast<const sockaddr*>(&addr), addr_len) != 0) {
     CloseSocket(fd);
     return false;
   }
