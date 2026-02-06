@@ -110,4 +110,20 @@ inline redisContext* ConnectRedis(const RedisConnectionConfig& config,
   return context;
 }
 
+inline bool ValidateRedisReply(redisReply* reply, const std::string& stage_name,
+                               const std::string& action) {
+  if (!reply) {
+    FP_LOG_ERROR(stage_name + " failed to execute Redis command: " + action);
+    return false;
+  }
+
+  if (reply->type == REDIS_REPLY_ERROR) {
+    std::string message = reply->str ? std::string(reply->str) : "unknown error";
+    FP_LOG_ERROR(stage_name + " Redis command error (" + action + "): " + message);
+    return false;
+  }
+
+  return true;
+}
+
 }  // namespace flowpipe::v1::stages::util

@@ -29,11 +29,13 @@ using flowpipe_stage_tests::MakeTempPath;
 namespace {
 google::protobuf::Struct BuildFileSourceConfig(
     const std::filesystem::path& path,
-    flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType compression) {
+    flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType compression,
+    uint64_t max_bytes = 0) {
   google::protobuf::Struct config;
   (*config.mutable_fields())["path"].set_string_value(path.string());
   (*config.mutable_fields())["compression"].set_string_value(
       flowpipe::v1::stages::file::source::v1::FileSourceConfig::CompressionType_Name(compression));
+  (*config.mutable_fields())["max_bytes"].set_number_value(static_cast<double>(max_bytes));
   return config;
 }
 
@@ -142,6 +144,23 @@ TEST(FileSourceTest, AutoDetectsGzip) {
   flowpipe::Payload payload;
   ASSERT_TRUE(stage.produce(ctx, payload));
   EXPECT_EQ(std::string(reinterpret_cast<const char*>(payload.data()), payload.size), contents);
+}
+
+TEST(FileSourceTest, EnforcesMaxBytes) {
+  auto path = MakeTempPath("limited.txt");
+  const std::string contents = "12345";
+  std::ofstream output(path, std::ios::binary);
+  output << contents;
+  output.close();
+
+  FileSource stage;
+  auto config = BuildFileSourceConfig(
+      path, flowpipe::v1::stages::file::source::v1::FileSourceConfig::COMPRESSION_NONE, 4);
+  ASSERT_TRUE(stage.configure(config));
+
+  flowpipe::StageContext ctx;
+  flowpipe::Payload payload;
+  EXPECT_FALSE(stage.produce(ctx, payload));
 }
 
 TEST(FileSinkTest, WritesRawFile) {

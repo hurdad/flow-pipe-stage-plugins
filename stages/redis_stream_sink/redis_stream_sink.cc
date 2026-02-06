@@ -118,12 +118,11 @@ class RedisStreamSink final : public ISinkStage, public ConfigurableStage {
 
     redisReply* reply = ExecuteXAdd(context_, config_, payload);
 
-    if (!reply) {
-      FP_LOG_ERROR("redis_stream_sink failed to add stream entry");
+    const bool ok = flowpipe::v1::stages::util::ValidateRedisReply(reply, name(), "XADD");
+    freeReplyObject(reply);
+    if (!ok) {
       return;
     }
-
-    freeReplyObject(reply);
   }
 
  private:

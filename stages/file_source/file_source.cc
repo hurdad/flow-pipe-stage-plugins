@@ -42,15 +42,22 @@ bool ResolveCompression(CompressionType compression, const std::string& path,
   }
 }
 
-bool ReadFileRaw(const std::string& path, std::vector<char>& out) {
+bool ReadFileRaw(const std::string& path, size_t max_bytes, std::vector<char>& out,
+                 std::string& error) {
   std::ifstream input(path, std::ios::binary);
   if (!input.is_open()) {
+    error = "failed to open file";
     return false;
   }
 
   input.seekg(0, std::ios::end);
   std::streamsize size = input.tellg();
   if (size < 0) {
+    error = "failed to read file size";
+    return false;
+  }
+  if (max_bytes > 0 && static_cast<size_t>(size) > max_bytes) {
+    error = "file size exceeds max_bytes limit";
     return false;
   }
   input.seekg(0, std::ios::beg);
@@ -61,13 +68,15 @@ bool ReadFileRaw(const std::string& path, std::vector<char>& out) {
   }
 
   if (!input.read(out.data(), size)) {
+    error = "failed to read file contents";
     return false;
   }
 
   return true;
 }
 
-bool ReadFileGzip(const std::string& path, std::vector<char>& out, std::string& error) {
+bool ReadFileGzip(const std::string& path, size_t max_bytes, std::vector<char>& out,
+                  std::string& error) {
   gzFile file = gzopen(path.c_str(), "rb");
   if (!file) {
     error = "failed to open gzip file";
@@ -81,6 +90,11 @@ bool ReadFileGzip(const std::string& path, std::vector<char>& out, std::string& 
   while (true) {
     int read = gzread(file, buffer.data(), static_cast<unsigned int>(buffer.size()));
     if (read > 0) {
+      if (max_bytes > 0 && out.size() + static_cast<size_t>(read) > max_bytes) {
+        error = "gzip data exceeds max_bytes limit";
+        gzclose(file);
+        return false;
+      }
       out.insert(out.end(), buffer.begin(), buffer.begin() + read);
       continue;
     }
@@ -147,6 +161,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
 
     config_ = std::move(cfg);
     compression_ = compression;
+    max_bytes_ = static_cast<size_t>(config_.max_bytes());
     produced_ = false;
 
     FP_LOG_INFO("file_source configured");
@@ -169,15 +184,16 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
     std::vector<char> data;
     switch (compression_) {
       case FileSourceConfig::COMPRESSION_NONE: {
-        if (!file_source_internal::ReadFileRaw(config_.path(), data)) {
-          FP_LOG_ERROR("file_source failed to read file: " + config_.path());
+        std::string error;
+        if (!file_source_internal::ReadFileRaw(config_.path(), max_bytes_, data, error)) {
+          FP_LOG_ERROR("file_source failed to read file: " + error);
           return false;
         }
         break;
       }
       case FileSourceConfig::COMPRESSION_GZIP: {
         std::string error;
-        if (!file_source_internal::ReadFileGzip(config_.path(), data, error)) {
+        if (!file_source_internal::ReadFileGzip(config_.path(), max_bytes_, data, error)) {
           FP_LOG_ERROR("file_source gzip error: " + error);
           return false;
         }
@@ -210,6 +226,7 @@ class FileSource final : public ISourceStage, public ConfigurableStage {
  private:
   FileSourceConfig config_{};
   file_source_internal::CompressionType compression_{FileSourceConfig::COMPRESSION_NONE};
+  size_t max_bytes_{0};
   bool produced_{false};
 };
 
