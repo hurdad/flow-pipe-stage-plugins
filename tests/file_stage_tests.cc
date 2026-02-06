@@ -146,7 +146,7 @@ TEST(FileSourceTest, AutoDetectsGzip) {
   EXPECT_EQ(std::string(reinterpret_cast<const char*>(payload.data()), payload.size), contents);
 }
 
-TEST(FileSourceTest, EnforcesMaxBytes) {
+TEST(FileSourceTest, RespectsMaxBytes) {
   auto path = MakeTempPath("limited.txt");
   const std::string contents = "12345";
   std::ofstream output(path, std::ios::binary);
@@ -160,7 +160,9 @@ TEST(FileSourceTest, EnforcesMaxBytes) {
 
   flowpipe::StageContext ctx;
   flowpipe::Payload payload;
-  EXPECT_FALSE(stage.produce(ctx, payload));
+  EXPECT_TRUE(stage.produce(ctx, payload));
+  ASSERT_EQ(payload.size, 4u);
+  EXPECT_EQ(std::string(reinterpret_cast<const char*>(payload.data()), payload.size), "1234");
 }
 
 TEST(FileSinkTest, WritesRawFile) {
