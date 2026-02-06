@@ -17,6 +17,7 @@ else ()
 endif ()
 
 add_executable(arrow_stage_tests
+        arrow_schema_proto_tests.cc
         csv_arrow_sink_tests.cc
         csv_arrow_source_tests.cc
         file_stage_tests.cc
