@@ -16,4 +16,7 @@ message FileSourceConfig {
 
   // Compression type (default: none)
   CompressionType compression = 2;
+
+  // Maximum number of bytes to read (0 = no limit)
+  uint64 max_bytes = 3;
 }

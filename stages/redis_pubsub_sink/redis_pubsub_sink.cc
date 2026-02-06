@@ -81,12 +81,12 @@ class RedisPubSubSink final : public ISinkStage, public ConfigurableStage {
     redisReply* reply = static_cast<redisReply*>(redisCommand(
         context_, "PUBLISH %s %b", config_.channel().c_str(), payload.data(), payload.size));
 
-    if (!reply) {
-      FP_LOG_ERROR("redis_pubsub_sink failed to publish message");
+    const bool ok =
+        flowpipe::v1::stages::util::ValidateRedisReply(reply, name(), "PUBLISH");
+    freeReplyObject(reply);
+    if (!ok) {
       return;
     }
-
-    freeReplyObject(reply);
   }
 
  private:

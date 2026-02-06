@@ -18,3 +18,8 @@ poll_timeout_ms: 1000
 ## Outputs
 
 - Payload: raw bytes read from the TCP connection (up to `max_payload_size`). Schema: `bytes` (opaque binary data).
+
+## Notes
+
+`tcp_source` accepts a single client connection at a time to avoid interleaving
+payloads from multiple producers and to keep per-connection backpressure simple.
