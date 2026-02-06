@@ -313,6 +313,22 @@ inline arrow::Result<arrow::TimeUnit::type> ConvertTimeUnit(
   }
 }
 
+inline arrow::Result<flowpipe_arrow::schema::ColumnType::TimeUnit> ConvertTimeUnitFromArrow(
+    arrow::TimeUnit::type unit) {
+  switch (unit) {
+    case arrow::TimeUnit::SECOND:
+      return flowpipe_arrow::schema::ColumnType::TIME_UNIT_SECOND;
+    case arrow::TimeUnit::MILLI:
+      return flowpipe_arrow::schema::ColumnType::TIME_UNIT_MILLI;
+    case arrow::TimeUnit::MICRO:
+      return flowpipe_arrow::schema::ColumnType::TIME_UNIT_MICRO;
+    case arrow::TimeUnit::NANO:
+      return flowpipe_arrow::schema::ColumnType::TIME_UNIT_NANO;
+    default:
+      return arrow::Status::Invalid("Unsupported time unit");
+  }
+}
+
 inline arrow::Result<std::shared_ptr<arrow::DataType>> ConvertColumnType(
     const flowpipe_arrow::schema::ColumnType& column_type) {
   switch (column_type.type()) {
@@ -397,5 +413,119 @@ inline arrow::Result<std::shared_ptr<arrow::DataType>> ConvertColumnType(
     case flowpipe_arrow::schema::ColumnType::DATA_TYPE_UNSPECIFIED:
     default:
       return arrow::Status::Invalid("Column type must be specified");
+  }
+}
+
+inline arrow::Result<flowpipe_arrow::schema::ColumnType> ConvertDataTypeToColumnType(
+    const std::shared_ptr<arrow::DataType>& data_type) {
+  flowpipe_arrow::schema::ColumnType proto;
+  switch (data_type->id()) {
+    case arrow::Type::NA:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_NULL);
+      return proto;
+    case arrow::Type::BOOL:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_BOOL);
+      return proto;
+    case arrow::Type::INT8:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT8);
+      return proto;
+    case arrow::Type::INT16:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT16);
+      return proto;
+    case arrow::Type::INT32:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT32);
+      return proto;
+    case arrow::Type::INT64:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_INT64);
+      return proto;
+    case arrow::Type::UINT8:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT8);
+      return proto;
+    case arrow::Type::UINT16:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT16);
+      return proto;
+    case arrow::Type::UINT32:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT32);
+      return proto;
+    case arrow::Type::UINT64:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_UINT64);
+      return proto;
+    case arrow::Type::HALF_FLOAT:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT16);
+      return proto;
+    case arrow::Type::FLOAT:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT32);
+      return proto;
+    case arrow::Type::DOUBLE:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_FLOAT64);
+      return proto;
+    case arrow::Type::STRING:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_STRING);
+      return proto;
+    case arrow::Type::LARGE_STRING:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_LARGE_STRING);
+      return proto;
+    case arrow::Type::BINARY:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_BINARY);
+      return proto;
+    case arrow::Type::LARGE_BINARY:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_LARGE_BINARY);
+      return proto;
+    case arrow::Type::DATE32:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_DATE32);
+      return proto;
+    case arrow::Type::DATE64:
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_DATE64);
+      return proto;
+    case arrow::Type::TIMESTAMP: {
+      auto timestamp_type = std::static_pointer_cast<arrow::TimestampType>(data_type);
+      ARROW_ASSIGN_OR_RAISE(auto unit, ConvertTimeUnitFromArrow(timestamp_type->unit()));
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIMESTAMP);
+      proto.set_time_unit(unit);
+      return proto;
+    }
+    case arrow::Type::TIME32: {
+      auto time32_type = std::static_pointer_cast<arrow::Time32Type>(data_type);
+      ARROW_ASSIGN_OR_RAISE(auto unit, ConvertTimeUnitFromArrow(time32_type->unit()));
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIME32);
+      proto.set_time_unit(unit);
+      return proto;
+    }
+    case arrow::Type::TIME64: {
+      auto time64_type = std::static_pointer_cast<arrow::Time64Type>(data_type);
+      ARROW_ASSIGN_OR_RAISE(auto unit, ConvertTimeUnitFromArrow(time64_type->unit()));
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_TIME64);
+      proto.set_time_unit(unit);
+      return proto;
+    }
+    case arrow::Type::DURATION: {
+      auto duration_type = std::static_pointer_cast<arrow::DurationType>(data_type);
+      ARROW_ASSIGN_OR_RAISE(auto unit, ConvertTimeUnitFromArrow(duration_type->unit()));
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_DURATION);
+      proto.set_time_unit(unit);
+      return proto;
+    }
+    case arrow::Type::DECIMAL128: {
+      auto decimal_type = std::static_pointer_cast<arrow::Decimal128Type>(data_type);
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_DECIMAL128);
+      proto.set_decimal_precision(decimal_type->precision());
+      proto.set_decimal_scale(decimal_type->scale());
+      return proto;
+    }
+    case arrow::Type::DECIMAL256: {
+      auto decimal_type = std::static_pointer_cast<arrow::Decimal256Type>(data_type);
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_DECIMAL256);
+      proto.set_decimal_precision(decimal_type->precision());
+      proto.set_decimal_scale(decimal_type->scale());
+      return proto;
+    }
+    case arrow::Type::FIXED_SIZE_BINARY: {
+      auto fixed_size_type = std::static_pointer_cast<arrow::FixedSizeBinaryType>(data_type);
+      proto.set_type(flowpipe_arrow::schema::ColumnType::DATA_TYPE_FIXED_SIZE_BINARY);
+      proto.set_fixed_size_binary_length(fixed_size_type->byte_width());
+      return proto;
+    }
+    default:
+      return arrow::Status::Invalid("Unsupported Arrow data type: ", data_type->ToString());
   }
 }
